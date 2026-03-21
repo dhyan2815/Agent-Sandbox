@@ -1,4 +1,4 @@
-# DP's CLI Experiments
+# CLI Experiments
 
 Welcome to my experimental playground for CLI-based tools, AI agents, and workflow automations. This repository is dedicated to exploring the capabilities and scaling possibilities of various command-line interfaces and their associated "skills" or "mcp" integrations.
 
