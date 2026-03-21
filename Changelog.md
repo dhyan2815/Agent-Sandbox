@@ -2,6 +2,9 @@
 
 This file tracks significant setup and configuration changes for the CLI experiments repository.
 
+### 2026-03-21
+- Created `project markdowns/automated_job_discovery_plan.md`: A detailed, node-by-node plan for building an n8n workflow to automate job discovery.
+
 ### 2026-03-16
 - Fixed n8n MCP connection issues for Claude Code.
 - Identified that Claude Code looks for MCP configuration in `~/.claude.json` (project section) instead of `settings.json`.
