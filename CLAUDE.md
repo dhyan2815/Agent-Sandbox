@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## High‑Level Architecture
 The repository currently contains no source files. When code is added, consider documenting the following high‑level aspects here:
 - **Language / Runtime**: Indicate the primary language(s) (e.g., Python, JavaScript/TypeScript, Go) and any version requirements.
-- **Project Layout**: Describe the top‑level directories (e.g., `src/` for source code, `tests/` for test suites, `configs/` for configuration files). Keep the description concise; the file tree can be inspected directly.
+- **Project Layout**: Describe the top-level directories. This project uses `workflows/`, `excalidraw diagrams/`, and `project markdowns/` instead of a traditional `src/` layout. Keep the description concise; the file tree can be inspected directly.
 - **Core Components**: Identify the main logical components (e.g., API layer, data access layer, business logic, UI) and how they interact. Add a brief diagram if helpful.
 - **Dependency Management**: Mention the package manager (e.g., `pip`, `npm`, `go modules`) and where dependency files live (`requirements.txt`, `package.json`, `go.mod`).
 - **Configuration**: Note any environment‑variable based configuration or config files (e.g., `.env`, `config.yaml`).
@@ -19,7 +19,7 @@ The repository currently contains no source files. When code is added, consider 
 
 ## Repository‑Specific Rules
 - No `.cursor` or Copilot rule files are present. When such files are added, summarize the most important directives here.
-- No `README.md` exists. Once a README is added, highlight the essential usage instructions in this file to help Claude quickly understand the project's purpose and setup.
+- The `README.md` file clarifies that this repository is an experimental playground for CLI tools and AI agents, focusing on Claude Code, Gemini CLI, and n8n.
 
 ## How Claude Should Use This File
 - Scan this file on startup to learn the available commands and high‑level structure.

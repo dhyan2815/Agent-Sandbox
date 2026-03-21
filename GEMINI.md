@@ -1,15 +1,21 @@
-# Project: General
+# GEMINI.md
 
-## Changelog
+This file provides guidance to the Gemini CLI when working with code in this repository.
 
-### 2026-03-16
-- Fixed n8n MCP connection issues for Claude Code.
-- Identified that Claude Code looks for MCP configuration in `~/.claude.json` (project section) instead of `settings.json`.
-- Migrated n8n HTTP MCP configuration from `~/.claude/settings.json` to the correct location using `claude mcp add`.
-- Verified connection status with `claude mcp list` (status: Connected).
-- Cleaned up redundant `mcpServers` entry from `~/.claude/settings.json`.
-- Deleted `n8n_MCP_TROUBLESHOOTING.md` after successful resolution.
+## Common Commands
+- **Build**: No build step defined.
+- **Lint**: No linter configured.
+- **Run Tests**: No test suite detected.
 
-### 2026-03-15
-- Initialized project with `GEMINI.md`.
-- Created `n8n_MCP_GUIDE.md`: A comprehensive guide for connecting n8n instance-level MCP to Claude Code and Gemini CLI.
+## High-Level Architecture
+This repository is an experimental playground for CLI tools and does not contain traditional source code.
+- **Project Layout**: The repository is organized into `workflows/` (n8n automations), `excalidraw diagrams/` (architecture visuals), and `project markdowns/` (documentation).
+- **Core Focus**: Experiments with Claude Code, Gemini CLI, n8n, and other CLI-based tools.
+
+## Repository-Specific Rules
+- Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
+- The `Changelog.md` file tracks significant setup and configuration changes.
+
+## How Gemini Should Use This File
+- Scan this file on startup to understand the repository's unconventional structure and purpose.
+- Use this context to inform your analysis of workflows, diagrams, and documentation.
