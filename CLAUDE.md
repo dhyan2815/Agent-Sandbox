@@ -21,6 +21,12 @@ The repository currently contains no source files. When code is added, consider 
 - No `.cursor` or Copilot rule files are present. When such files are added, summarize the most important directives here.
 - The `README.md` file clarifies that this repository is an experimental playground for CLI tools and AI agents, focusing on Claude Code, Gemini CLI, and n8n.
 
+## Memory System
+- A persistent memory system exists at `.claude/memory/`.
+- The `MEMORY.md` file in that directory indexes all memory files.
+- At the start of each session, I will review `MEMORY.md` and relevant memories to get context.
+- Throughout the session, I will update these files with new information about the user, their preferences, project decisions, and other relevant context.
+
 ## How Claude Should Use This File
 - Scan this file on startup to learn the available commands and high‑level structure.
 - When a user asks how to build, lint, test, or run the project, refer to the concrete commands listed here (or prompt the user to add them if they are missing).
