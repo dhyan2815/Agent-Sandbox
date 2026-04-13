@@ -2,6 +2,38 @@
 
 This document provides essential context, standards, and commands for AI agents (like Claude Code, Gemini CLI, etc.) operating within this repository. It is designed to ensure consistency, safety, and efficiency when performing automated tasks.
 
+## 0. Session Memory System (CRITICAL - READ FIRST)
+
+### Auto-Fetch Protocol
+At the start of **every session** (new or existing), the agent MUST:
+1. Read `memories/SESSION_MEMORY.md` immediately after loading this file
+2. Check the **Session Index** (Section 1) for the most recent session
+3. Review any relevant context from **Section 4 (Historical Sessions)**
+4. Check **Section 5 (Key Decisions & Outcomes)** for established patterns
+
+### Memory Update Protocol
+After each session concludes:
+1. Append session record to Section 4 following the template
+2. Update the Session Index table in Section 1
+3. Update Section 5 with any new decisions made
+4. Update Section 7 with any future intentions discussed
+
+### File Locations
+- **Session Memory**: `memories/SESSION_MEMORY.md` (versioned, NOT gitignored)
+- **Career Info**: `memories/CAREER.md` (gitignored - contains sensitive job search data)
+- **This File**: `.opencode/AGENTS.md`
+
+### Why This Matters
+The SESSION_MEMORY.md file is the primary second brain for this codebase. It stores:
+- All conversation history and context
+- Key decisions and outcomes
+- User profile and preferences
+- Project evolution over time
+
+Reading this file first optimizes token usage by avoiding redundant context retrieval.
+
+---
+
 ## 1. Project Overview & Mission
 This repository is a central hub for **n8n automation workflows**, **MCP (Model Context Protocol) configurations**, and **system architecture documentation**. The primary goal is to bridge the gap between AI assistants and automated business processes (e.g., Loan Consulting System, Lead Generation, CRM enrichment).
 
@@ -173,5 +205,6 @@ This repository is a central hub for **n8n automation workflows**, **MCP (Model 
 - **AI-Native Nodes**: Prefer "AI Agent" or "Basic LLM Chain" for NLP tasks.
 
 ---
-*Last Updated: 2026-04-09*
-*Targeted Audience: AI Coding Agents (Claude Code, Gemini CLI, etc.)*
+*Last Updated: 2026-04-13*
+*Memory System: SESSION_MEMORY.md (memories/SESSION_MEMORY.md)*
+*Targeted Audience: AI Coding Agents (Claude Code, Gemini CLI, OpenCode, etc.)*
