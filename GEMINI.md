@@ -19,6 +19,13 @@ This repository is an experimental playground for CLI tools and does not contain
   - `.claude/` - Claude Code knowledge base (memory, docs, rules)
 - **Core Focus**: Experiments with Claude Code, Gemini CLI, n8n, and other CLI-based tools.
 
+## Changelog
+- **2026-04-21**: Initialized Claude Code configuration and command personas.
+    - Updated `.claude/settings.json` with secure permissions.
+    - Defined agent personas: Planner, Coder, Reviewer, Tester, Orchestrator.
+    - Created context templates for tracking Plans, Changes, Reviews, and Test Results.
+    - Synchronized master templates in `.claude/files/`.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
