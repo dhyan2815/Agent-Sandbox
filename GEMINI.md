@@ -25,6 +25,9 @@ This repository is an experimental playground for CLI tools and does not contain
     - Defined agent personas: Planner, Coder, Reviewer, Tester, Orchestrator.
     - Created context templates for tracking Plans, Changes, Reviews, and Test Results.
     - Synchronized master templates in `.claude/files/`.
+- **2026-04-22**: Modified `linkedin-profile-optimizer` skill to use LinkedIn URL as primary input.
+    - Updated `SKILL.md` to remove PDF/pasted text dependencies.
+    - Refined input handling to prioritize browser-based profile extraction from URLs.
 
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
