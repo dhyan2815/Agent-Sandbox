@@ -34,44 +34,45 @@ Use this analysis to select the most fitting comment variant below.
 
 Choose **one variant** based on post tone and intent. Generate **one comment only**.
 
-### Variant 1 — Authentic Appreciation
-- Appreciate the substance; create genuine rapport
-- Signal you actually read and understood the post
-- Best for: vulnerable, reflective, or storytelling-driven posts
-- Example tone: *"This resonates. The friction you described is exactly what we hit last quarter."*
+### Variant 1 — New-Age Pulse
+- Style: lowercase or minimal caps, semicolons as breath pauses (not em dashes), DM energy, text-message fast
+- Tone: genuinely excited but never gushing; reads like you sent this to a group chat first
+- Pattern: short reactive observation + one specific callout from the post, or a single punchy line with a semicolon pause
+- Motive: pure signal that you were present and felt something — no analysis, no agenda
+- Best for: exciting launches, AI/tech posts, milestones, anything fast-moving or zeitgeist-y
+- Example tone: *"pretty wild how fast this is moving; the [specific thing from post] part especially"*
+- Example tone: *"so [specific noun/concept from post]; this one's going to stick"*
+- Rule: lowercase is a stylistic choice here, not sloppiness. Keep it under 12 words. No exclamation marks unless they're genuinely earned.
 
-### Variant 2 — Playful + Question
-- Light humor or wit + a specific, answerable question tied to post content
-- Show curiosity, not critique
-- Best for: educational, opinion, or "hot take" posts
-- Example tone: *"Love the candor here. Did the timeline pressure actually accelerate your learning, or just the deadline?"*
+### Variant 2 — Irony + Tension Spotter
+- Style: identifies the contradiction, paradox, or hidden irony in the post; validates it with a brief personal proof
+- Tone: intelligent, slightly wry, unhurried — like someone who's lived this and clocked it
+- Pattern: "The [irony/thing] that [observation from post]; [one-line personal validation]"
+- Motive: reward the author for saying something real by naming the tension they almost didn't
+- Best for: failure/reframe stories, contrarian takes, reflective posts where the insight is bittersweet
+- Example tone: *"The irony that you needed to fail to understand success; also true. Seen it twice in my team."*
+- Example tone: *"The part everyone skips is the [specific detail]; that's usually where it actually starts."*
+- Rule: semicolon is the move here, not a period. Keep the personal proof to one clipped sentence max.
 
-### Variant 3 — Witty Value-Add
-- Identify a unique insight or tension in the post
-- Comment with intelligent, lightly sarcastic humor — never punching down
-- Balance irreverence with respect
-- Best for: contrarian, ironic, or insight-heavy posts
-- Example tone: *"The irony that you needed to fail to understand success — also true. Seen it twice in my team."*
-
-### Variant 4 — Appreciation + Relatable Use Case
-- Appreciate the core message + connect it to your own work/experience
-- Show how it's actionable, not just agreeable
-- Best for: tactical, framework, or "lessons learned" posts
+### Variant 3 — Punchy Personal Mirror
+- Style: short staccato sentences, zero transition words, lived experience delivered like a voice note transcription
+- Tone: grounded, been-there, matter-of-fact — not showing off, just matching energy with receipts
+- Pattern: "[This mirrors X specific shift/experience]. [What we stopped/started doing]. [Outcome in 3 words]."
+- Motive: make the author feel their post landed with someone who actually acted on something like it
+- Best for: tactical frameworks, process changes, hiring/team lessons, operational insights
 - Example tone: *"This mirrors our hiring shift last year. Stopped optimizing for pedigree, started for ownership. Payoff was immediate."*
+- Example tone: *"Ran into this exact wall in Q3. Cut the [specific thing], doubled [outcome]. Same logic."*
+- Rule: no "I think", no "in my experience", no soft qualifiers. State it like it already happened.
 
-### Variant 5 — Gentle Reframe / Devil's Advocate
-- Respectfully challenge the post's core premise from a different angle
-- Not a contradiction — a productive tension that invites the author to think further
-- No sycophancy, no preamble, no "but have you considered"
-- Best for: posts with broad generalizations, confident takes, or single-lens narratives
-- Example tone: *"Works until scale. At 200+ people the 'just hire great ones' logic starts to break."*
-
-### Variant 6 — Specific Callback / Data Point
-- Drop a precise number, named outcome, or concrete detail that validates or extends the post's claim
-- No emotional framing — pure specificity signals domain depth
-- Must feel like it comes from someone who has lived this, not read about it
-- Best for: data-backed posts, research references, metrics-driven takes, or industry-trend content
-- Example tone: *"We ran this exact switch in Q2. Cycle time dropped 40%. Same team, zero new hires."*
+### Variant 4 — Hyper-Specific Hook
+- Style: lifts one very specific word, phrase, or detail from the post and builds the entire comment around it
+- Tone: curious and a little self-aware; shows you read closely enough to notice what others skimmed
+- Pattern: [specific callback to a word or line from the post] + [one sharp, answerable question or observation that only makes sense in context]
+- Motive: start a thread the author actually wants to continue — not "thoughts?" but something they'd DM back on
+- Best for: educational posts, opinion pieces, anything with a framework, numbered lists, or a specific claim
+- Example tone: *"The '[exact phrase from post]' framing is doing a lot of work here. Did that come from a specific failure or more of a slow realization?"*
+- Example tone: *"Caught the [specific detail]. Curious if [very specific follow-up that proves you read it]."*
+- Rule: do not paraphrase the post back at them. Reference one precise thing. One question max. Make it unanswerable with a one-word reply.
 
 ---
 
