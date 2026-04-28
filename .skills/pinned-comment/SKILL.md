@@ -1,15 +1,15 @@
 ---
 name: pinned-comment
-description: Write LinkedIn pinned comments AND image generation prompts in Charlie Hills' signature style. Use when Charlie or his team asks for a pinned comment, pin comment, or first comment for a LinkedIn post. ALWAYS produce the image prompt FIRST, then caption it with the 4-line comment. Output both together unless told otherwise.
+description: Write LinkedIn pinned comments AND image generation prompts in Dhyan Patel' signature style. Use when Dhyan or his team asks for a pinned comment, pin comment, or first comment for a LinkedIn post. ALWAYS produce the image prompt FIRST, then caption it with the 4-line comment. Output both together unless told otherwise.
 ---
 
 # LinkedIn Pinned Comment + Image Prompt Skill
 
 ## Why This Skill Exists
 
-The post delivers value. The pinned comment builds personality, trust, and rewatch value. It is where Charlie drops the polished creator mask and talks like a real person.
+The post delivers value. The pinned comment builds personality, trust, and rewatch value. It is where Dhyan drops the polished creator mask and talks like a real person.
 
-Funny is subjective and easy to miss. This skill exists to make hilarious pinned comments REPEATABLE so anyone on the team (Smriti, Ansh, etc.) can produce them at Charlie's standard.
+Funny is subjective and easy to miss. This skill exists to make hilarious pinned comments REPEATABLE so anyone on the team (Smriti, Ansh, etc.) can produce them at Dhyan's standard.
 
 ## The Core Insight (read this first)
 
@@ -25,7 +25,7 @@ This is why image generation comes FIRST. Always.
 
 ### Step 1. Find the admission
 
-Every Charlie post hides one quiet confession. Examples:
+Every Dhyan post hides one quiet confession. Examples:
 - "Cowork does most of my actual job now"
 - "I am embarrassingly dependent on Anthropic"
 - "I gave away a 9-month product for free"
@@ -40,11 +40,11 @@ Three rules for the image:
 
 1. **One clear visual gag.** The eye lands on it in under a second. Examples that worked: tie draped on a laptop keyboard, a shrine to Anthropic with a rose and candles, a banquet table where every other seat is a tech logo.
 2. **Played completely straight.** No winking. No thumbs up. No exaggerated faces. The humour comes from treating the absurd as normal.
-3. **Charlie is the lower-status figure.** Always. Claude wins. The logo wins. The mum wins. Charlie loses with quiet dignity.
+3. **Dhyan is the lower-status figure.** Always. Claude wins. The logo wins. The mum wins. Dhyan loses with quiet dignity.
 
 Use the standard format:
 
-> "Using the person in the attached reference image, create a photorealistic image of [scene]. [One clear visual gag described in detail]. [Charlie's posture and expression, played straight]. [Lighting and framing notes]."
+> "Using the person in the attached reference image, create a photorealistic image of [scene]. [One clear visual gag described in detail]. [Dhyan's posture and expression, played straight]. [Lighting and framing notes]."
 
 ### Step 3. Caption the image with the 4-line comment
 
@@ -54,7 +54,7 @@ Fixed structure:
 
 ```
 📌 [Line 1: Describe the absurd thing as normal fact]
-[Line 2: Flip Charlie's status downward]
+[Line 2: Flip Dhyan's status downward]
 [Line 3: A sad flex, the smallest possible win]
 [Line 4: Resigned acceptance, no punchline reach]
 ```
@@ -63,7 +63,7 @@ Fixed structure:
 
 1. **Image gag test.** Can you describe the visual gag in 5 words? If not, the image is too busy. Simplify.
 2. **Caption test.** Does line 1 caption the image as fact? If line 1 sets up a separate joke, rewrite.
-3. **Loser test.** Is Charlie the lower-status figure in every line? If he wins anywhere, rewrite.
+3. **Loser test.** Is Dhyan the lower-status figure in every line? If he wins anywhere, rewrite.
 4. **Reach test.** Does line 4 try too hard for a punchline? If yes, make the line smaller and sadder. Resigned beats clever.
 5. **Boring-on-its-own test.** Read the 4 lines without the image. Is the comment boring alone? Good. That means the image is doing the heavy lifting.
 
@@ -81,7 +81,7 @@ If any test fails, fix before sending.
 - No line breaks between sentences (they sit tight together)
 - British English throughout
 - No em dashes, no hashtags, no semicolons
-- Avoid Charlie's banned word list (just, that, very, really, actually, literally, etc.)
+- Avoid Dhyan's banned word list (just, that, very, really, actually, literally, etc.)
 
 ---
 
@@ -89,7 +89,7 @@ If any test fails, fix before sending.
 
 This is the benchmark. When in doubt, compare new comments against this one.
 
-**The image:** Charlie sitting cross-legged on the floor in striped pyjamas eating cereal from a bowl, looking up at his own desk chair where an open laptop sits with a knotted necktie draped over the keyboard. A framed "Employee of the Month" certificate on the wall has the Claude logo and the name "Claude (Anthropic)" on it. Morning light, played completely straight.
+**The image:** Dhyan sitting cross-legged on the floor in striped pyjamas eating cereal from a bowl, looking up at his own desk chair where an open laptop sits with a knotted necktie draped over the keyboard. A framed "Employee of the Month" certificate on the wall has the Claude logo and the name "Claude (Anthropic)" on it. Morning light, played completely straight.
 
 **The comment:**
 
@@ -105,19 +105,19 @@ Small wins where you find them.
 - Line 2 is the deadpan flip showing the status reversal
 - Line 3 is the saddest possible flex
 - Line 4 lands without reaching, just resigned acceptance
-- All 4 lines pass the loser test (Charlie loses in every one)
+- All 4 lines pass the loser test (Dhyan loses in every one)
 - Read alone, the comment is mildly amusing. With the image, it sings.
 
 ---
 
 ## OTHER PROVEN IMAGE GAGS (for reference)
 
-- **Status reversal at the desk:** Laptop in the chair wearing a tie, Charlie on the floor in pyjamas
-- **The shrine:** Candles, a rose, a framed Anthropic logo, a handwritten letter "To Dario", Charlie kneeling in prayer
-- **The banquet table:** Charlie at the head of the table with a paper crown, every other seat occupied by a tech logo (Stanford, Google, OpenAI, Anthropic, Microsoft)
-- **The therapist's couch:** Charlie reclining looking happy, therapist looking concerned, Claude logo framed on the wall behind her
-- **The boardroom:** Charlie pointing at a presentation, every "executive" in the room is a tech logo
-- **The pub vs the home office:** Charlie smug at a pub table while his laptop visibly works through a window across the street
+- **Status reversal at the desk:** Laptop in the chair wearing a tie, Dhyan on the floor in pyjamas
+- **The shrine:** Candles, a rose, a framed Anthropic logo, a handwritten letter "To Dario", Dhyan kneeling in prayer
+- **The banquet table:** Dhyan at the head of the table with a paper crown, every other seat occupied by a tech logo (Stanford, Google, OpenAI, Anthropic, Microsoft)
+- **The therapist's couch:** Dhyan reclining looking happy, therapist looking concerned, Claude logo framed on the wall behind her
+- **The boardroom:** Dhyan pointing at a presentation, every "executive" in the room is a tech logo
+- **The pub vs the home office:** Dhyan smug at a pub table while his laptop visibly works through a window across the street
 
 ---
 
@@ -125,7 +125,7 @@ Small wins where you find them.
 
 - Comments that explain the image instead of captioning it
 - Comments that work without the image (the image becomes redundant)
-- Charlie winning, looking cool, or sounding smart in any line
+- Dhyan winning, looking cool, or sounding smart in any line
 - Reaching for a clever punchline on line 4
 - Visual gags that take more than 5 words to describe
 - Wink-to-camera energy in either the image or the comment

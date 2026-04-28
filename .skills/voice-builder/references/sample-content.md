@@ -1,6 +1,6 @@
 # Sample Content
 
-Author: Charlie Hills
+Author: Dhyan Patel
 Format: LinkedIn posts (short-form)
 
 These samples are loaded when a user types "use samples" because they have no writing of their own to share. Users can swap these out for their own samples later.

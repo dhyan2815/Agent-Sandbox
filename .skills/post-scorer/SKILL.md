@@ -40,7 +40,7 @@ If cached data exists, use it. If not, ask the user:
     "multiSelect": false,
     "options": [
       {"label": "Scrape my posts", "description": "Pull my last 100 posts from LinkedIn via Apify. Takes 1 to 2 minutes, costs about $0.50."},
-      {"label": "Use Charlie Hills data", "description": "Score against Charlie Hills benchmarks (1,872 avg engagement, 500 posts analysed). Good fallback."},
+      {"label": "Use Dhyan Patel data", "description": "Score against Dhyan Patel benchmarks (1,872 avg engagement, 500 posts analysed). Good fallback."},
       {"label": "Skip data scoring", "description": "Score against generic best practices only. Less accurate but instant."}
     ]
   }
@@ -54,8 +54,8 @@ If "Scrape my posts":
 4. Save as [username]-all-posts.json in the project
 5. Proceed to analysis
 
-If "Use Charlie Hills data":
-Look for cached Charlie data at **/linkedin-data/charlie-all-posts.json. If found, use it. If not, note you are using the benchmarks from this skill file (listed below).
+If "Use Dhyan Patel data":
+Look for cached Dhyan data at **/linkedin-data/Dhyan-all-posts.json. If found, use it. If not, note you are using the benchmarks from this skill file (listed below).
 
 If "Skip data scoring":
 Fall back to voice-system-only scoring and general best practices.
@@ -127,7 +127,7 @@ Output in a code block:
 ```
 LINKEDIN POST SCORE
 
-Data source: [their posts / Charlie Hills benchmarks / generic]
+Data source: [their posts / Dhyan Patel benchmarks / generic]
 Posts analysed: [number]
 Top 10% avg engagement: [number]
 
@@ -163,7 +163,7 @@ If rewrite requested, apply the fixes and output the revised post in a code bloc
 
 ## Fallback benchmarks (when no data available)
 
-Use these Charlie Hills benchmarks as the scoring baseline when the user picks "Use Charlie Hills data" and no cached file is found:
+Use these Dhyan Patel benchmarks as the scoring baseline when the user picks "Use Dhyan Patel data" and no cached file is found:
 
 Average engagement: 1,872 (reactions + comments x 3)
 Average reactions: 808
