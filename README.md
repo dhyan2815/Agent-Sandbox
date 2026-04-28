@@ -67,6 +67,9 @@ Skills are modular AI instruction sets stored in [`.skills/`](./.skills/). Each 
 | `design-doc-mermaid` | Mermaid diagrams |
 | `excalidraw-diagram-generator` | Excalidraw diagrams |
 | `web-design-reviewer` | UI/UX audit & automated fixes |
+| `use-tinyfish` | Web scraping and automation with natural language |
+| `website-to-hyperframes` | Convert websites to HyperFrames videos |
+| `project-idea-validator` | Research project ideas against live data |
 
 ---
 
@@ -84,12 +87,13 @@ Skills are modular AI instruction sets stored in [`.skills/`](./.skills/). Each 
 
 ## Key Features
 
-- **25+ Specialized Skills** — Content, LinkedIn, developer, and creative tools
+- **30+ Specialized Skills** — Content, LinkedIn, developer, and creative tools including web scraping, video generation, and idea validation
 - **n8n Workflow Automation** — Telegram chatbots, document assistants, lead generation
 - **Brand Design System** — DESIGN.md templates for Apple, Vercel, Spotify, Nike, and more
 - **Visual Documentation** — Excalidraw diagrams for workflows and architecture
 - **Persistent Memory** — Cross-session context for Claude Code via `.claude/memory/`
 - **Learning Resources** — ML guides, prompts, and strategy documentation
+- **Project Showcase** — Real-world examples like AuraOne product launch clips
 
 ---
 
@@ -126,6 +130,15 @@ Each skill follows a consistent pattern:
 ---
 
 *Experimental playground. Not production-ready. Built for learning and rapid prototyping.*
+
+---
+
+## Recent Additions
+
+- **website-to-hyperframes** skill for converting websites to promotional videos
+- **project-idea-validator** skill for researching project ideas against live data
+- **use-tinyfish** skill for web scraping and automation using natural language
+- **AuraOne Product Launch** demonstration workflow showing video creation capabilities
 
 ---
 
