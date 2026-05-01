@@ -62,6 +62,7 @@ Skills are organized into 4 categories:
 | `niche-research` | 20 trending stories (7 days) |
 | `profile-optimizer` | Full profile rebuild with image prompts |
 | `writing-linkedin-posts` | LinkedIn post creation |
+| `linkedin-sequence` | 2-message DM sequence after connection accepted |
 
 ### [.skills/developer/](.skills/developer/) — Developer Tools
 
