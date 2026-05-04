@@ -50,6 +50,7 @@ Skills are organized into 4 categories:
 | `youtube-thumbnail` | CTR-optimized thumbnails |
 | `reels-scripting` | Reel scripts from reference content |
 | `newsletter-voice` | Newsletter-specific voice profiling |
+| `humanizer` | Remove signs of AI-generated writing from text |
 
 ### [.skills/linkedin/](.skills/linkedin/) — LinkedIn Tools
 
