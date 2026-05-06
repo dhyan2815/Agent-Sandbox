@@ -29,7 +29,7 @@ A structured playground for experimenting with AI agents and CLI automation tool
 
 > Invoke via `/skill-name` or Claude Code Skill tool
 
-Skills are modular AI instruction sets stored in [`.skills/`](./.skills/). Each skill contains specialized workflows, prompts, and references for specific tasks.
+Skills are modular AI instruction sets stored in [`skills/`](./skills/). Each skill contains specialized workflows, prompts, and references for specific tasks.
 
 Skills are organized into 5 categories:
 
