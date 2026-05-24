@@ -28,6 +28,9 @@ This repository is an experimental playground for CLI tools and does not contain
 - **2026-04-22**: Modified `linkedin-profile-optimizer` skill to use LinkedIn URL as primary input.
     - Updated `SKILL.md` to remove PDF/pasted text dependencies.
     - Refined input handling to prioritize browser-based profile extraction from URLs.
+- **2026-05-24**: Day 4 of AI CLI Experimentation Plan.
+    - Planned custom Agent Memory & Reflection MCP server.
+    - Created spec document `docs/mcp/custom-mcp-server-spec.md`.
 
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
