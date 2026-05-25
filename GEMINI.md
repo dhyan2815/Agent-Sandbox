@@ -32,6 +32,11 @@ This repository is an experimental playground for CLI tools and does not contain
     - Planned custom Agent Memory & Reflection MCP server.
     - Created spec document `docs/mcp/custom-mcp-server-spec.md`.
 
+- **2026-05-25**: Day 5 of AI CLI Experimentation Plan.
+    - Set up project structure for `custom-mcp-server`.
+    - Implemented basic server with `stdio` transport.
+    - Added `echo` and `get_timestamp` tools.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
