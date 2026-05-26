@@ -4,6 +4,13 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, "../../");
 
 const server = new Server(
   {
@@ -43,6 +50,28 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["message"],
         },
       },
+      {
+        name: "add_memory_entry",
+        description: "Appends a new entry to a specified memory file.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            file_target: {
+              type: "string",
+              description: "Path representing the target file relative to repository root (e.g., GEMINI.md, .claude/memory/decision_log.md).",
+            },
+            content: {
+              type: "string",
+              description: "The actual memory or changelog text.",
+            },
+            date: {
+              type: "string",
+              description: "Optional ISO date string. Defaults to current date.",
+            },
+          },
+          required: ["file_target", "content"],
+        },
+      },
     ],
   };
 });
@@ -69,6 +98,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         },
       ],
     };
+  }
+
+  if (request.params.name === "add_memory_entry") {
+    const args = request.params.arguments;
+    const fileTarget = args.file_target;
+    const content = args.content;
+    const date = args.date || new Date().toISOString().split("T")[0];
+    
+    try {
+      const targetPath = path.resolve(REPO_ROOT, fileTarget);
+      
+      // Basic security check to ensure we don't write outside the repo root
+      if (!targetPath.startsWith(REPO_ROOT)) {
+        throw new Error("Cannot write outside repository root");
+      }
+      
+      const entryText = `\n- **${date}**: ${content}\n`;
+      await fs.appendFile(targetPath, entryText, "utf-8");
+      
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Successfully appended memory entry to ${fileTarget}.`,
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Failed to append memory entry: ${error.message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
   }
 
   throw new Error(`Unknown tool: ${request.params.name}`);
