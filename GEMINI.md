@@ -37,6 +37,10 @@ This repository is an experimental playground for CLI tools and does not contain
     - Implemented basic server with `stdio` transport.
     - Added `echo` and `get_timestamp` tools.
 
+- **2026-05-26**: Day 6 of AI CLI Experimentation Plan.
+    - Implemented `add_memory_entry` tool in the custom MCP server for file-based memory updates.
+    - Setup `fs` and `path` logic for file writing to repository root.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
