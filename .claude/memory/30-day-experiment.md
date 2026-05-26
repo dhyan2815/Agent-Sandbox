@@ -41,3 +41,22 @@ type: project
 - [x] Available tools enumerated (model search, image gen, docs, papers)
 
 **Commit:** Day 2 - MCP exploration
+
+## Day 4 Status: COMPLETE
+
+- [x] Planned custom Agent Memory & Reflection MCP server
+- [x] Created spec document `docs/mcp/custom-mcp-server-spec.md`
+
+## Day 5 Status: COMPLETE
+
+- [x] Set up project structure for `custom-mcp-server`
+- [x] Implemented basic server with `stdio` transport
+- [x] Added `echo` and `get_timestamp` tools
+
+## Day 6 Status: COMPLETE
+
+- [x] Implemented `add_memory_entry` tool in the custom MCP server
+- [x] Added `fs` and `path` logic for file writing
+- [x] Updated `GEMINI.md` changelog
+
+**Commit:** Day 6 - Agent Memory MCP server capabilities
