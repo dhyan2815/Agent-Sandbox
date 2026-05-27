@@ -242,21 +242,22 @@
     },
     {
       "parameters": {
+        "model": "claude-3-haiku-20240307",
         "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "typeVersion": 1,
       "position": [
         1120,
         1040
       ],
       "id": "02d9c3b6-2750-4a49-92b4-1f82f0ce4bb3",
-      "name": "2.5 Flash",
+      "name": "Claude 3 Haiku",
       "retryOnFail": true,
       "credentials": {
-        "googlePalmApi": {
-          "id": "DCdz6x18Ug2KEMup",
-          "name": "dhyan.work.2815 Workflow B 1st"
+        "anthropicApi": {
+          "id": "dummy_anthropic_id",
+          "name": "Anthropic API"
         }
       }
     },
@@ -355,7 +356,7 @@
         ]
       ]
     },
-    "2.5 Flash": {
+    "Claude 3 Haiku": {
       "ai_languageModel": [
         [
           {

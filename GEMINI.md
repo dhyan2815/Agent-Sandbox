@@ -41,6 +41,10 @@ This repository is an experimental playground for CLI tools and does not contain
     - Implemented `add_memory_entry` tool in the custom MCP server for file-based memory updates.
     - Setup `fs` and `path` logic for file writing to repository root.
 
+- **2026-05-27**: Day 6 & Day 7 of AI CLI Experimentation Plan.
+    - Conducted an audit of existing n8n workflows and created `docs/workflow-audit.md`.
+    - Enhanced the `DP Job Application - ChatBot.json` n8n workflow by swapping the Gemini 2.5 Flash node with a Claude 3 Haiku node.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
