@@ -45,6 +45,11 @@ This repository is an experimental playground for CLI tools and does not contain
     - Conducted an audit of existing n8n workflows and created `docs/workflow-audit.md`.
     - Enhanced the `DP Job Application - ChatBot.json` n8n workflow by swapping the Gemini 2.5 Flash node with a Claude 3 Haiku node.
 
+- **2026-05-29**: Day 8 of AI CLI Experimentation Plan.
+    - Explored Gemini CLI v0.42.0 capabilities: subcommands, approval modes, skills, extensions, MCP management.
+    - Tested headless prompt execution (`-p` flag) with basic arithmetic and repo summarization.
+    - Documented findings in `docs/experiments/gemini-cli-setup.md`.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
