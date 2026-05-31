@@ -50,6 +50,11 @@ This repository is an experimental playground for CLI tools and does not contain
     - Tested headless prompt execution (`-p` flag) with basic arithmetic and repo summarization.
     - Documented findings in `docs/experiments/gemini-cli-setup.md`.
 
+- **2026-05-31**: Day 9 of AI CLI Experimentation Plan.
+    - Created a simple repetitive task automation script utilizing the Gemini CLI's headless mode (`-p` flag).
+    - Created `scripts/gemini-summarize.ps1` for automating markdown file summarization.
+    - Documented workflow in `docs/workflows/gemini-automation.md`.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
