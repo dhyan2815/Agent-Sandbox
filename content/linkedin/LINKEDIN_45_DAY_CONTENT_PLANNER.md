@@ -61,7 +61,6 @@
 
 ## 2) Content Matrix (Skill Output: 5 pillars x 8 formats)
 
-```markdown
 | Pillar | Actionable | Motivational | Analytical | Contrarian | Observation | X vs Y | Present vs Future | Listicle |
 |---|---|---|---|---|---|---|---|---|
 | Agentic Workflows | "How I design a 3-agent workflow in 15 minutes (researcher, writer, verifier)" | "How a solo builder shipped a week of client ops with one orchestration layer" | "Why multi-agent pipelines fail at hand-offs, not prompts" | "Stop worshipping prompts, start designing state transitions" | "Most automations break at week 3 because no recovery paths exist" | "Single mega-agent vs specialised agent crew: where each wins" | "Today: assistant chats. Next: autonomous work queues with human checkpoints" | "7 guardrails every agent workflow needs before production" |
@@ -69,7 +68,6 @@
 | MLOps + Reliability | "Set up model monitoring in one afternoon: the exact dashboard blocks" | "From notebook chaos to deployment confidence in 30 days" | "Why p99 latency matters more than average latency in AI products" | "Most 'AI products' are observability products in disguise" | "The model rarely fails first, data contracts fail first" | "FastAPI + Docker vs serverless endpoints for first production launch" | "Current MLOps is reactive; future stacks will self-heal with policy engines" | "10 reliability metrics I track on every deployed model" |
 | AI Career Moat (2026) | "A weekly skill-stack sprint to stay hireable in agentic AI" | "How a consistent build-in-public habit compounds opportunities" | "What hiring managers actually infer from your GitHub + LinkedIn combo" | "Certificates do not build moat, shipped systems do" | "Candidates lose interviews by describing tools, not decisions" | "Portfolio-first strategy vs DSA-only strategy for AI roles" | "Today: prompt skills are enough. Future: systems thinking is mandatory" | "8 portfolio proof elements that beat a generic resume" |
 | Automation + Creator Systems | "My weekly content engine: research -> hook -> draft -> score -> publish" | "How creators scale without sounding robotic" | "Why distribution systems outperform one-off viral posts" | "Posting more is not growth, tighter feedback loops are growth" | "Most creator burnout comes from no repurposing workflow" | "Manual content planning vs automation-assisted planning" | "Current content ops are calendar-based; future ops are signal-based" | "12 automation templates that save 5+ hours/week for creators" |
-```
 
 **Strongest matrix idea:** "Stop worshipping prompts, start designing state transitions" because it is contrarian, timely for 2026, and directly aligned with your builder identity.
 
