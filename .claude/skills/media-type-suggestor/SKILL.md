@@ -1,7 +1,7 @@
 ---
 name: media-type-suggestor
 description: Use when someone asks for media format recommendations, which format to use for LinkedIn, suggest media type for my post, or what media should I use for this caption.
-argument-hint: [LinkedIn caption text]
+argument-hint: "LinkedIn caption text"
 disable-model-invocation: true
 ---
 
