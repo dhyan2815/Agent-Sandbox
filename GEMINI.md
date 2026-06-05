@@ -55,6 +55,11 @@ This repository is an experimental playground for CLI tools and does not contain
     - Created `scripts/gemini-summarize.ps1` for automating markdown file summarization.
     - Documented workflow in `docs/workflows/gemini-automation.md`.
 
+- **2026-06-05**: Updated LinkedIn Data Cache README.
+    - Updated `linkedin-data/README.md` to remove obsolete reference to root-level post cache file.
+    - Refined refresh instructions to match the latest `post-scorer` skill configurations.
+    - Documented and saved changes in the repository.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
