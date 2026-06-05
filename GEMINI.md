@@ -55,9 +55,10 @@ This repository is an experimental playground for CLI tools and does not contain
     - Created `scripts/gemini-summarize.ps1` for automating markdown file summarization.
     - Documented workflow in `docs/workflows/gemini-automation.md`.
 
-- **2026-06-05**: Updated LinkedIn Data Cache README.
+- **2026-06-05**: Updated LinkedIn Data Cache README and Main Repository README.
     - Updated `linkedin-data/README.md` to remove obsolete reference to root-level post cache file.
     - Refined refresh instructions to match the latest `post-scorer` skill configurations.
+    - Updated main `README.md` to reference `.claude/skills/` instead of `skills/` at root, and included the 7 new specialized skills (`pdf-reading`, `gog`, `gh-issues`, `ui-design-system`, `canvas-design`, `readme-generator`, `media-type-suggestor`) in their respective categories.
     - Documented and saved changes in the repository.
 
 ## Repository-Specific Rules

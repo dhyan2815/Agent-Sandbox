@@ -31,11 +31,11 @@ A structured playground for experimenting with AI agents and CLI automation tool
 
 > Invoke via `/skill-name` or Claude Code Skill tool
 
-Skills are modular AI instruction sets stored in [`skills/`](./skills/). Each skill contains specialized workflows, prompts, and references for specific tasks.
+Skills are modular AI instruction sets stored in [`.claude/skills/`](./.claude/skills/). Each skill contains specialized workflows, prompts, and references for specific tasks.
 
 Skills are organized into 5 categories:
 
-### [skills/content/](skills/content/) — Content Creation
+### Content Creation
 
 | Skill | Function |
 |-------|----------|
@@ -53,8 +53,9 @@ Skills are organized into 5 categories:
 | `reels-scripting` | Reel scripts from reference content |
 | `newsletter-voice` | Newsletter-specific voice profiling |
 | `humanizer` | Remove signs of AI-generated writing from text |
+| `canvas-design` | Create beautiful visual art in .png and .pdf documents using design philosophy |
 
-### [skills/linkedin/](skills/linkedin/) — LinkedIn Tools
+### LinkedIn Tools
 
 | Skill | Function |
 |-------|----------|
@@ -66,8 +67,9 @@ Skills are organized into 5 categories:
 | `profile-optimizer` | Full profile rebuild with image prompts |
 | `writing-linkedin-posts` | LinkedIn post creation |
 | `linkedin-sequence` | 2-message DM sequence after connection accepted |
+| `media-type-suggestor` | Suggest LinkedIn media types based on post content |
 
-### [skills/developer/](skills/developer/) — Developer Tools
+### Developer Tools
 
 | Skill | Function |
 |-------|----------|
@@ -81,16 +83,21 @@ Skills are organized into 5 categories:
 | `project-idea-validator` | Research project ideas against live data |
 | `creating-pr` | GitHub PR creation workflow |
 | `issue-workflow` | GitHub Issues management |
+| `gh-issues` | Auto-fix GitHub issues using parallel sub-agents |
 | `pr-comment` | Post comments on PRs |
 | `ai-wrapper-product` | AI wrapper product development guide |
+| `gog` | Google Workspace CLI for Gmail, Calendar, Drive, Contacts, Sheets, and Docs |
+| `pdf-reading` | Read, inspect, or extract content from PDF files |
+| `readme-generator` | Generates comprehensive README.md files by analyzing codebase structure |
+| `ui-design-system` | UI design system toolkit with design token generation |
 
-### [skills/graphics/](skills/graphics/) — Graphics & Video
+### Graphics & Video
 
 | Skill | Function |
 |-------|----------|
 | `website-to-hyperframes` | Convert websites to HyperFrames videos |
 
-### [skiills/apify/](skiills/apify/) — Apify Automation
+### Apify Automation
 
 | Skill | Function |
 |-------|----------|
@@ -116,7 +123,7 @@ Skills are organized into 5 categories:
 
 ## Key Features
 
-- **36+ Specialized Skills** — Content, LinkedIn, developer, Apify automation, and creative tools including web scraping, video generation, and idea validation
+- **47 Specialized Skills** — Content, LinkedIn, developer, Apify automation, and creative tools including web scraping, video generation, and idea validation
 - **n8n Workflow Automation** — Telegram chatbots, document assistants, lead generation
 - **Brand Design System** — DESIGN.md templates for Apple, Vercel, Spotify, Nike, and more
 - **Visual Documentation** — Excalidraw diagrams for workflows and architecture
@@ -164,10 +171,10 @@ Each skill follows a consistent pattern:
 
 ## Recent Additions
 
-- **AI/ML research docs (4)** — Portfolio project analysis, GitHub project audit, RAG vs fine-tuning comparison, and project suggestions for 2026
-- **Knowledge graph work tree** — `.understand-anything/` with scan scripts, batch processing outputs, and analyzer inputs (subsequently removed)
-- **Git Flow commands** — `/release` for release branches with semantic versioning and CHANGELOG generation, `/pr-review` for multi-disciplinary PR reviews
-- **Architecture documentation generator** — `/create-architecture-documentation` with C4 model, Arc42, ADRs, PlantUML, and automated diagram generation
+- **7 New Specialized Skills** — Added `pdf-reading`, `gog` (Google Workspace CLI), `gh-issues` (parallel sub-agent GitHub issue solver), `ui-design-system`, `canvas-design`, `readme-generator`, and `media-type-suggestor`.
+- **Custom MCP Server** — Built a custom Agent Memory & Reflection MCP server with tools for adding memory entries (`add_memory_entry`), echo, and timestamp.
+- **LinkedIn 45-Day Content Planner** — Added `LINKEDIN_45_DAY_CONTENT_PLANNER.md` and updated cache setup.
+- **AI/ML research docs (4)** — Portfolio project analysis, GitHub project audit, RAG vs fine-tuning comparison, and project suggestions for 2026.
 
 ---
 
