@@ -61,6 +61,10 @@ This repository is an experimental playground for CLI tools and does not contain
     - Updated main `README.md` to reference `.claude/skills/` instead of `skills/` at root, and included the 7 new specialized skills (`pdf-reading`, `gog`, `gh-issues`, `ui-design-system`, `canvas-design`, `readme-generator`, `media-type-suggestor`) in their respective categories.
     - Documented and saved changes in the repository.
 
+- **2026-06-06**: Installed `pptx` skill for PowerPoint presentation generation.
+    - Committed 112 files across 12 structured commits covering license, skill definition, documentation, OOXML schemas, validation scripts, slide manipulation utilities, and office helpers.
+    - Skill located at `.claude/skills/pptx/`.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
