@@ -28,6 +28,7 @@ Wait for the post, then call AskUserQuestion:
       {"label": "HTML/CSS graphic", "description": "Clean structured layout. Framework, comparison, steps, data. Fully editable, screenshot to export."},
       {"label": "Whiteboard infographic", "description": "Hand-drawn marker style on a whiteboard or notebook page. Recaps the post visually. Generated in Gemini."},
       {"label": "Branded infographic", "description": "Professional infographic using your brand colours. Recaps the post visually. Generated in Gemini."},
+      {"label": "SVG Vector graphic", "description": "Scalable, crisp vector graphic containing shapes and text. Directly viewable in browser, fully customizable."},
       {"label": "You decide", "description": "Analyse the post and pick the best format automatically"}
     ]
   }
@@ -131,6 +132,22 @@ Output the complete prompt in a code block. Tell the user:
 
 > Paste this into Gemini or your image generator. The prompt is ready to go.
 
+## Path C: Scalable Vector Graphics (SVG) Graphic
+
+Design constraints:
+- 1200 x 1400 pixels (LinkedIn optimal) using `viewBox="0 0 1200 1400"`
+- Dark background (e.g., `#0d1117`, `#0f172a`, or user's brand colour)
+- Clean, modern SVG layout using `<rect>`, `<text>`, `<circle>`, `<path>`, and `<g>` tags for structured layout
+- Professional color palette (e.g., text: `#f0f6fc`, accent/highlights: `#58a6ff`, secondary: `#8b949e`)
+- Clean sans-serif fonts (e.g., `font-family="system-ui, -apple-system, sans-serif"`)
+- Distil post content into:
+  - Header: Short, catchy title (5 to 8 words)
+  - Body: 3 to 5 structured points or visual cards with vector icons/shapes
+  - Footer: Author credit and handle from about-me.md if available
+
+Provide the raw SVG code inside an `xml` code block. Tell the user:
+> Save this code as an `.svg` file to view, edit, or convert it to PNG.
+
 ## After either path
 
 Say:
@@ -142,6 +159,7 @@ Say:
 - Always read the post before designing. The graphic must recap the post content, not illustrate an abstract concept.
 - Structured graphics (Path A) must be a single HTML file with inline CSS.
 - Image prompts (Path B) must be fully self-contained. The user pastes it cold into Gemini and gets the graphic.
+- SVG graphics (Path C) must be valid raw SVG code in an xml code block.
 - Extract and distil the post content into the graphic. No copying the full post text.
 - Whiteboard style: always hand-drawn marker look, imperfect lines, coloured pens, notebook/whiteboard texture.
 - Branded style: always clean, flat, modern, using the user's brand colours.

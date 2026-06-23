@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1400" width="100%" height="100%">
+  <!-- Background -->
+  <rect width="1200" height="1400" fill="#0b0f19"/>
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <!-- Drop Shadow -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Decorative background elements -->
+  <circle cx="1100" cy="100" r="250" fill="#3b82f6" opacity="0.05" filter="blur(50px)"/>
+  <circle cx="100" cy="1300" r="300" fill="#8b5cf6" opacity="0.05" filter="blur(60px)"/>
+
+  <!-- Title / Header -->
+  <text x="70" y="150" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#3b82f6" letter-spacing="1.5">AGENTIC INFRASTRUCTURE</text>
+  <text x="70" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="56" font-weight="800" fill="#ffffff">3 Pillars of Modern<tspan x="70" dy="70" fill="url(#headerGrad)">Agentic Workflows</tspan></text>
+
+  <!-- Divider -->
+  <line x1="70" y1="360" x2="1130" y2="360" stroke="#334155" stroke-width="2"/>
+
+  <!-- Card 1 -->
+  <g transform="translate(70, 410)" filter="url(#shadow)">
+    <rect width="1060" height="240" rx="16" fill="url(#cardGrad)" stroke="#1e293b" stroke-width="1.5"/>
+    <rect width="8" height="240" rx="4" fill="#3b82f6"/>
+    
+    <!-- Number Icon -->
+    <circle cx="70" cy="70" r="30" fill="#3b82f6" fill-opacity="0.1"/>
+    <text x="70" y="80" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#3b82f6" text-anchor="middle">1</text>
+    
+    <!-- Content -->
+    <text x="130" y="70" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="700" fill="#ffffff">Prompt Engineering</text>
+    <text x="130" y="125" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="400" fill="#94a3b8">
+      <tspan x="130" dy="0">Designing high-context, clean prompts with explicit constraints and</tspan>
+      <tspan x="130" dy="30">one-shot templates. Shifts agent behavior from guessing to execution.</tspan>
+    </text>
+  </g>
+
+  <!-- Card 2 -->
+  <g transform="translate(70, 690)" filter="url(#shadow)">
+    <rect width="1060" height="240" rx="16" fill="url(#cardGrad)" stroke="#1e293b" stroke-width="1.5"/>
+    <rect width="8" height="240" rx="4" fill="#a855f7"/>
+    
+    <!-- Number Icon -->
+    <circle cx="70" cy="70" r="30" fill="#a855f7" fill-opacity="0.1"/>
+    <text x="70" y="80" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#a855f7" text-anchor="middle">2</text>
+    
+    <!-- Content -->
+    <text x="130" y="70" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="700" fill="#ffffff">Context Management</text>
+    <text x="130" y="125" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="400" fill="#94a3b8">
+      <tspan x="130" dy="0">Maintaining persistent memory files (like CLAUDE.md and GEMINI.md)</tspan>
+      <tspan x="130" dy="30">to transfer state across sessions without polluting prompt token limits.</tspan>
+    </text>
+  </g>
+
+  <!-- Card 3 -->
+  <g transform="translate(70, 970)" filter="url(#shadow)">
+    <rect width="1060" height="240" rx="16" fill="url(#cardGrad)" stroke="#1e293b" stroke-width="1.5"/>
+    <rect width="8" height="240" rx="4" fill="#10b981"/>
+    
+    <!-- Number Icon -->
+    <circle cx="70" cy="70" r="30" fill="#10b981" fill-opacity="0.1"/>
+    <text x="70" y="80" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" fill="#10b981" text-anchor="middle">3</text>
+    
+    <!-- Content -->
+    <text x="130" y="70" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="700" fill="#ffffff">Autonomous Tool Delegation</text>
+    <text x="130" y="125" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="400" fill="#94a3b8">
+      <tspan x="130" dy="0">Equipping agents with specific CLI/API tools to read, write, build,</tspan>
+      <tspan x="130" dy="30">and test. The human operator shifts to architecture and supervision.</tspan>
+    </text>
+  </g>
+
+  <!-- Footer -->
+  <line x1="70" y1="1280" x2="1130" y2="1280" stroke="#334155" stroke-width="1.5"/>
+  
+  <text x="70" y="1330" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#64748b">BUILD IN PUBLIC</text>
+  <text x="1130" y="1330" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f0f6fc" text-anchor="end">Dhyan Patel | Repost</text>
+</svg>
