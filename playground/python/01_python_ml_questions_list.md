@@ -1,4 +1,4 @@
-# 30 Live Coding Execution Drills for AI/ML Freshers
+# 30 Catgory wise Coding Questions for Python and ML
 
 This list is designed to build your muscle memory for the most common Python data manipulation patterns tested in live coding interviews. These are not obscure LeetCode hard problems; they are practical, foundational exercises meant to ensure you don't freeze on basic syntax during a screen share.
 
