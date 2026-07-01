@@ -75,6 +75,21 @@ This repository is an experimental playground for CLI tools and does not contain
     - Created a sample SVG graphic for "3 Pillars of Modern Agentic Workflows".
     - Documented the enhancement in `docs/experiments/graphic-designer-svg-enhancement.md`.
 
+- **2026-06-30**: Day 15 of AI CLI Experimentation Plan.
+    - Reviewed `mcp_best_practices.md` and applied patterns to custom MCP server.
+    - Added structured JSON logging (stderr), centralized error handling, and input validation helpers.
+    - Implemented two new complex tools: `mcp_repo_list_files` and `mcp_repo_search_content`.
+    - Added MCP tool annotations (readOnlyHint, destructiveHint, idempotentHint, openWorldHint) to all tools.
+    - Renamed tools with `mcp_` service prefix per naming conventions.
+    - Updated test client and verified all 5 tools plus error handling.
+    - Documented findings in `docs/experiments/mcp-server-advanced-features.md`.
+
+- **2026-07-01**: Day 16 of AI CLI Experimentation Plan.
+    - Reviewed `excalidraw-diagram-generator` skill (9 diagram types, JSON format, color conventions).
+    - Generated MCP server architecture diagram (`visuals/mcp-server-architecture.excalidraw`).
+    - Generated cross-tool workflow diagram (`visuals/cross-tool-workflow.excalidraw`).
+    - Documented findings in `docs/experiments/excalidraw-diagram-generation.md`.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
