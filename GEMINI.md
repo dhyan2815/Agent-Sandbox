@@ -90,6 +90,12 @@ This repository is an experimental playground for CLI tools and does not contain
     - Generated cross-tool workflow diagram (`visuals/cross-tool-workflow.excalidraw`).
     - Documented findings in `docs/experiments/excalidraw-diagram-generation.md`.
 
+- **2026-07-02**: Day 17 of AI CLI Experimentation Plan.
+    - Reviewed `design-doc-mermaid` skill (4 diagram types, Unicode symbols, resilient workflow, Python utilities).
+    - Created MCP server architecture diagram with Mermaid (`docs/architecture/mcp-server-architecture.md`).
+    - Created 4 sequence diagrams for tool interactions (`docs/architecture/mcp-server-sequences.md`).
+    - Documented findings in `docs/experiments/mermaid-diagram-generation.md`.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
