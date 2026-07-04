@@ -461,6 +461,43 @@ Avoiding AI patterns is only half the job. Sterile, voiceless writing is just as
 >
 > When users hit a slow page, they leave.
 
+
+### 30. Rhetorical Questions
+
+**Problem:** AI writers frequently rely on rhetorical questions to introduce topics or transition between sections. This feels like an essay or marketing pitch rather than natural writing.
+
+**Before:**
+> Have you ever wondered how to optimize your database queries? In this article, we will show you three techniques.
+
+**After:**
+> Optimizing database queries requires three main techniques.
+
+
+### 31. Repetitive Paragraph-Level Transitions
+
+**Words to watch:** Moreover, Furthermore, Consequently, Ultimately, In addition, Additionally, Notably, Importantly
+
+**Problem:** LLMs use formal transition adverbs at the beginning of paragraphs to connect thoughts. Humans write more fluidly and rarely start consecutive paragraphs with these transitions.
+
+**Before:**
+> Furthermore, the application requires a Redis instance for caching session state. Consequently, latency is reduced.
+
+**After:**
+> The application uses Redis to cache session state, which reduces latency.
+
+
+### 32. Redundant Word Pairs (Doublets)
+
+**Phrases to watch:** each and every, first and foremost, completely and utterly, goals and objectives, custom and tailor-made, rules and regulations
+
+**Problem:** AI writing often uses redundant pairings to sound comprehensive, but it just adds wordiness.
+
+**Before:**
+> First and foremost, we must align our goals and objectives with the rules and regulations.
+
+**After:**
+> First, we must align our goals with the regulations.
+
 ---
 
 ## Process
