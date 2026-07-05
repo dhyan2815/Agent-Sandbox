@@ -101,6 +101,11 @@ This repository is an experimental playground for CLI tools and does not contain
     - Identified gaps (rhetorical questions, adverb transitions, redundant word pairs) and added them to `SKILL.md` (Categories 30, 31, 32).
     - Documented test cases, analysis of tells, and humanized output in `docs/experiments/humanizer-testing-and-refinement.md`.
 
+- **2026-07-05**: Day 19 of AI CLI Experimentation Plan.
+    - Reviewed `apify-lead-generation` skill (10+ Actors, 5-step workflow, run_actor.js script).
+    - Designed a concrete lead generation workflow targeting tech startups in Mumbai via Google Places Actor.
+    - Documented skill architecture, planned workflow, setup checklist, and key learnings in `docs/experiments/apify-lead-gen-test.md`.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
