@@ -1,0 +1,211 @@
+[
+  {
+    "#debug": {
+      "requestId": "N3cMHR4fU1VOdbk",
+      "url": "http://www.google.com/search?q=site%3Alinkedin.com%2Fin%2F+OR+site%3Agithub.com+AI+Developer+%40gmail.com",
+      "loadedUrl": "http://www.google.com/search?q=site%3Alinkedin.com%2Fin%2F+OR+site%3Agithub.com+AI+Developer+%40gmail.com",
+      "method": "GET",
+      "retryCount": 0,
+      "errorMessages": [],
+      "statusCode": 200
+    },
+    "#error": false,
+    "searchQuery": {
+      "term": "site:linkedin.com/in/ OR site:github.com AI Developer @gmail.com",
+      "url": "http://www.google.com/search?q=site%3Alinkedin.com%2Fin%2F+OR+site%3Agithub.com+AI+Developer+%40gmail.com",
+      "device": "DESKTOP",
+      "page": 1,
+      "type": "SEARCH",
+      "domain": "google.com",
+      "countryCode": "US",
+      "languageCode": null,
+      "locationUule": null,
+      "resultsPerPage": 10
+    },
+    "url": "http://www.google.com/search?q=site%3Alinkedin.com%2Fin%2F+OR+site%3Agithub.com+AI+Developer+%40gmail.com",
+    "hasNextPage": true,
+    "serpProviderCode": "L",
+    "resultsTotal": null,
+    "relatedQueries": [],
+    "paidResults": [],
+    "paidProducts": [],
+    "organicResults": [
+      {
+        "title": "Fergus Hurley - Director of AI Products @Google",
+        "websiteTitle": "LinkedIn · Fergus Hurley",
+        "url": "https://www.linkedin.com/in/fergushurley",
+        "displayedUrl": "LinkedIn › Fergus Hurley",
+        "description": "I currently lead the AI Developer Agents product team at Google Cloud, where we are pioneering agentic AI across the software development lifecycle.",
+        "emphasizedKeywords": [
+          "currently lead the AI Developer Agents product team at Google Cloud"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "followersAmount": "5.9K+ followers",
+        "type": "organic",
+        "position": 1
+      },
+      {
+        "title": "Sharmeen Shaikh - GenAI Engineer | Agentic AI",
+        "websiteTitle": "LinkedIn · Sharmeen Shaikh",
+        "url": "https://in.linkedin.com/in/sharmeen-shaikh-59860a16b",
+        "displayedUrl": "LinkedIn › Sharmeen Shaikh",
+        "description": "GenAI Enthusiast | ℙassionate in Agentic AI | 14 × Google ℂloud ℂertified ℙrofessional | 4 × Azure ℂertified | Automation Specialist | Data Scientist",
+        "emphasizedKeywords": [
+          "AI"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "personalInfo": {
+          "location": "Pune District, Maharashtra, India",
+          "jobTitle": "Senior Data Scientist",
+          "companyName": "IBM",
+          "rawText": "Pune District, Maharashtra, India · Senior Data Scientist · IBM"
+        },
+        "followersAmount": "15.2K+ followers",
+        "type": "organic",
+        "position": 2
+      },
+      {
+        "title": "Dave Elliott - Head of Developer Advocacy for AI at Google ...",
+        "websiteTitle": "LinkedIn · Dave Elliott",
+        "url": "https://www.linkedin.com/in/davidlelliott",
+        "displayedUrl": "LinkedIn › Dave Elliott",
+        "description": "Specialties: Team Building, Leadership, Generative AI, Google Cloud Platform (GCP), Artificial Intelligence (AI), Technology Evangelism, Developer Marketing.",
+        "emphasizedKeywords": [
+          "AI",
+          "Artificial Intelligence",
+          "AI",
+          "Developer"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "personalInfo": {
+          "location": "San Diego, California, United States",
+          "jobTitle": "Head of Advocacy for AI & Industry Solutions - Google Cloud",
+          "companyName": "Google",
+          "rawText": "San Diego, California, United States · Head of Advocacy for AI & Industry Solutions - Google Cloud · Google"
+        },
+        "followersAmount": "4K+ followers",
+        "type": "organic",
+        "position": 3
+      },
+      {
+        "title": "Anna Gutowska - AI Engineer, Developer Advocate @ IBM",
+        "websiteTitle": "LinkedIn · Anna Gutowska",
+        "url": "https://www.linkedin.com/in/anna-gutowska",
+        "displayedUrl": "LinkedIn › Anna Gutowska",
+        "description": "AI Engineer, Developer Advocate @ IBM | Stanford MSCS · I build AI applications, talk about them, and help other devs do the same (with fewer headaches).",
+        "emphasizedKeywords": [
+          "AI Engineer, Developer Advocate @ IBM"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "personalInfo": {
+          "location": "United States",
+          "jobTitle": "AI Engineer, Developer Advocate",
+          "companyName": "IBM",
+          "rawText": "United States · AI Engineer, Developer Advocate · IBM"
+        },
+        "followersAmount": "2K+ followers",
+        "type": "organic",
+        "position": 4
+      },
+      {
+        "title": "Addy Osmani - AI Engineering & DevRel Leader, Recently",
+        "websiteTitle": "LinkedIn · Addy Osmani",
+        "url": "https://www.linkedin.com/in/addyosmani",
+        "displayedUrl": "LinkedIn › Addy Osmani",
+        "description": "Addy Osmani is an Irish Software Engineer and leader who was most recently a director at Google Cloud AI, focused on helping developers and businesses ...",
+        "emphasizedKeywords": [
+          "AI",
+          "developers"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "followersAmount": "282.2K+ followers",
+        "type": "organic",
+        "position": 5
+      },
+      {
+        "title": "Roman Pushkin - THIS PROFILE IS NOT ACTIVE, REACH ...",
+        "websiteTitle": "LinkedIn · Roman Pushkin",
+        "url": "https://www.linkedin.com/in/software-engineer-san-francisco",
+        "displayedUrl": "LinkedIn › Roman Pushkin",
+        "description": "THIS PROFILE IS NOT ACTIVE, REACH OUT TO EMAIL: roman.pushkin@gmail.com | Staff AI Engineer, Author, Inventor, Speaker · Location: San Francisco · 500+ ...",
+        "emphasizedKeywords": [
+          "roman.pushkin@gmail.com"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "followersAmount": "2.2K+ followers",
+        "type": "organic",
+        "position": 6
+      },
+      {
+        "title": "Steven Rahman - Developer Product Marketing, ex ...",
+        "websiteTitle": "LinkedIn · Steven Rahman",
+        "url": "https://www.linkedin.com/in/stevenrahman",
+        "displayedUrl": "LinkedIn › Steven Rahman",
+        "description": "Find me at steven rahman (at) gmail.com. Experience. Google Graphic. Product Marketing Manager, AI, Developers, Gemini in Android Studio. Google. 2024 - Present ...",
+        "emphasizedKeywords": [
+          "Product Marketing Manager, AI, Developers"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "followersAmount": "3K+ followers",
+        "type": "organic",
+        "position": 7
+      },
+      {
+        "title": "hr@gmail.com · Issue #1493 · google-ai-edge/mediapipe",
+        "websiteTitle": "GitHub",
+        "url": "https://github.com/google-ai-edge/mediapipe/issues/1493",
+        "displayedUrl": "https://github.com › google-ai-edge › mediapipe › issues",
+        "description": "Enterprise platformAI-powered developer platform. AVAILABLE ADD-ONS ... hr@gmail.com #1493. New issue. Copy link. New issue. Copy link.",
+        "date": "2021-01-11T12:00:00.000Z",
+        "emphasizedKeywords": [
+          "AI",
+          "developer",
+          "gmail.com"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "type": "organic",
+        "position": 8
+      },
+      {
+        "title": "heilcheng/awesome-agent-skills",
+        "websiteTitle": "GitHub",
+        "url": "https://github.com/heilcheng/awesome-agent-skills",
+        "displayedUrl": "https://github.com › heilcheng › awesome-agent-skills",
+        "description": "This is a community-curated list of simple text files that teach AI assistants (like Claude, Copilot, or Codex) how to do new things on demand, without ...",
+        "emphasizedKeywords": [
+          "AI"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "type": "organic",
+        "position": 9
+      },
+      {
+        "title": "GoogleCloudPlatform/agent-starter-pack",
+        "websiteTitle": "GitHub",
+        "url": "https://github.com/googlecloudplatform/agent-starter-pack",
+        "displayedUrl": "https://github.com › googlecloudplatform › agent-starte...",
+        "description": "Ship AI Agents to Google Cloud in minutes, not months. Production-ready templates with built-in CI/CD, evaluation, and observability.",
+        "emphasizedKeywords": [
+          "Ship AI Agents to Google Cloud in minutes"
+        ],
+        "siteLinks": [],
+        "productInfo": {},
+        "type": "organic",
+        "position": 10
+      }
+    ],
+    "suggestedResults": [],
+    "peopleAlsoAsk": [],
+    "customData": null,
+    "htmlSnapshotUrl": "https://api.apify.com/v2/key-value-stores/fUKpo58JxlnG6bSHR/records/N3cMHR4fU1VOdbk-0.html?signature=1xQdmNHkdxNfz1EBNrQTM"
+  }
+]
