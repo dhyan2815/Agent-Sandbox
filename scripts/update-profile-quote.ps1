@@ -16,19 +16,28 @@ if (-not (Test-Path $ReadmePath)) {
 # 2. Curated list of quotes (keep them relatively concise for capsule-render)
 $Quotes = @(
     @{ Text = "Talk is cheap. Show me the code."; Author = "Linus Torvalds" }
-    @{ Text = "AI Is The New Electricity"; Author = "Andrew Ng" }
-    @{ Text = "First, solve the problem. Then, write the code."; Author = "John Johnson" }
-    @{ Text = "Simplicity is the ultimate sophistication."; Author = "Leonardo da Vinci" }
-    @{ Text = "The best way to predict the future is to invent it."; Author = "Alan Kay" }
-    @{ Text = "Computers are useless. They can only give you answers."; Author = "Pablo Picasso" }
     @{ Text = "Stay hungry, stay foolish."; Author = "Steve Jobs" }
-    @{ Text = "First do it, then do it right, then do it fast."; Author = "Kent Beck" }
     @{ Text = "Make it simple, but significant."; Author = "Don Draper" }
-    @{ Text = "If you're not failing, you're not innovating."; Author = "Elon Musk" }
-    @{ Text = "The code you delete makes you a good programmer."; Author = "Mario Fusco" }
-    @{ Text = "One of my most productive days was throwing away 1000 lines of code."; Author = "Ken Thompson" }
-    @{ Text = "The only way to do great work is to love what you do."; Author = "Steve Jobs" }
-    @{ Text = "Quality is not an act, it is a habit."; Author = "Aristotle" }
+    @{ Text = "Simplicity is the soul of efficiency."; Author = "Austin Freeman" }
+    @{ Text = "Simplicity is the key to brilliance."; Author = "Bruce Lee" }
+    @{ Text = "Strive for simplicity."; Author = "Unknown" }
+    @{ Text = "Move fast and break things."; Author = "Mark Zuckerberg" }
+    @{ Text = "Keep it simple, stupid."; Author = "Kelly Johnson" }
+    @{ Text = "Less is more."; Author = "Ludwig Mies" }
+    @{ Text = "Think different."; Author = "Apple" }
+    @{ Text = "Code is poetry."; Author = "WordPress" }
+    @{ Text = "Don't repeat yourself."; Author = "Andy Hunt" }
+    @{ Text = "Fail fast, learn faster."; Author = "Unknown" }
+    @{ Text = "Done is better than perfect."; Author = "Sheryl Sandberg" }
+    @{ Text = "Automate everything."; Author = "Unknown" }
+    @{ Text = "Build, measure, learn."; Author = "Eric Ries" }
+    @{ Text = "To iterate is human, to recurse divine."; Author = "L. Peter Deutsch" }
+    @{ Text = "Focus on impact."; Author = "Mark Zuckerberg" }
+    @{ Text = "One man's constant is another's variable."; Author = "Alan Perlis" }
+    @{ Text = "Logic is the beginning of wisdom."; Author = "Spock" }
+    @{ Text = "Be yourself; everyone else is taken."; Author = "Oscar Wilde" }
+    @{ Text = "Make it work, make it right, make it fast."; Author = "Kent Beck" }
+    @{ Text = "Simplicity is prerequisite for reliability."; Author = "Edsger W. Dijkstra" }
 )
 
 # 3. Read current README content
