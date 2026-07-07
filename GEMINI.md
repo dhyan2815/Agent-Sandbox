@@ -115,6 +115,8 @@ This repository is an experimental playground for CLI tools and does not contain
 - **2026-07-07**: Updated profile README quote script and executed it.
     - Updated `scripts/update-profile-quote.ps1` to replace long quotes with a curated list of short quotes (under 42 characters) to prevent capsule-render banner cutting off on mobile/narrow viewports.
     - Ran the script, successfully updating the quote to "Be yourself; everyone else is taken. - Oscar Wilde" and pushed the changes to the GitHub repository.
+    - Refined `scripts/update-profile-quote.ps1` to exclusively feature tech-motivated quotes by famous tech authors and computer scientists, and fixed encoding/character parsing bugs.
+    - Ran the script again, updating the quote to "Write programs to work together. - Doug McIlroy".
 
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.

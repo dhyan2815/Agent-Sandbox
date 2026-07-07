@@ -17,27 +17,33 @@ if (-not (Test-Path $ReadmePath)) {
 $Quotes = @(
     @{ Text = "Talk is cheap. Show me the code."; Author = "Linus Torvalds" }
     @{ Text = "Stay hungry, stay foolish."; Author = "Steve Jobs" }
-    @{ Text = "Make it simple, but significant."; Author = "Don Draper" }
-    @{ Text = "Simplicity is the soul of efficiency."; Author = "Austin Freeman" }
-    @{ Text = "Simplicity is the key to brilliance."; Author = "Bruce Lee" }
-    @{ Text = "Strive for simplicity."; Author = "Unknown" }
     @{ Text = "Move fast and break things."; Author = "Mark Zuckerberg" }
-    @{ Text = "Keep it simple, stupid."; Author = "Kelly Johnson" }
-    @{ Text = "Less is more."; Author = "Ludwig Mies" }
-    @{ Text = "Think different."; Author = "Apple" }
-    @{ Text = "Code is poetry."; Author = "WordPress" }
     @{ Text = "Don't repeat yourself."; Author = "Andy Hunt" }
-    @{ Text = "Fail fast, learn faster."; Author = "Unknown" }
-    @{ Text = "Done is better than perfect."; Author = "Sheryl Sandberg" }
-    @{ Text = "Automate everything."; Author = "Unknown" }
-    @{ Text = "Build, measure, learn."; Author = "Eric Ries" }
-    @{ Text = "To iterate is human, to recurse divine."; Author = "L. Peter Deutsch" }
-    @{ Text = "Focus on impact."; Author = "Mark Zuckerberg" }
+    @{ Text = "Optimization hinders evolution."; Author = "Alan Perlis" }
     @{ Text = "One man's constant is another's variable."; Author = "Alan Perlis" }
-    @{ Text = "Logic is the beginning of wisdom."; Author = "Spock" }
-    @{ Text = "Be yourself; everyone else is taken."; Author = "Oscar Wilde" }
     @{ Text = "Make it work, make it right, make it fast."; Author = "Kent Beck" }
+    @{ Text = "The best code is no code at all."; Author = "Jeff Atwood" }
+    @{ Text = "Simple is not the same as easy."; Author = "Rich Hickey" }
+    @{ Text = "Complexity is the enemy of reliability."; Author = "Tony Hoare" }
+    @{ Text = "When in doubt, use brute force."; Author = "Ken Thompson" }
+    @{ Text = "Good code is its own best documentation."; Author = "Steve McConnell" }
+    @{ Text = "If it hurts, do it more often."; Author = "Martin Fowler" }
+    @{ Text = "Improve the design of existing code."; Author = "Martin Fowler" }
+    @{ Text = "Elegance is not an optional luxury."; Author = "Bjarne Stroustrup" }
+    @{ Text = "Don't comment bad code - rewrite it."; Author = "Brian Kernighan" }
+    @{ Text = "Write programs to work together."; Author = "Doug McIlroy" }
+    @{ Text = "Copying code is a design error."; Author = "David Parnas" }
+    @{ Text = "We must design for change."; Author = "David Parnas" }
+    @{ Text = "The code is the design."; Author = "Jack Reeves" }
+    @{ Text = "Write code that is easy to delete."; Author = "Tef" }
+    @{ Text = "Programs must be written for people to read."; Author = "Abelson and Sussman" }
+    @{ Text = "All programmers are optimists."; Author = "Fred Brooks" }
+    @{ Text = "Plan to throw one away; you will, anyhow."; Author = "Fred Brooks" }
+    @{ Text = "No Silver Bullet."; Author = "Fred Brooks" }
+    @{ Text = "Software is eating the world."; Author = "Marc Andreessen" }
     @{ Text = "Simplicity is prerequisite for reliability."; Author = "Edsger W. Dijkstra" }
+    @{ Text = "Hardware is easy. Software is hard."; Author = "Al Alcorn" }
+    @{ Text = "Code never lies, comments sometimes do."; Author = "Ron Jeffries" }
 )
 
 # 3. Read current README content
