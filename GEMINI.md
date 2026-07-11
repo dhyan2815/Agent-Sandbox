@@ -118,6 +118,31 @@ This repository is an experimental playground for CLI tools and does not contain
     - Refined `scripts/update-profile-quote.ps1` to exclusively feature tech-motivated quotes by famous tech authors and computer scientists, and fixed encoding/character parsing bugs.
     - Ran the script again, updating the quote to "Write programs to work together. - Doug McIlroy".
 
+- **2026-07-08**: Updated primary Agent Sandbox repository README.
+    - Analyzed recent commit history and directory structure changes across `n8n-workflows/`, `playground/`, `scripts/`, `mcp/`, and multi-root skills (`.claude/skills/` and `.agents/skills/`).
+    - Updated `README.md` to document the full inventory of 55 specialized skills across all 5 domains plus Higgsfield AI suites (`higgsfield-generate`, `higgsfield-marketplace-cards`, `higgsfield-product-photoshoot`, `higgsfield-soul-id`, `higgsfield-websites`).
+    - Added a clear Directory Structure & Workspace Layout diagram and refreshed Recent Additions and Core Focus Areas.
+
+- **2026-07-08**: Updated personal profile README quote.
+    - Ran the script `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+    - The new quote is: "Code never lies, comments sometimes do. - Ron Jeffries".
+
+- **2026-07-09**: Updated personal profile README quote, and automated LinkedIn insights.
+    - Ran the script `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+    - The new quote is: "No Silver Bullet. - Fred Brooks".
+    - Automated LinkedIn data retrieval via Apify, performed performance data analysis for the last 7 days, and saved the markdown report.
+    - Created a Notion sub-page under 'Task List > To Do's > LinkedIn: Data Insights & Analytics' and uploaded the complete report as enhanced markdown.
+    - Fixed a bug in the analytics script where nested fields (`stats` and `posted_at`) from the live Apify response returned 0 metrics. Re-generated the corrected report and updated the Notion sub-page accordingly.
+
+- **2026-07-10**: Updated personal profile README quote, and executed LinkedIn daily insights automation.
+    - Ran the script `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+    - The new quote is: "Complexity is the enemy of reliability. - Tony Hoare".
+    - Executed the LinkedIn daily insights automation pipeline (`scripts/linkedin_insights.py`), fetching latest profile post metrics from Apify (Dataset ID: `6vEaroWyHdgw538hc`) and generating a 7-day performance report in IST.
+    - Pushed/updated the Notion sub-page "LinkedIn Insights — 2026-07-10" under "Task List > To Do's > LinkedIn: Data Insights & Analytics" with the latest report.
+
 ## Repository-Specific Rules
 - Refer to the `README.md` for a detailed explanation of the project's purpose and structure.
 - The `Changelog.md` file tracks significant setup and configuration changes.
