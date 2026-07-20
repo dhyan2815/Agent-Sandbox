@@ -175,6 +175,30 @@ This repository is an experimental playground for CLI tools and does not contain
     - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
     - The new quote is: "Software is eating the world. - Marc Andreessen".
 
+- **2026-07-15**: Updated personal profile README quote.
+    - Ran the script `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+    - The new quote is: "Don't repeat yourself. - Andy Hunt".
+
+- **2026-07-16**: Updated personal profile README quote.
+    - Ran the script `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+    - The new quote is: "We must design for change. - David Parnas".
+
+- **2026-07-18**: Updated personal profile README quote.
+    - Updated the capsule-render banner in `dhyan2815/README.md` to display Andrew Ng's quote: "AI Is The New Electricity".
+    - Committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+
+- **2026-07-19**: Updated personal profile README quote.
+    - Ran the script `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+    - The new quote is: "If it hurts, do it more often. - Martin Fowler".
+
+- **2026-07-20**: Executed 30-day LinkedIn Weekly Insights automation.
+    - Created `scripts/linkedin_weekly_insights.py` to scrape 100 posts from Apify (Run ID: `77cAI8ZrwZbxYiPbl`, Dataset ID: `ZKoPa8JQ2vPk5n2QX`), parse nested metrics, and segment performance over a 30-day window into 4 weekly blocks.
+    - Generated a comprehensive 30-day weekly report with format, topic, day-of-week, 4-week breakdown, and week-over-week comparison tables formatted in IST.
+    - Created and populated the Notion sub-page "LinkedIn Weekly Insights — 2026-06-20 to 2026-07-20" under "Task List > To Do's > LinkedIn: Data Insights & Analytics".
+
 
 
 ## Repository-Specific Rules
