@@ -13,40 +13,67 @@ if (-not (Test-Path $ReadmePath)) {
     exit 1
 }
 
-# 2. Curated list of quotes (keep them relatively concise for capsule-render)
+# 2. Curated list of quotes — tech-stack aligned (AI/ML, agents, automation, full-stack, Python, data)
 $Quotes = @(
-    @{ Text = "Talk is cheap. Show me the code."; Author = "Linus Torvalds" }
-    @{ Text = "Stay hungry, stay foolish."; Author = "Steve Jobs" }
-    @{ Text = "Move fast and break things."; Author = "Mark Zuckerberg" }
-    @{ Text = "Don't repeat yourself."; Author = "Andy Hunt" }
-    @{ Text = "Optimization hinders evolution."; Author = "Alan Perlis" }
-    @{ Text = "One man's constant is another's variable."; Author = "Alan Perlis" }
-    @{ Text = "Make it work, make it right, make it fast."; Author = "Kent Beck" }
+    # AI Leaders — OpenAI / Sam Altman
+    @{ Text = "Ideas are cheap and easy, and there are a lot of them."; Author = "Sam Altman" }
+    @{ Text = "Move fast. Speed is one of your main advantages over large competitors."; Author = "Sam Altman" }
+
+    # AI Leaders — Elon Musk
+    @{ Text = "AI is a fundamental existential risk for human civilization."; Author = "Elon Musk" }
+    @{ Text = "Making some sort of digital superintelligence seems like it could be dangerous."; Author = "Elon Musk" }
+
+    # AI Leaders — Andrew Ng
+    @{ Text = "AI is the new electricity."; Author = "Andrew Ng" }
+    @{ Text = "The question is not whether AI will change your industry, but when."; Author = "Andrew Ng" }
+
+    # AI Leaders — Others
+    @{ Text = "Machines take me by surprise with great frequency."; Author = "Alan Turing" }
+    @{ Text = "Intelligence is the ability to adapt to change."; Author = "Stephen Hawking" }
+    @{ Text = "AI won't replace humans, but humans with AI will."; Author = "Karim Lakhani" }
+
+    # Automation / Workflows
+    @{ Text = "Automate the boring stuff."; Author = "Al Sweigart" }
     @{ Text = "The best code is no code at all."; Author = "Jeff Atwood" }
-    @{ Text = "Simple is not the same as easy."; Author = "Rich Hickey" }
-    @{ Text = "Complexity is the enemy of reliability."; Author = "Tony Hoare" }
-    @{ Text = "When in doubt, use brute force."; Author = "Ken Thompson" }
-    @{ Text = "Good code is its own best documentation."; Author = "Steve McConnell" }
-    @{ Text = "If it hurts, do it more often."; Author = "Martin Fowler" }
-    @{ Text = "Improve the design of existing code."; Author = "Martin Fowler" }
-    @{ Text = "Elegance is not an optional luxury."; Author = "Bjarne Stroustrup" }
-    @{ Text = "Don't comment bad code - rewrite it."; Author = "Brian Kernighan" }
-    @{ Text = "Write programs to work together."; Author = "Doug McIlroy" }
-    @{ Text = "Copying code is a design error."; Author = "David Parnas" }
-    @{ Text = "We must design for change."; Author = "David Parnas" }
-    @{ Text = "The code is the design."; Author = "Jack Reeves" }
-    @{ Text = "Write code that is easy to delete."; Author = "Tef" }
-    @{ Text = "Programs must be written for people to read."; Author = "Abelson and Sussman" }
-    @{ Text = "All programmers are optimists."; Author = "Fred Brooks" }
-    @{ Text = "Plan to throw one away; you will, anyhow."; Author = "Fred Brooks" }
-    @{ Text = "No Silver Bullet."; Author = "Fred Brooks" }
+    @{ Text = "Don't repeat yourself."; Author = "Andy Hunt" }
+    @{ Text = "Make it work, make it right, make it fast."; Author = "Kent Beck" }
+
+    # Python / Data
+    @{ Text = "Python is executable pseudocode."; Author = "Bruce Eckel" }
+    @{ Text = "Data is the new oil."; Author = "Clive Humby" }
+    @{ Text = "In God we trust. All others must bring data."; Author = "W. Edwards Deming" }
+    @{ Text = "Premature optimization is the root of all evil."; Author = "Donald Knuth" }
+
+    # Full-Stack / Web / JavaScript
+    @{ Text = "Move fast and break things."; Author = "Mark Zuckerberg" }
+    @{ Text = "Any application that can be written in JS, will be."; Author = "Jeff Atwood" }
+    @{ Text = "The network is the computer."; Author = "John Gage" }
     @{ Text = "Software is eating the world."; Author = "Marc Andreessen" }
-    @{ Text = "Simplicity is prerequisite for reliability."; Author = "Edsger W. Dijkstra" }
-    @{ Text = "Hardware is easy. Software is hard."; Author = "Al Alcorn" }
-    @{ Text = "Code never lies, comments sometimes do."; Author = "Ron Jeffries" }
+
+    # Engineering Principles
+    @{ Text = "Talk is cheap. Show me the code."; Author = "Linus Torvalds" }
+    @{ Text = "First, solve the problem. Then, write the code."; Author = "John Johnson" }
+    @{ Text = "The only way to go fast is to go well."; Author = "Robert C. Martin" }
+    @{ Text = "Good code is its own best documentation."; Author = "Steve McConnell" }
+    @{ Text = "Simplicity is the ultimate sophistication."; Author = "Leonardo da Vinci" }
+    @{ Text = "Complexity is the enemy of reliability."; Author = "Tony Hoare" }
+
+    # Vision / Leadership
+    @{ Text = "Stay hungry, stay foolish."; Author = "Steve Jobs" }
+    @{ Text = "The best way to predict the future is to invent it."; Author = "Alan Kay" }
 )
 
-# 3. Read current README content
+
+# 3. Pull latest remote changes to ensure local repo is synced
+Push-Location $RepoPath
+try {
+    git pull origin main --quiet
+} catch {
+    Write-Host "Warning: Could not pull latest changes from remote."
+}
+Pop-Location
+
+# 4. Read current README content
 $Content = [System.IO.File]::ReadAllText($ReadmePath)
 
 # 4. Try to extract current quote to avoid duplicates
@@ -71,26 +98,48 @@ Write-Host "Selected New Quote: '$NewText' - $NewAuthor"
 $EncodedText = [uri]::EscapeDataString($NewText)
 $EncodedAuthor = [uri]::EscapeDataString("- $NewAuthor")
 
+# Calculate optimal fontSize based on character length to prevent text clipping
+$Length = $NewText.Length
+if ($Length -le 20) {
+    $FontSize = 42
+} elseif ($Length -le 25) {
+    $FontSize = 36
+} elseif ($Length -le 30) {
+    $FontSize = 32
+} elseif ($Length -le 35) {
+    $FontSize = 28
+} elseif ($Length -le 40) {
+    $FontSize = 25
+} elseif ($Length -le 45) {
+    $FontSize = 23
+} elseif ($Length -le 52) {
+    $FontSize = 20
+} else {
+    $FontSize = 17
+}
+
+Write-Host "Quote length: $Length chars -> Calculated fontSize: $FontSize"
+
 # Match the <img src="https://capsule-render.vercel.app/api?..."/> tag
-# We replace the text and desc parameters inside the img src
-$Pattern = '(<img\s+src="https://capsule-render\.vercel\.app/api\?[^"]*?text=)([^&]+)([^"]*?desc=)([^&]+)([^"]*"[^>]*>)'
+# We replace text, fontSize, and desc parameters inside the img src
+$Pattern = '(<img\s+src="https://capsule-render\.vercel\.app/api\?[^"]*?text=)[^&]+(.*?\bfontSize=)\d+(.*?\bdesc=)[^&]+'
 
 if ($Content -match $Pattern) {
-    # Replace text and desc inside the matched tag
+    # Replace text, fontSize, and desc inside the matched tag
     $NewContent = [regex]::Replace($Content, $Pattern, {
         param($m)
         $prefix = $m.Groups[1].Value
-        $suffix1 = $m.Groups[3].Value
-        $suffix2 = $m.Groups[5].Value
-        return "${prefix}${EncodedText}${suffix1}${EncodedAuthor}${suffix2}"
+        $mid = $m.Groups[2].Value
+        $suffix = $m.Groups[3].Value
+        return "${prefix}${EncodedText}${mid}${FontSize}${suffix}${EncodedAuthor}"
     })
     
     # Write back to README.md (UTF-8 without BOM)
     $Utf8NoBom = New-Object System.Text.UTF8Encoding $false
     [System.IO.File]::WriteAllText($ReadmePath, $NewContent, $Utf8NoBom)
-    Write-Host "Updated README.md locally."
+    Write-Host "Updated README.md locally with fitted fontSize=$FontSize."
 } else {
-    Write-Error "Could not find capsule-render image tag with 'text' and 'desc' in README.md"
+    Write-Error "Could not find capsule-render image tag with 'text', 'fontSize', and 'desc' in README.md"
     exit 1
 }
 

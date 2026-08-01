@@ -199,6 +199,10 @@ This repository is an experimental playground for CLI tools and does not contain
     - Generated a comprehensive 30-day weekly report with format, topic, day-of-week, 4-week breakdown, and week-over-week comparison tables formatted in IST.
     - Created and populated the Notion sub-page "LinkedIn Weekly Insights — 2026-06-20 to 2026-07-20" under "Task List > To Do's > LinkedIn: Data Insights & Analytics".
 
+- **2026-07-20**: Updated personal profile README quote.
+    - Ran `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+    - The new quote is: "No Silver Bullet. - Fred Brooks".
 
 
 ## Repository-Specific Rules
@@ -216,3 +220,44 @@ This repository is an experimental playground for CLI tools and does not contain
 ## How Gemini Should Use This File
 - Scan this file on startup to understand the repository's unconventional structure and purpose.
 - Use this context to inform your analysis of workflows, diagrams, and documentation.
+
+- **2026-07-21**: Curated profile README quote list in `scripts/update-profile-quote.ps1`.
+    - Removed 9 obscure/awkward quotes (Alan Perlis x2, Tef, Jack Reeves, Al Alcorn, etc.).
+    - Added 6 widely-cited, iconic quotes: "The only way to go fast is to go well." (Robert C. Martin), "Premature optimization is the root of all evil." (Donald Knuth), "First, solve the problem. Then, write the code." (John Johnson), "AI is the new electricity." (Andrew Ng), "Innovation distinguishes a leader from a follower." (Steve Jobs).
+    - Total quotes reduced from 29 to 25, all well-known and meaningful.
+
+- **2026-07-21**: Updated personal profile README quote.
+    - Ran `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically committed and pushed the changes to the `dhyan2815/dhyan2815` repository using Git/GitHub CLI.
+    - The new quote is: "Elegance is not an optional luxury. - Bjarne Stroustrup".
+
+- **2026-07-21**: Overhauled profile README quote list to be tech-stack aligned.
+    - Completely replaced all 25 quotes in `scripts/update-profile-quote.ps1` with quotes grouped by category: AI/LLMs/Agents, Automation/Workflows, Python/Data, Full-Stack/Web/JS, Engineering Principles, and Vision/Leadership.
+    - New quotes include: Andrew Ng, Alan Turing, Stephen Hawking, Karim Lakhani, Al Sweigart, Bruce Eckel, Clive Humby, W. Edwards Deming, Jeff Atwood (Atwood's Law), John Gage, Alan Kay, and more.
+    - Updated personal profile README with new quote: "First, solve the problem. Then, write the code. - John Johnson".
+    - Automatically committed and pushed to `dhyan2815/dhyan2815` using Git/GitHub CLI.
+
+- **2026-07-24**: Executed GitHub profile README quote update via CLI automation script.
+    - Executed `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Automatically updated the quote to: `"Data is the new oil. - Clive Humby"`.
+    - Committed (`86fdabc`) and pushed changes to `dhyan2815/dhyan2815` remote repository via Git/GitHub CLI.
+    - Verified repository status using `gh repo view dhyan2815/dhyan2815`.
+
+- **2026-07-26**: Added dynamic font size scaling to `scripts/update-profile-quote.ps1`.
+    - Implemented length-based font scaling (ranging from `fontSize=42` down to `fontSize=17`) to prevent long quotes from overflowing or clipping on the GitHub profile banner.
+    - Updated regex in `update-profile-quote.ps1` to replace `fontSize` in the capsule-render URL along with `text` and `desc`.
+    - Executed script (`32db67b`), updated README banner quote to `"Make it work, make it right, make it fast. - Kent Beck"` with calculated `fontSize=23`, and pushed changes to GitHub.
+- **2026-07-28**: Onboarding & daily task automation with Notion and Python labs.
+    - Used Notion MCP to fetch "LinearLoop" and parsed today's task database.
+    - Created a comprehensive Python practice laboratory `notebooks/numpy_pandas_practice.py` covering NumPy creation, modification, math, stats, filtering, and Pandas equivalents.
+    - Checked off tasks on the Notion Pandas & NumPy learning page.
+    - Added a template Hugging Face transformers check script at `playground/huggingface_demo.py`.
+- **2026-07-28**: Executed GitHub profile README quote update via CLI automation script.
+    - Executed `scripts/update-profile-quote.ps1` to update the quote on the capsule-render banner in `dhyan2815/README.md`.
+    - Selected quote: `"Premature optimization is the root of all evil. - Donald Knuth"` with fitted `fontSize=20`.
+    - Committed (`63b2214`) and pushed changes to remote `dhyan2815/dhyan2815` repository using Git/GitHub CLI credentials.
+    - Verified live repository view using `gh repo view dhyan2815/dhyan2815`.
+- **2026-07-30**: Playwright task exploration & sub-task blueprint rendering in Notion.
+    - Located today's task "W1: To Do - Explore Playwright" (ID `3ac097dd-d30d-8058-a931-c009c2e85f69`) under the LinearLoop Task List database via Notion MCP.
+    - Designed and rendered a complete Sub-Task Execution Blueprint for scraping hospitals in Ahmedabad and Surat using Playwright Python/Chromium.
+    - Added sections covering city zone targeting, inputs/outputs schema, architectural approaches (DOM scroll vs Network interception), anti-blocking strategies, deduplication pipelines, and an executable async Playwright script.
