@@ -67,6 +67,7 @@ $Quotes = @(
 # 3. Pull latest remote changes to ensure local repo is synced
 Push-Location $RepoPath
 try {
+    git checkout main --quiet
     git pull origin main --quiet
 } catch {
     Write-Host "Warning: Could not pull latest changes from remote."
@@ -161,8 +162,8 @@ try {
     git commit -m "Update quote: $NewText"
     if ($LASTEXITCODE -ne 0) { throw "git commit failed" }
 
-    # Use git push, which inherits GitHub CLI credentials
-    git push
+    # Use git push explicitly to main, which works from detached HEAD
+    git push origin HEAD:main
     if ($LASTEXITCODE -ne 0) { throw "git push failed" }
 
     Write-Host "Successfully committed and pushed to GitHub!"
