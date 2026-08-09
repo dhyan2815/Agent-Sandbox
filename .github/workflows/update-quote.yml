@@ -14,11 +14,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Requires a Personal Access Token to push to a different repository (dhyan2815/dhyan2815)
+          token: ${{ secrets.GH_PAT || github.token }}
+          submodules: true
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Run Quote Update Script
         shell: pwsh
         run: |
-          ./scripts/update-profile-quote.ps1 -RepoPath "." -Force
+          ./scripts/update-profile-quote.ps1 -RepoPath "./dhyan2815" -Force
 
       - name: Commit and Push Changes
         run: |
