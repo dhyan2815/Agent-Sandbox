@@ -163,6 +163,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "git commit failed" }
 
     # Use git push explicitly to main, which works from detached HEAD
+    if ($env:GH_PAT) {
+        Write-Host "GH_PAT provided, setting remote URL for authentication..."
+        git remote set-url origin "https://oauth2:$($env:GH_PAT)@github.com/dhyan2815/dhyan2815.git"
+    }
     git push origin HEAD:main
     if ($LASTEXITCODE -ne 0) { throw "git push failed" }
 
