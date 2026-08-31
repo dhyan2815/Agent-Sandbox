@@ -34,12 +34,13 @@ A structured playground for experimenting with AI agents and CLI automation tool
 ```
 Agent Sandbox/
 ├── .agents/skills/      # Higgsfield AI generation & full-stack web skills (5 skills)
-├── .claude/skills/      # Modular AI instruction skills across 5 domains (50 skills)
+├── .claude/skills/      # Modular AI instruction skills across 5 domains (52 skills)
 ├── designs/             # DESIGN.md brand UI specifications & templates
 ├── docs/                # Experiment logs, MCP server specs & technical documentation
 ├── linkedin-data/       # Cached analytics & reference data for LinkedIn automation
 ├── mcp/                 # Custom Model Context Protocol (MCP) server implementations
 ├── n8n-workflows/       # Exported n8n workflow blueprints (Chatbots, Document Assistants)
+├── notebooks/           # Jupyter notebooks for NLP (Empathy Detection), ML intro, and practice
 ├── openwiki/            # Open source repo documentation agent workspace
 ├── playground/          # Machine learning (Pandas/NumPy) & Python interview notebooks
 ├── scripts/             # Automation scripts (GitHub profile quote updater, CLI utilities)
@@ -54,7 +55,7 @@ Agent Sandbox/
 
 Skills are modular AI instruction sets stored in [`.claude/skills/`](./.claude/skills/) and [`.agents/skills/`](./.agents/skills/). Each skill contains specialized workflows, prompts, and references for specific tasks.
 
-Skills are organized into 5 core categories across 55 specialized skills:
+Skills are organized into 5 core categories across 57 specialized skills:
 
 ### Content Creation
 
@@ -75,6 +76,7 @@ Skills are organized into 5 core categories across 55 specialized skills:
 | `newsletter-voice` | Newsletter-specific voice profiling |
 | `humanizer` | Remove signs of AI-generated writing from text |
 | `canvas-design` | Create visual art in .png and .pdf using design philosophy |
+| `chatgpt-image-ad` | Meta ad creative generation for Arcads & GPT-Image-2 |
 
 ### LinkedIn Tools
 
@@ -113,6 +115,7 @@ Skills are organized into 5 core categories across 55 specialized skills:
 | `readme-generator` | Generates comprehensive README.md files by analyzing codebase structure |
 | `ui-design-system` | UI design system toolkit with design token generation |
 | `humanize-code` | Remove robotic AI structures and patterns from code and text |
+| `code-refactoring` | Automated code refactoring & clean code transformations |
 
 ### Graphics, Video & Higgsfield AI
 
@@ -147,6 +150,7 @@ Skills are organized into 5 core categories across 55 specialized skills:
 | n8n Workflows | [`n8n-workflows/`](./n8n-workflows/) |
 | Visual Diagrams | [`visuals/`](./visuals/) |
 | Brand Designs | [`designs/`](./designs/) |
+| ML & NLP Notebooks | [`notebooks/`](./notebooks/) |
 | ML & Python Playground | [`playground/`](./playground/) |
 | Automation Scripts | [`scripts/`](./scripts/) |
 
@@ -154,10 +158,10 @@ Skills are organized into 5 core categories across 55 specialized skills:
 
 ## Key Features
 
-- **55 Specialized AI Skills** — Distributed across `.claude/skills/` and `.agents/skills/`, covering content creation, LinkedIn optimization, developer utilities, Apify scraping, presentations, and Higgsfield AI generation.
+- **57 Specialized AI Skills** — Distributed across `.claude/skills/` and `.agents/skills/`, covering content creation, LinkedIn optimization, ad creative generation, developer utilities, Apify scraping, presentations, and Higgsfield AI generation.
 - **Higgsfield AI & Full-Stack Web Suite** — Multi-modal generation for studio product photography, marketplace cards, Soul identity training, and full-stack React 19 + TanStack Start web deployment on Cloudflare Workers.
-- **ML & Python Practice Playground** — Structured notebooks and reference guides in `playground/` for Pandas data manipulation, NumPy arrays, SQL, and Python interview algorithms.
-- **Automated Profile & Scripting Workflows** — PowerShell scripts (`scripts/update-profile-quote.ps1`, `gemini-summarize.ps1`) for daily GitHub profile README quote rotation and headless CLI summarization.
+- **ML, NLP & Python Practice Playground** — Structured notebooks in `notebooks/` (Empathy Detection NLP) and `playground/` for Pandas data manipulation, NumPy arrays, SQL, and Python interview algorithms.
+- **Automated Profile & Scripting Workflows** — Native GitHub Actions workflows and PowerShell scripts (`scripts/update-profile-quote.ps1`, `gemini-summarize.ps1`) for daily GitHub profile README quote rotation and headless CLI summarization.
 - **Custom MCP Server Suite** — Advanced Model Context Protocol server implementations in `mcp/` featuring persistent memory entries, repository file search, and structured logging.
 - **n8n Workflow Automation** — Event-driven automations in `n8n-workflows/` for Telegram chatbots, AI document assistants, and lead generation.
 - **Brand Design System** — DESIGN.md templates in `designs/` for brand-consistent UI generation across Apple, Vercel, Spotify, Nike, and more.
@@ -206,11 +210,11 @@ Each skill follows a consistent pattern:
 
 ## Recent Additions
 
+- **ChatGPT Image Ad Skill (`.claude/skills/chatgpt-image-ad`)** — Integrated Arcads / GPT-Image-2 ad creative generation skill for high-converting Meta & paid-social ads.
+- **NLP & Machine Learning Notebooks (`notebooks/`)** — Added `LL_Empathy_Detection.ipynb` for NLP empathy detection modeling along with ML introduction and practice notebooks.
+- **Native GitHub Action Automation** — Migrated profile README quote rotation natively into GitHub Actions for automated daily execution across repositories.
 - **Higgsfield AI Skill Suite (`.agents/skills/`)** — Integrated 5 full-stack Higgsfield skills: `higgsfield-generate`, `higgsfield-marketplace-cards`, `higgsfield-product-photoshoot`, `higgsfield-soul-id`, and `higgsfield-websites` (React 19 + TanStack Start SSR deployment).
-- **ML & Python Playground (`playground/`)** — Expanded `playground (ml)` and `playground (py)` with notebooks and practice guides for Pandas data manipulation, NumPy arrays, SQL resources, and Python coding patterns.
-- **Automated Profile Quote Updater (`scripts/`)** — Created `update-profile-quote.ps1` to automatically select short tech-motivated quotes from famous computer scientists and update/push the profile banner via GitHub CLI.
-- **Skill Enhancements & Additions** — Added PowerPoint OOXML generator (`pptx`), full PDF processing suite (`pdf`), AI code de-roboticizer (`humanize-code`), SVG vector support in `graphic-designer`, and Analytical Connector comments in `linkedin-comment-generator`.
-- **Directory & Workflow Synchronization** — Standardized automation blueprints under `n8n-workflows/`, added Excalidraw/Mermaid diagrams in `visuals/` and `docs/`, and documented 30-day AI CLI experimentation progress.
+- **Skill Suite Expansion (57 Total Skills)** — Added `chatgpt-image-ad`, `code-refactoring`, PowerPoint OOXML generator (`pptx`), full PDF processing suite (`pdf`), AI code de-roboticizer (`humanize-code`), and SVG vector support in `graphic-designer`.
 
 ---
 
