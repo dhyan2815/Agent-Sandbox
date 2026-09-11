@@ -287,3 +287,8 @@ This repository is an experimental playground for CLI tools and does not contain
     - Added `notebooks/` directory (NLP Empathy Detection, ML intro) to Workspace Layout & Quick Links.
     - Committed changes and pushed to GitHub main branch.
 
+- **2026-09-11**: Added `product-brainstorming` skill and expanded OpenWiki documentation.
+    - Added `product-brainstorming` skill in `.claude/skills/` for structured problem exploration, assumption stress-testing, and ideation.
+    - Cleaned up redundant legacy compressed archives (`gemini-carousel.zip`, `visual-explainer.rar`).
+    - Expanded OpenWiki documentation covering sandbox quickstart, skills catalog, content creation workflows, and architecture visualizations.
+
