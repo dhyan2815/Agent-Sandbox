@@ -1,0 +1,10 @@
+﻿{
+  "llm": {
+    "provider": "openai",
+    "base_url": "https://integrate.api.nvidia.com/v1",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "api_key": "YOUR_ACTUAL_NVIDIA_API_KEY",
+    "temperature": 0.2,
+    "max_tokens": 4096
+  }
+}
