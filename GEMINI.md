@@ -292,3 +292,7 @@ This repository is an experimental playground for CLI tools and does not contain
     - Cleaned up redundant legacy compressed archives (`gemini-carousel.zip`, `visual-explainer.rar`).
     - Expanded OpenWiki documentation covering sandbox quickstart, skills catalog, content creation workflows, and architecture visualizations.
 
+- **2026-09-14**: Added YCB configuration and updated .gitignore.
+    - Added `.ycb/config.json` configuring NVIDIA Nemotron-3-Ultra LLM endpoint for Your Company Brain CLI tool.
+    - Updated `.gitignore` to ignore runtime log files (`*.log`) and local database files (`*.db`).
+

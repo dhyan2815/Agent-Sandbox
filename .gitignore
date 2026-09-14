@@ -9,3 +9,5 @@ venv/
 .mcp.json
 linkedin-data
 scratch/
+*.log
+*.db
