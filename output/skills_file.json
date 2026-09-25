@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-09-25 15:52:38.182365",
+  "company_name": "Demo Company",
+  "skills": [
+    {
+      "id": "skill-3eef94db-b066-4bd4-b445-384ca580c507",
+      "name": "Title: Dhyan Patel ### Ai/Ml Engineer & Full Stack",
+      "description": "Skill related to Title: Dhyan Patel ### Ai/Ml Engineer & Full Stack",
+      "category": "general",
+      "procedure_steps": [],
+      "decision_points": {},
+      "examples": [],
+      "prerequisites": [],
+      "success_criteria": [],
+      "exceptions_and_edge_cases": [],
+      "source_items": [
+        "notion:25a097dd-d30d-8011-9650-da0e698cd9c0"
+      ],
+      "last_updated": "2026-09-25 15:30:50.254895",
+      "confidence_score": 0.3
+    }
+  ],
+  "metadata": {
+    "total_skills": 1,
+    "by_category": {
+      "general": 1
+    }
+  }
+}
