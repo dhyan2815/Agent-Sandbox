@@ -11,3 +11,7 @@ linkedin-data
 scratch/
 *.log
 *.db
+videos/
+visuals/
+.agents/
+.claude/
