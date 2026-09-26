@@ -1,14 +1,11 @@
 # LinkedIn Data Cache Notes
 
 ## What this contains
-- `Dhyan-all-posts.json`: starter dataset built from public snippets of `https://www.linkedin.com/in/dhyan2815/`.
+- A raw post cache, kept current with the latest known state of the tracked profile.
+- `monthly/YYYY-MM.md`: one performance report per calendar month, each showing engagement, format, topic, and timing breakdowns for that month.
 
-## Why this is a starter set
-This file is not a full export of your last 100 posts. It is a partial cache from publicly indexed profile snippets and is useful for immediate scoring setup only.
+## How this stays current
+Refreshed through an internal research workflow rather than manual entry. The exact pipeline is intentionally not documented here.
 
-## How to refresh for accurate scoring
-1. Run `post-scorer` and choose `Scrape my posts`.
-2. Use LinkedIn username: `dhyan2815`.
-3. Pull 100 posts via Apify actor `apimaestro/linkedin-profile-posts`.
-4. Save output as `Dhyan-all-posts.json` in the `linkedin-data` directory (or `[username]-all-posts.json` in the project root).
-5. Keep `total_reactions` and `comments` fields intact so engagement scoring works.
+## Why monthly
+One file per calendar month keeps the history comparable over time without report sprawl. A new month gets its own file automatically; refreshing mid-month updates that month's file in place.
