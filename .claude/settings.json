@@ -10,5 +10,8 @@
       "Bash(npm test *)",
       "Bash(npm run build *)"
     ]
+  },
+  "enabledPlugins": {
+    "brag@brag": true
   }
 }
