@@ -20,9 +20,11 @@ A structured playground for experimenting with AI agents and CLI automation tool
 |------------------|---------|-------------|
 | **Claude Code** | Agentic AI for code generation, refactoring, automation | [CLAUDE.md](./CLAUDE.md) |
 | **Gemini CLI** | Workflow automation via Google Gemini models | [GEMINI.md](./GEMINI.md) |
-| **Codex CLI** | OpenAI's CLI for code tasks and agentic workflows | [references/codex-tools.md](./references/codex-tools.md) |
+| **Codex CLI** | OpenAI's CLI for code tasks and agentic workflows | [`.codex/`](./.codex/) |
 | **n8n Workflows** | Event-driven API & service automations | [`n8n-workflows/`](./n8n-workflows/) |
 | **Higgsfield AI** | AI image, video, 3D, audio, and full-stack web generation | [`.agents/skills/`](./.agents/skills/) |
+| **HyperFrames** | HTML-to-video: compositions, motion, captions, rendering | [`.agents/skills/`](./.agents/skills/) |
+| **Security Audit** | Source-first vulnerability review ([cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)) | [`.claude/skills/security-audit/`](./.claude/skills/security-audit/) |
 | **ML & Python Playground** | Jupyter notebooks & scripts for ML, Pandas, NumPy, and algorithms | [`playground/`](./playground/) |
 | **Excalidraw & Visuals** | Architecture & workflow diagrams | [`visuals/`](./visuals/) |
 | **DESIGN.md** | Brand-consistent UI generation system | [`designs/DESIGN.md`](./designs/DESIGN.md) |
@@ -33,8 +35,12 @@ A structured playground for experimenting with AI agents and CLI automation tool
 
 ```
 Agent Sandbox/
-├── .agents/skills/      # Higgsfield AI generation & full-stack web skills (5 skills)
-├── .claude/skills/      # Modular AI instruction skills across 5 domains (52 skills)
+├── .agents/skills/      # Higgsfield AI, HyperFrames video & design skills (27 skills)
+├── .claude/skills/      # Modular AI instruction skills (54 own; 22 symlinked from .agents)
+├── .codex/ .opencode/   # Codex CLI & OpenCode configuration
+├── architecture/        # Architecture notes
+├── assets/ data/        # Static assets & datasets
+├── content/ researches/ # Content drafts & research notes
 ├── designs/             # DESIGN.md brand UI specifications & templates
 ├── docs/                # Experiment logs, MCP server specs & technical documentation
 ├── linkedin-data/       # Cached analytics & reference data for LinkedIn automation
@@ -43,6 +49,7 @@ Agent Sandbox/
 ├── notebooks/           # Jupyter notebooks for NLP (Empathy Detection), ML intro, and practice
 ├── openwiki/            # Open source repo documentation agent workspace
 ├── playground/          # Machine learning (Pandas/NumPy) & Python interview notebooks
+├── references/          # Reference material
 ├── scripts/             # Automation scripts (GitHub profile quote updater, CLI utilities)
 └── visuals/             # Excalidraw architecture & cross-tool workflow diagrams
 ```
@@ -55,7 +62,7 @@ Agent Sandbox/
 
 Skills are modular AI instruction sets stored in [`.claude/skills/`](./.claude/skills/) and [`.agents/skills/`](./.agents/skills/). Each skill contains specialized workflows, prompts, and references for specific tasks.
 
-Skills are organized into 5 core categories across 57 specialized skills:
+81 unique skills in 6 categories (22 are shared between both roots via symlinks):
 
 ### Content Creation
 
@@ -116,6 +123,9 @@ Skills are organized into 5 core categories across 57 specialized skills:
 | `ui-design-system` | UI design system toolkit with design token generation |
 | `humanize-code` | Remove robotic AI structures and patterns from code and text |
 | `code-refactoring` | Automated code refactoring & clean code transformations |
+| `security-audit` | Source-first security review; full audit writes REPORT.md + findings.json (sandboxed, never probes live systems) |
+| `product-brainstorming` | Brainstorm and shape product ideas |
+| `figma` | Figma design-to-code workflows |
 
 ### Graphics, Video & Higgsfield AI
 
@@ -128,6 +138,31 @@ Skills are organized into 5 core categories across 57 specialized skills:
 | `higgsfield-websites` | Build, edit & deploy full-stack React 19 + TanStack Start web apps |
 | `website-to-hyperframes` | Convert websites to HyperFrames videos |
 | `pptx` | Generate and validate professional OOXML PowerPoint presentations |
+| `hallmark` | Design websites and pages that look designed, not generated |
+
+### HyperFrames Video & Motion
+
+| Skill | Function |
+|-------|----------|
+| `hyperframes` | Core HTML-to-video entry point |
+| `hyperframes-core` | Composition contract: timing, tracks, sub-compositions |
+| `hyperframes-cli` | CLI loop: init, lint, preview, render |
+| `hyperframes-animation` | Motion rules, blueprints, transitions, runtime adapters |
+| `hyperframes-keyframes` | Seek-safe punch-ins, zooms, camera moves |
+| `hyperframes-creative` | Palettes, typography, narration, beat planning |
+| `hyperframes-audio` | Audio and audio-reactive visuals |
+| `hyperframes-registry` / `hyperframes-studio` | Component registry & studio editing |
+| `embedded-captions` | Styled caption modes and themes |
+| `motion-graphics` | Motion graphics videos |
+| `music-to-video` | Turn music into video |
+| `faceless-explainer` | Faceless explainer videos |
+| `general-video` | General-purpose video creation |
+| `product-launch-video` | Product launch videos |
+| `pr-to-video` | Turn pull requests into videos |
+| `remotion-to-hyperframes` | Convert Remotion projects to HyperFrames |
+| `talking-head-recut` | Recut talking-head footage |
+| `slideshow` | Slideshow videos |
+| `media-use` | Media sourcing and handling |
 
 ### Apify Automation
 
@@ -158,7 +193,7 @@ Skills are organized into 5 core categories across 57 specialized skills:
 
 ## Key Features
 
-- **57 Specialized AI Skills** — Distributed across `.claude/skills/` and `.agents/skills/`, covering content creation, LinkedIn optimization, ad creative generation, developer utilities, Apify scraping, presentations, and Higgsfield AI generation.
+- **81 Specialized AI Skills** — Distributed across `.claude/skills/` and `.agents/skills/`, covering content creation, LinkedIn optimization, ad creative generation, developer utilities, security auditing, HyperFrames video, Apify scraping, presentations, and Higgsfield AI generation.
 - **Higgsfield AI & Full-Stack Web Suite** — Multi-modal generation for studio product photography, marketplace cards, Soul identity training, and full-stack React 19 + TanStack Start web deployment on Cloudflare Workers.
 - **ML, NLP & Python Practice Playground** — Structured notebooks in `notebooks/` (Empathy Detection NLP) and `playground/` for Pandas data manipulation, NumPy arrays, SQL, and Python interview algorithms.
 - **Automated Profile & Scripting Workflows** — Native GitHub Actions workflows and PowerShell scripts (`scripts/update-profile-quote.ps1`, `gemini-summarize.ps1`) for daily GitHub profile README quote rotation and headless CLI summarization.
@@ -183,7 +218,8 @@ The system includes 9 standard sections: visual theme, color palette, typography
 
 The repository organizes AI agent instructions across two customization roots:
 - `.claude/skills/` — Task-specific skills for content creation, code manipulation, document processing, and workflows.
-- `.agents/skills/` — Domain-specific Higgsfield AI suites for creative generation and web app deployment.
+- `.agents/skills/` — Higgsfield AI suites, HyperFrames video skills and design skills. Shared skills are symlinked into `.claude/skills/`.
+- Both folders are tracked in git.
 
 Each skill follows a consistent pattern:
 - `SKILL.md` — Core instructions & workflows with YAML frontmatter
@@ -210,11 +246,14 @@ Each skill follows a consistent pattern:
 
 ## Recent Additions
 
+- **Security Audit Skill (`.claude/skills/security-audit`)** — Added Cloudflare's source-first security-audit skill with schema and ledger validators.
+- **HyperFrames Video Suite** — Added 20+ video, motion, caption and design skills (HyperFrames, `hallmark`, `figma`, `media-use` and more) in `.agents/skills/`, symlinked into `.claude/skills/`.
+- **Tracking `.claude/` and `.agents/`** — Removed both from `.gitignore`; `settings.local.json` stays ignored.
 - **ChatGPT Image Ad Skill (`.claude/skills/chatgpt-image-ad`)** — Integrated Arcads / GPT-Image-2 ad creative generation skill for high-converting Meta & paid-social ads.
 - **NLP & Machine Learning Notebooks (`notebooks/`)** — Added `LL_Empathy_Detection.ipynb` for NLP empathy detection modeling along with ML introduction and practice notebooks.
 - **Native GitHub Action Automation** — Migrated profile README quote rotation natively into GitHub Actions for automated daily execution across repositories.
 - **Higgsfield AI Skill Suite (`.agents/skills/`)** — Integrated 5 full-stack Higgsfield skills: `higgsfield-generate`, `higgsfield-marketplace-cards`, `higgsfield-product-photoshoot`, `higgsfield-soul-id`, and `higgsfield-websites` (React 19 + TanStack Start SSR deployment).
-- **Skill Suite Expansion (57 Total Skills)** — Added `chatgpt-image-ad`, `code-refactoring`, PowerPoint OOXML generator (`pptx`), full PDF processing suite (`pdf`), AI code de-roboticizer (`humanize-code`), and SVG vector support in `graphic-designer`.
+- **Skill Suite Expansion (57 skills at the time)** — Added `chatgpt-image-ad`, `code-refactoring`, PowerPoint OOXML generator (`pptx`), full PDF processing suite (`pdf`), AI code de-roboticizer (`humanize-code`), and SVG vector support in `graphic-designer`.
 
 ---
 
