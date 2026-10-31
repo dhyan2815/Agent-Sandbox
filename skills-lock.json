@@ -25,6 +25,12 @@
       "skillPath": "skills/general-video/SKILL.md",
       "computedHash": "3720000b6e4e31219115d4cb7777c9fa0bf07dd6acea53ab6fc3b618c40783e7"
     },
+    "hallmark": {
+      "source": "nutlope/hallmark",
+      "sourceType": "github",
+      "skillPath": "skills/hallmark/SKILL.md",
+      "computedHash": "1829aba1cd4a115d91708e266a5b2699f8de219649a5dde762a009f75af08526"
+    },
     "higgsfield-generate": {
       "source": "higgsfield-ai/skills",
       "sourceType": "github",
