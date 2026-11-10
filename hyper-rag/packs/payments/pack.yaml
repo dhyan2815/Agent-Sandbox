@@ -1,0 +1,39 @@
+# Payments developer documentation.
+# Nothing downloaded is committed: pages are fetched into data/payments/raw/ (git-ignored).
+name: payments
+description: Developer documentation for online payments in India - Razorpay (payments, orders, refunds, settlements, disputes, webhooks, errors, UPI payment methods) and the Google Wallet API for generic passes.
+chunk_size: 1200
+chunk_overlap: 150
+
+sources:
+  # Razorpay docs, India edition. robots.txt allows /docs/ and asks for a 1 second
+  # crawl delay; the ingest script honours both. Pages are taken from the public sitemap
+  # and limited to the sections listed here.
+  - name: razorpay
+    sitemap: https://razorpay.com/docs/sitemap.xml
+    base_url: https://razorpay.com/docs/
+    sections:
+      - payments/payments
+      - payments/orders
+      - payments/refunds
+      - payments/settlements
+      - payments/disputes
+      - payments/payment-methods/upi
+      - payments/payment-gateway/web-integration/standard
+      - payments/server-integration/python
+      - webhooks
+      - errors
+      - api/orders
+      - api/refunds
+      - api/settlements
+      - api/disputes
+
+  # Google Wallet API, generic pass. Google developer documentation is published under
+  # CC BY 4.0. Pages are discovered from the links on the section's landing page.
+  - name: google-wallet
+    start_url: https://developers.google.com/wallet/generic
+    base_url: https://developers.google.com/wallet/
+    link_prefix: /wallet/generic
+
+  # UPI: npci.org.in (the UPI operator) answers automated requests with "Access Denied",
+  # so it is not crawled. UPI is covered through Razorpay's UPI integration pages above.
