@@ -1,0 +1,36 @@
+# Engine settings. Secrets live in .env, not here.
+# Override any key with an environment variable: HYPER_RAG_<KEY>, e.g. HYPER_RAG_LLM_PROVIDER=groq
+
+# --- Generation -------------------------------------------------------------
+# Model names were checked against the providers' free-tier pages on 2026-11-10:
+#   https://console.groq.com/docs/rate-limits
+#   https://ai.google.dev/gemini-api/docs/pricing
+# Free line-ups change often; if a call fails with "model not found", update here.
+llm_provider: gemini            # fake | groq | gemini
+groq_model: openai/gpt-oss-120b
+gemini_model: gemini-3.5-flash-lite
+
+# The judge scores answers in the eval. It uses a different provider from the
+# generator so a model is never grading its own output.
+judge_provider: groq            # fake | groq | gemini
+# Seconds to wait between calls to one provider (free tiers allow tens of requests/minute).
+min_seconds_between_calls: 4.0
+max_retries: 6
+
+# --- Retrieval (local, CPU) -------------------------------------------------
+embedder: fastembed             # fastembed | hashing (offline, for tests)
+embedding_model: BAAI/bge-small-en-v1.5
+reranker: fastembed             # fastembed | lexical (offline, for tests)
+reranker_model: Xenova/ms-marco-MiniLM-L-6-v2
+
+candidates_per_retriever: 30    # how many hits dense and BM25 each contribute to fusion
+rerank_pool: 20                 # how many fused candidates the cross-encoder rescores
+top_k: 5                        # passages handed to the generator
+rrf_k: 60                       # RRF constant from the original paper (Cormack et al., 2009)
+
+# --- Agent ------------------------------------------------------------------
+max_rewrites: 2                 # query rewrites before the agent declines
+
+# --- Paths ------------------------------------------------------------------
+packs_dir: packs
+data_dir: data
