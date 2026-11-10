@@ -36,12 +36,15 @@ def test_rrf_rewards_agreement_between_rankings():
 
 
 def test_metrics_on_a_known_ranking():
-    retrieved, gold = ["a", "b", "b", "c"], ["b", "z"]
-    assert recall_at_k(retrieved, gold, 1) == 0.0
-    assert recall_at_k(retrieved, gold, 4) == 0.5
-    assert reciprocal_rank(retrieved, gold) == 0.5
-    # One gold doc found at rank 2; the ideal ranking has both gold docs at ranks 1 and 2.
-    assert ndcg_at_k(retrieved, gold, 4) == pytest.approx(0.6309 / 1.6309, abs=1e-3)
+    retrieved = ["a", "b", "b", "c"]
+    needs = [["b", "x"], ["z"]]  # need 1: b or x; need 2: z (never retrieved)
+    assert recall_at_k(retrieved, needs, 1) == 0.0
+    assert recall_at_k(retrieved, needs, 4) == 0.5
+    assert reciprocal_rank(retrieved, needs) == 0.5
+    # One need met at rank 2 (the second "b" earns nothing); ideal is both at ranks 1 and 2.
+    assert ndcg_at_k(retrieved, needs, 4) == pytest.approx(0.6309 / 1.6309, abs=1e-3)
+    # Alternatives inside one need do not inflate recall.
+    assert recall_at_k(["b", "x"], [["b", "x"]], 2) == 1.0
 
 
 def test_every_mode_finds_the_refunds_page(sample_retriever):

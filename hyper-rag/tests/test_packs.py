@@ -19,5 +19,5 @@ def test_golden_sources_exist_in_corpus(settings, tmp_path):
     golden = load_golden(pack)
     assert any(not q.answerable for q in golden), "need unanswerable questions to test refusals"
     for question in golden:
-        assert set(question.relevant_sources) <= doc_ids
+        assert {doc for need in question.relevant_sources for doc in need} <= doc_ids
         assert question.answerable == bool(question.relevant_sources)

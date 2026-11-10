@@ -57,7 +57,9 @@ class GoldenQuestion:
     question: str
     answerable: bool  # False: the corpus does not contain the answer; the system should decline
     reference_answer: str
-    relevant_sources: list[str]  # document ids that contain the answer
+    # Information needs: each inner list names documents that each contain that part of
+    # the answer. See evaluation/retrieval_metrics.py.
+    relevant_sources: list[list[str]]
     key_facts: list[str]  # short strings a correct answer must contain (deterministic check)
 
 
@@ -87,7 +89,11 @@ def load_golden(pack: Pack) -> list[GoldenQuestion]:
                 question=row["question"],
                 answerable=row["answerable"],
                 reference_answer=row.get("reference_answer", ""),
-                relevant_sources=row.get("relevant_sources", []),
+                # A bare string is shorthand for a need with a single document.
+                relevant_sources=[
+                    [need] if isinstance(need, str) else need
+                    for need in row.get("relevant_sources", [])
+                ],
                 key_facts=row.get("key_facts", []),
             )
         )
