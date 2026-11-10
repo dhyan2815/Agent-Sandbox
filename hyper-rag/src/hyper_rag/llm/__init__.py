@@ -11,13 +11,18 @@ __all__ = ["LLM", "LLMError", "build_llm", "parse_json"]
 
 
 def build_llm(settings: Settings, role: str = "generator") -> LLM:
-    """Create the LLM for a role: "generator" answers questions, "judge" scores answers in evals.
+    """Create the LLM for a role.
+
+    "generator" writes answers, "control" makes the agent's routing/grading/checking
+    decisions, "judge" scores answers in evals.
 
     Hosted providers are wrapped in the disk cache. The fake provider is not: it is
     instant and deterministic already.
     """
     if role == "judge":
         provider, model = settings.judge_provider, settings.judge_model
+    elif role == "control":
+        provider, model = settings.llm_provider, settings.control_model or settings.llm_model
     else:
         provider, model = settings.llm_provider, settings.llm_model
     pacing = (settings.min_seconds_between_calls, settings.max_retries)

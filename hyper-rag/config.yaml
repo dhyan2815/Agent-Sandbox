@@ -11,6 +11,11 @@
 llm_provider: groq              # fake | groq | gemini
 llm_model: openai/gpt-oss-120b
 
+# The agent's yes/no decisions (route, grade, rewrite, self-check) go to a smaller model.
+# They are classification tasks that do not need the large model, and on a free tier
+# this keeps them from spending the large model's daily token budget.
+control_model: openai/gpt-oss-20b
+
 # The judge scores answers in the eval. It is a different model family from the
 # generator so that a model is never grading its own output, and on Groq each model
 # has its own rate-limit budget.

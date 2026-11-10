@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # Generation
     llm_provider: Literal["fake", "groq", "gemini"] = "fake"
     llm_model: str = ""
+    control_model: str = ""  # agent's routing/grading/checking calls; empty = use llm_model
     judge_provider: Literal["fake", "groq", "gemini"] = "fake"
     judge_model: str = ""
     min_seconds_between_calls: float = 4.0

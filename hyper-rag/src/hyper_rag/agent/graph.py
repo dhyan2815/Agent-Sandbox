@@ -50,9 +50,12 @@ class Agent:
         pack_description: str,
         max_rewrites: int = 2,
         mode: Mode = "hybrid_rerank",
+        control_llm: LLM | None = None,
     ):
         self.retriever = retriever
-        self.llm = llm
+        self.llm = llm  # writes the answer
+        # Makes the decisions (route, grade, rewrite, check). Defaults to the same model.
+        self.control = control_llm or llm
         self.pack_description = pack_description
         self.max_rewrites = max_rewrites
         self.mode = mode
@@ -62,7 +65,7 @@ class Agent:
 
     def _route(self, state: AgentState) -> dict:
         reply = parse_json(
-            self.llm.complete(route_prompt(state["question"], self.pack_description))
+            self.control.complete(route_prompt(state["question"], self.pack_description))
         )
         # Anything other than an explicit "decline" goes to retrieval: a wrong
         # "retrieve" costs one search, a wrong "decline" loses an answerable question.
@@ -87,7 +90,7 @@ class Agent:
         candidates = state["candidates"]
         # Passages are graded against the original question, not the rewritten query:
         # a rewrite can drift, and the question is what must be answered.
-        reply = parse_json(self.llm.complete(grade_prompt(state["question"], candidates)))
+        reply = parse_json(self.control.complete(grade_prompt(state["question"], candidates)))
         numbers = reply.get("relevant", [])
         kept = [
             candidates[n - 1] for n in numbers if isinstance(n, int) and 1 <= n <= len(candidates)
@@ -102,7 +105,7 @@ class Agent:
         return update
 
     def _rewrite(self, state: AgentState) -> dict:
-        reply = self.llm.complete(rewrite_prompt(state["question"], state["tried"]))
+        reply = self.control.complete(rewrite_prompt(state["question"], state["tried"]))
         query = reply.strip().strip('"').splitlines()[0] if reply.strip() else state["question"]
         return {
             "query": query,
@@ -121,7 +124,7 @@ class Agent:
         return update
 
     def _check(self, state: AgentState) -> dict:
-        reply = parse_json(self.llm.complete(check_prompt(state["draft"], state["passages"])))
+        reply = parse_json(self.control.complete(check_prompt(state["draft"], state["passages"])))
         # Only an explicit true passes. An unparseable reply counts as not grounded:
         # the check exists to stop unsupported answers, so it fails closed.
         grounded = reply.get("grounded") is True
