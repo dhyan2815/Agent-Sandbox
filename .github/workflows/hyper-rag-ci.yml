@@ -31,3 +31,9 @@ jobs:
       # No API key and no model download: tests use the fake LLM and the hashing embedder.
       - name: Tests
         run: pytest
+      # End-to-end on the hand-written sample pack: ingest, retrieve, run the agent,
+      # score the answers. Same code path as a real run, with the offline stand-ins.
+      - name: Offline eval
+        run: |
+          hyper-rag ingest sample --offline
+          hyper-rag eval sample --offline
