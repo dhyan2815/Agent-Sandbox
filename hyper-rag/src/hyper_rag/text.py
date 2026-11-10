@@ -41,7 +41,13 @@ def coverage(needle: str, haystack: str) -> float:
 
 
 def split_sentences(text: str) -> list[str]:
-    return [s.strip() for s in _SENTENCE_END.split(text.replace("\n", " ")) if s.strip()]
+    # A line break also ends a sentence: headings and list items carry no full stop.
+    return [
+        sentence.strip()
+        for line in text.splitlines()
+        for sentence in _SENTENCE_END.split(line)
+        if sentence.strip()
+    ]
 
 
 def cited_numbers(answer: str) -> list[int]:

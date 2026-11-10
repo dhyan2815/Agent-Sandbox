@@ -55,5 +55,104 @@ def eval_retrieval(
     _print_table(evaluate_retrieval(load_retriever(loaded, settings), load_golden(loaded)))
 
 
+@app.command()
+def ask(
+    pack: str,
+    question: str,
+    offline: bool = typer.Option(False, "--offline", help=OFFLINE_HELP),
+    trace: bool = typer.Option(False, "--trace", help="Show each step the agent took."),
+    as_json: bool = typer.Option(False, "--json", help="Print the full result as JSON."),
+) -> None:
+    """Ask the agent a question about a pack. Answers cite their sources as [n]."""
+    from hyper_rag.service import build_agent
+
+    answer = build_agent(pack, load_settings(offline)).ask(question)
+    if as_json:
+        typer.echo(json.dumps(answer.to_dict(), indent=2, ensure_ascii=False))
+        return
+    typer.echo(answer.text)
+    if answer.citations:
+        typer.echo("\nSources:")
+        for number, chunk in answer.citations:
+            typer.echo(f"  [{number}] {chunk.title}\n      {chunk.url}")
+    if trace:
+        typer.echo("\nTrace:")
+        for step in answer.trace:
+            typer.echo(f"  {step}")
+
+
+@app.command("eval")
+def eval_answers(
+    pack: str,
+    offline: bool = typer.Option(False, "--offline", help=OFFLINE_HELP),
+    save: bool = typer.Option(False, "--save", help="Also write results/<pack>-<run>.json."),
+) -> None:
+    """Full evaluation: retrieval metrics, then the answer-quality ablation.
+
+    Resumable: if a rate limit stops the run, run the same command again.
+    """
+    from datetime import date
+    from pathlib import Path
+
+    from hyper_rag.evaluation.answer_eval import run_answer_eval
+    from hyper_rag.evaluation.retrieval_eval import evaluate_retrieval
+    from hyper_rag.index import load_retriever, pack_data_dir
+    from hyper_rag.llm import LLMError, build_llm
+
+    settings = load_settings(offline)
+    loaded = load_pack(settings.packs_dir, pack)
+    golden = load_golden(loaded)
+    retriever = load_retriever(loaded, settings)
+    generator = build_llm(settings, "generator")
+    control = build_llm(settings, "control")
+    judge = build_llm(settings, "judge")
+
+    typer.echo(f"Retrieval ({len(golden)} golden questions, embedder {retriever.embedder.name})\n")
+    retrieval_rows = evaluate_retrieval(retriever, golden)
+    _print_table(retrieval_rows)
+
+    run_name = "offline" if offline else generator.name.replace("/", "-").replace(":", "-")
+    run_dir = pack_data_dir(settings, pack) / "eval" / run_name
+    typer.echo(f"\nAnswers (generator {generator.name}, judge {judge.name})")
+    try:
+        answer_rows = run_answer_eval(
+            loaded,
+            golden,
+            retriever,
+            generator,
+            control,
+            judge,
+            settings,
+            run_dir,
+            # Live runs take minutes; show progress. Offline runs finish instantly.
+            on_progress=(lambda line: None) if offline else typer.echo,
+        )
+    except LLMError as error:
+        typer.echo(f"\nStopped: {error}\nProgress is saved in {run_dir}. Re-run to continue.")
+        raise typer.Exit(code=1) from error
+    typer.echo("")
+    _print_table(answer_rows)
+
+    if save:
+        report = {
+            "pack": pack,
+            "date": date.today().isoformat(),
+            "command": f"hyper-rag eval {pack}" + (" --offline" if offline else ""),
+            "generator": generator.name,
+            "control": control.name,
+            "judge": judge.name,
+            "embedder": retriever.embedder.name,
+            "reranker": settings.reranker_model if settings.reranker == "fastembed" else "lexical",
+            "chunks": len(retriever.chunks),
+            "questions": len(golden),
+            "retrieval": retrieval_rows,
+            "answers": answer_rows,
+        }
+        out = Path("results") / f"{pack}-{run_name}.json"
+        out.parent.mkdir(exist_ok=True)
+        out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        typer.echo(f"\nSaved {out}")
+
+
 if __name__ == "__main__":
     app()
