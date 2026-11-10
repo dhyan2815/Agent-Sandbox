@@ -22,9 +22,9 @@ class Settings(BaseSettings):
 
     # Generation
     llm_provider: Literal["fake", "groq", "gemini"] = "fake"
-    groq_model: str = ""
-    gemini_model: str = ""
+    llm_model: str = ""
     judge_provider: Literal["fake", "groq", "gemini"] = "fake"
+    judge_model: str = ""
     min_seconds_between_calls: float = 4.0
     max_retries: int = 6
 

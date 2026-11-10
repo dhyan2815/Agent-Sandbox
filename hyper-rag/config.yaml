@@ -3,18 +3,22 @@
 
 # --- Generation -------------------------------------------------------------
 # Model names were checked against the providers' free-tier pages on 2026-11-10:
-#   https://console.groq.com/docs/rate-limits
-#   https://ai.google.dev/gemini-api/docs/pricing
-# Free line-ups change often; if a call fails with "model not found", update here.
-llm_provider: gemini            # fake | groq | gemini
-groq_model: openai/gpt-oss-120b
-gemini_model: gemini-3.5-flash-lite
+#   https://console.groq.com/docs/rate-limits     (free plan: 30 requests/min, 8K tokens/min,
+#                                                  200K tokens/day, per model)
+#   https://ai.google.dev/gemini-api/docs/pricing (free tier: e.g. gemini-3.5-flash-lite,
+#                                                  gemini-3.8-flash)
+# Free line-ups change often; if a call fails with "model not found", update the names here.
+llm_provider: groq              # fake | groq | gemini
+llm_model: openai/gpt-oss-120b
 
-# The judge scores answers in the eval. It uses a different provider from the
-# generator so a model is never grading its own output.
+# The judge scores answers in the eval. It is a different model family from the
+# generator so that a model is never grading its own output, and on Groq each model
+# has its own rate-limit budget.
 judge_provider: groq            # fake | groq | gemini
-# Seconds to wait between calls to one provider (free tiers allow tens of requests/minute).
-min_seconds_between_calls: 4.0
+judge_model: qwen/qwen3.8-27b
+
+# Seconds between calls to a provider. 2.5s keeps a run under 30 requests/minute.
+min_seconds_between_calls: 2.5
 max_retries: 6
 
 # --- Retrieval (local, CPU) -------------------------------------------------
