@@ -1,0 +1,9 @@
+# A tiny hand-written corpus about a fictional payments API ("Lumen Pay").
+# It exists so tests and the offline CI eval have something to retrieve from
+# without downloading anything. Lumen Pay is not a real product.
+name: sample
+description: Developer documentation for Lumen Pay, a fictional payments API (payments, refunds, webhooks, UPI, settlements, disputes, errors).
+chunk_size: 600   # the sample pages are short; small chunks make retrieval non-trivial
+chunk_overlap: 80
+sources:
+  - corpus/
