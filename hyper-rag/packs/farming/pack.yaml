@@ -6,7 +6,7 @@
 # pmfby.gov.in and vikaspedia.in serve their content through JavaScript, which this
 # plain-HTTP ingester does not execute. Adding them needs a browser-based fetcher.
 name: farming
-description: Indian agriculture - government schemes for farmers (PM-KISAN, crop insurance, Kisan Credit Card, minimum support price, e-NAM, soil health cards, irrigation) and farming practices and crop seasons in India.
+description: Farming and agriculture, with a focus on India - government schemes and institutions for farmers (PM-KISAN, crop insurance, Kisan Credit Card, NABARD, minimum support price, e-NAM, irrigation schemes), crop seasons, and farming practices such as drip irrigation, crop rotation, pest management, composting and vermicompost.
 chunk_size: 1200
 chunk_overlap: 150
 sources:

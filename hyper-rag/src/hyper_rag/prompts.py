@@ -32,11 +32,16 @@ def format_passages(passages: list[Chunk]) -> str:
 
 
 def route_prompt(question: str, pack_description: str) -> Prompt:
+    # The router only filters out questions that are obviously about something else.
+    # It must not guess whether the answer exists: that is what retrieval and grading
+    # are for. An earlier, stricter wording ("could plausibly be answered from the
+    # collection") made a small model decline 7 of 16 answerable farming questions.
     system = (
-        "You route questions for a documentation assistant. "
-        'Reply with JSON only: {"route": "retrieve"} if the question could plausibly be '
-        'answered from the document collection described below, or {"route": "decline"} '
-        "if it is clearly unrelated to it (small talk, other topics)."
+        "You route questions for a documentation assistant. Reply with JSON only. "
+        'Reply {"route": "retrieve"} if the question is about any subject the document '
+        "collection below deals with, even loosely, and even if you doubt the answer is in "
+        'it: a search will check that. Reply {"route": "decline"} only if the question '
+        "is plainly about something else, such as small talk or an unrelated field."
     )
     user = f"Collection: {pack_description}\n\nQuestion: {question}"
     return Prompt("route", system, user, max_tokens=200, inputs={"question": question})
