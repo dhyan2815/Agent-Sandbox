@@ -95,7 +95,7 @@ def check_prompt(answer: str, passages: list[Chunk]) -> Prompt:
     )
     user = f"Passages:\n{format_passages(passages)}\n\nAnswer: {answer}"
     return Prompt(
-        "check", system, user, max_tokens=300, inputs={"answer": answer, "passages": passages}
+        "check", system, user, max_tokens=120, inputs={"answer": answer, "passages": passages}
     )
 
 
@@ -110,5 +110,5 @@ def judge_prompt(question: str, reference: str, answer: str) -> Prompt:
     )
     user = f"Question: {question}\n\nReference answer: {reference}\n\nAnswer to grade: {answer}"
     return Prompt(
-        "judge", system, user, max_tokens=300, inputs={"reference": reference, "answer": answer}
+        "judge", system, user, max_tokens=40, inputs={"reference": reference, "answer": answer}
     )

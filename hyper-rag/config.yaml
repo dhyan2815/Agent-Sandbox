@@ -22,6 +22,12 @@ control_model: openai/gpt-oss-20b
 judge_provider: groq            # fake | groq | gemini
 judge_model: qwen/qwen3.8-27b
 
+# Groq reasoning effort. The judge runs with reasoning off: on the free plan this model
+# is capped at 1,000 output tokens per minute and reasoning tokens count as output, so
+# reasoning would limit an eval to about one judged answer per minute.
+reasoning_effort: low           # gpt-oss models accept low | medium | high
+judge_reasoning_effort: none    # qwen models also accept none
+
 # Seconds between calls to a provider. 2.5s keeps a run under 30 requests/minute.
 min_seconds_between_calls: 2.5
 max_retries: 6

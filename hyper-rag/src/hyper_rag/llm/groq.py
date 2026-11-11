@@ -15,19 +15,28 @@ REASONING_HEADROOM = 600
 
 class GroqLLM(HttpLLM):
     def __init__(
-        self, model: str, api_key: str, min_seconds_between_calls: float, max_retries: int
+        self,
+        model: str,
+        api_key: str,
+        min_seconds_between_calls: float,
+        max_retries: int,
+        reasoning_effort: str = "low",
     ):
         super().__init__(min_seconds_between_calls, max_retries)
         self.name = f"groq:{model}"
         self.model = model
         self.api_key = api_key
+        self.reasoning_effort = reasoning_effort
 
     def complete(self, prompt: Prompt) -> str:
+        headroom = 0 if self.reasoning_effort == "none" else REASONING_HEADROOM
         body = {
             "model": self.model,
             "temperature": 0,  # evals need the most repeatable output the model can give
-            "max_completion_tokens": prompt.max_tokens + REASONING_HEADROOM,
-            "reasoning_effort": "low",  # these are short, well-specified tasks
+            # Groq charges the whole max_completion_tokens against the per-minute output
+            # limit when the request arrives, so asking for more than needed slows a run.
+            "max_completion_tokens": prompt.max_tokens + headroom,
+            "reasoning_effort": self.reasoning_effort,
             "include_reasoning": False,  # only the final answer is used
             "messages": [
                 {"role": "system", "content": prompt.system},

@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     control_model: str = ""  # agent's routing/grading/checking calls; empty = use llm_model
     judge_provider: Literal["fake", "groq", "gemini"] = "fake"
     judge_model: str = ""
+    reasoning_effort: str = "low"  # Groq only; passed through as reasoning_effort
+    judge_reasoning_effort: str = "low"
     min_seconds_between_calls: float = 4.0
     max_retries: int = 6
 
