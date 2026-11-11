@@ -1,0 +1,17 @@
+# Question answering over a code repository: its Python source and its markdown docs.
+# By default the repository is this project itself (path "."), so the pack works with
+# no network. To index another repository, set `path` to a local checkout or set
+# `git_url` to a public repository, which is shallow-cloned into data/codebase/raw/.
+name: codebase
+description: The source code and documentation of the Hyper-RAG project - a Python agentic RAG system (LangGraph agent, hybrid retrieval with BM25 and dense vectors, reciprocal rank fusion, reranking, LLM providers, evaluation harness, CLI and API).
+chunk_size: 1500   # code is denser than prose; a whole function should fit in one chunk
+chunk_overlap: 0   # chunks are cut at function boundaries, so overlap would only duplicate
+sources:
+  - name: repository
+    path: "."
+    # git_url: https://github.com/<owner>/<repo>.git
+    include:
+      - "src/**/*.py"
+      - "docs/*.md"
+      - "README.md"
+      - "config.yaml"
