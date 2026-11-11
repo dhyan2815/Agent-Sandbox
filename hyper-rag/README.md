@@ -32,14 +32,17 @@ chunks, 38 golden questions (32 answerable, 6 unanswerable). Run on 2026-11-11.
 | Hybrid (vector + BM25, RRF) | 0.984 | 0.984 | 0.892 | 0.914 | 0.96 |
 | Hybrid + rerank | 0.984 | 0.984 | 0.912 | 0.929 | 0.92 |
 
-**Answers** (`hyper-rag eval payments --no-judge`, generator `openai/gpt-oss-120b` on Groq)
+**Answers** (`hyper-rag eval payments --save`, generator `openai/gpt-oss-120b`, judge
+`qwen/qwen3.8-27b`, both on Groq's free tier)
 
-| Configuration | Key facts present | Answers with citations | Citation precision | Unanswerable declined | Answerable wrongly declined | LLM calls per question |
-|---|---|---|---|---|---|---|
-| Vector only, single shot | 0.84 | 1.00 | 0.875 | 6 of 6 | 0 of 32 | 1.0 |
-| Hybrid, single shot | 0.88 | 1.00 | 0.828 | 6 of 6 | 0 of 32 | 1.0 |
-| Hybrid + rerank, single shot | 0.84 | 1.00 | 0.927 | 6 of 6 | 0 of 32 | 1.0 |
-| Full agent | 0.87 | 1.00 | 0.917 | 6 of 6 | 2 of 32 | 3.8 |
+| Configuration | Correctness (judged) | Groundedness (judged) | Key facts present | Citation precision | Unanswerable declined | Answerable wrongly declined | LLM calls per question |
+|---|---|---|---|---|---|---|---|
+| Vector only, single shot | 0.922 | 0.906 | 0.84 | 0.875 | 6 of 6 | 0 of 32 | 1.0 |
+| Hybrid, single shot | 0.953 | 0.812 | 0.88 | 0.828 | 6 of 6 | 0 of 32 | 1.0 |
+| Hybrid + rerank, single shot | 0.938 | 0.906 | 0.84 | 0.927 | 6 of 6 | 0 of 32 | 1.0 |
+| Full agent | 0.922 | 0.903 | 0.83 | 0.919 | 6 of 6 | 1 of 32 | 3.8 |
+
+Every answer in every configuration carried at least one citation.
 
 What these numbers say, including the parts that do not flatter the system:
 
@@ -48,43 +51,55 @@ What these numbers say, including the parts that do not flatter the system:
    the share of citations that point at a correct page (0.875 to 0.927), not recall.
 2. **Hybrid + rerank matters more on harder text.** On the research papers pack, recall@5
    rises from 0.933 to 1.000 and facts@5 from 0.786 to 0.929 (table below).
-3. **The agent did not beat single-shot RAG on accuracy here, and it costs 3.8 calls instead
-   of 1.** Every configuration declined all six unanswerable questions, so the agent's extra
-   checks had no refusals left to win. It wrongly declined 2 answerable questions.
-4. **One of those two refusals was the self-check doing its job.** Asked which value the
-   `speed` attribute takes for an instant refund, the generator wrote "instant". The docs say
-   `optimum`. All three single-shot configurations returned the wrong answer; the agent's
-   self-check flagged the claim as unsupported and declined.
-
-**Judged metrics are not in the table yet.** Groundedness and answer correctness are scored
-by a second model (`qwen/qwen3.8-27b`). Its free quota of 200,000 tokens per day ran out
-during this work, as did the control model's, so the final judged run has not completed.
-The harness is resumable (`hyper-rag eval payments --save` continues where it stopped). One
-earlier full judged run exists and is kept in
-[`results/history/run1/`](results/history/run1/payments-first-full-run.json): correctness
-0.92 / 0.94 / 0.92 / 0.81 and groundedness 0.91 / 0.88 / 0.97 / 0.93 for the four
-configurations. It predates three fixes described under [What the evaluation
-caught](#what-the-evaluation-caught), so treat it as preliminary.
+3. **On payments the agent did not beat single-shot RAG, and it costs 3.8 LLM calls instead
+   of 1.** Correctness is within one question of the single-shot configurations (one question
+   is worth 0.03 here). Every configuration declined all six unanswerable questions, so the
+   agent's extra checks had no refusals left to win, and its router wrongly declined one
+   answerable question.
+4. **On papers the agent scored higher,** 0.967 against 0.900 for single-shot hybrid +
+   rerank, with no wrong refusals. With 15 answerable questions that gap is about one
+   question, so it is a hint, not a result.
+5. **The self-check is not dependable yet.** Asked which value the `speed` attribute takes for
+   an instant refund, the generator wrote "instant"; the docs say `optimum`. In an earlier
+   run the self-check flagged the claim and the agent declined. In the final run, after the
+   check prompt was reworded to fix a different failure, it let the same wrong answer
+   through. One example, but it shows the check's verdict is sensitive to prompt wording.
+6. **Groundedness is 0.81 to 0.91:** by the judge's reading, roughly one answer in eight
+   makes a claim that the passages it cites do not fully support. I have not yet separated
+   wrong claims from correct claims that cite too few passages.
 
 ### All four packs
 
-Retrieval metrics for the best mode (hybrid + rerank), then agent behaviour. Commands:
-`hyper-rag eval <pack> --no-judge --configs hybrid_rerank,agent --save`.
+Agent results per pack. Commands: `hyper-rag eval payments --save`, and for the others
+`hyper-rag eval <pack> --configs hybrid_rerank,agent --save`.
 
-| Pack | Corpus | Chunks | Questions | recall@5 | MRR | facts@5 | Agent: key facts | Agent: citation precision | Agent: unanswerable declined | Agent: answerable wrongly declined |
+| Pack | Corpus | Chunks | Questions | recall@5 | MRR | Agent correctness | Agent groundedness | Agent citation precision | Unanswerable declined | Answerable wrongly declined |
 |---|---|---|---|---|---|---|---|---|---|---|
-| payments | 192 doc pages | 2,389 | 32 + 6 | 0.984 | 0.912 | 0.92 | 0.87 | 0.917 | 6 of 6 | 2 of 32 |
-| papers | 12 arXiv papers | 654 | 15 + 4 | 1.000 | 1.000 | 0.929 | 0.69 | 1.000 | 4 of 4 | 1 of 15 |
-| codebase | 37 files of this repo | 190 | 14 + 3 | 1.000 | 0.917 | 1.00 | 0.86 | 0.923 | 3 of 3 | 1 of 14 |
-| farming | 8 Wikipedia articles | 223 | 16 + 4 | 1.000 | 1.000 | 1.00 | 1.00 | 1.000 | 4 of 4 | 1 of 16 |
+| payments | 192 doc pages | 2,389 | 32 + 6 | 0.984 | 0.912 | 0.922 | 0.903 | 0.919 | 6 of 6 | 1 of 32 |
+| papers | 12 arXiv papers | 654 | 15 + 4 | 1.000 | 1.000 | 0.967 | 0.933 | 1.000 | 4 of 4 | 0 of 15 |
+| codebase | 37 files of this repo | 190 | 14 + 3 | 1.000 | 0.917 | not judged | not judged | 0.923 | 3 of 3 | 1 of 14 |
+| farming | 8 Wikipedia articles | 223 | 16 + 4 | 1.000 | 1.000 | not judged | not judged | 1.000 | 4 of 4 | 1 of 16 |
 
-Papers pack, all three retrieval modes:
+recall@5 and MRR are for hybrid + rerank. Questions are answerable + unanswerable.
+
+**Codebase and farming are not judged.** The judge model's free quota of 200,000 tokens per
+day ran out after payments and papers. Their deterministic metrics come from
+`hyper-rag eval <pack> --no-judge --configs hybrid_rerank,agent --save`; exact-match key
+facts were present in 0.86 (codebase) and 1.00 (farming) of the agent's answers. To finish,
+run the judged command above on another day: the harness resumes and reuses cached replies.
+
+Papers pack, retrieval modes and answers:
 
 | Retrieval mode | recall@5 | recall@10 | MRR | nDCG@10 | facts@5 |
 |---|---|---|---|---|---|
 | Vector only | 0.933 | 1.000 | 0.940 | 0.947 | 0.786 |
 | Hybrid | 0.967 | 1.000 | 0.950 | 0.948 | 0.929 |
 | Hybrid + rerank | 1.000 | 1.000 | 1.000 | 1.000 | 0.929 |
+
+| Configuration | Correctness (judged) | Groundedness (judged) | Key facts present | Citation precision | Unanswerable declined | Answerable wrongly declined |
+|---|---|---|---|---|---|---|
+| Hybrid + rerank, single shot | 0.900 | 0.929 | 0.92 | 1.000 | 4 of 4 | 1 of 15 |
+| Full agent | 0.967 | 0.933 | 0.71 | 1.000 | 4 of 4 | 0 of 15 |
 
 The complete tables for every pack are in [`results/`](results/) and print with
 `hyper-rag report`.
@@ -110,16 +125,17 @@ The point of building the harness first was to find problems by measurement. It 
 
 - **A metric bug.** The first run reported that only 34% of answers had citations. Reading
   the raw answers showed the model was citing correctly in its own bracket style
-  (`【1†L9-L12】`). Replies are now normalised to `[1]` before parsing.
+  (`【1†L9-L12】`). Replies are now normalised to `[1]` before parsing. That first run is kept in
+  [`results/history/run1/`](results/history/run1/payments-first-full-run.json).
 - **An over-strict router.** The agent wrongly declined 4 of 32 payments questions and 7 of
   16 farming questions. Traces showed the router, not retrieval, was rejecting them as out of
   scope. Rewording the router prompt to decline only clearly unrelated questions, and
-  correcting the farming pack's description, brought this to 2 of 32 and 1 of 16. Before and
-  after are both saved: [`results/history/router-v1/`](results/history/router-v1/).
-- **A self-check that sometimes missed the answer.** On one demo question the smaller model
-  replied "no answer provided to verify". The check prompt now marks the answer explicitly.
-  This fix is in the code but the tables above were produced just before it; the re-run is
-  waiting on the same daily quota.
+  correcting the farming pack's description, brought this to 1 of 32 and 1 of 16. The "before"
+  results are saved in [`results/history/router-v1/`](results/history/router-v1/).
+- **A self-check that sometimes missed the answer.** On one question the smaller model
+  replied "no answer provided to verify" and the agent declined a correct answer. The check
+  prompt now marks the answer explicitly. As noted above, the reworded check also stopped
+  catching one wrong answer it had caught before.
 - **A rate-limit detail.** Groq charges a request's whole `max_completion_tokens` against the
   per-minute output limit up front. Oversized output budgets had slowed the judge to one call
   per minute.
@@ -271,7 +287,10 @@ line-ups change; update the names in `config.yaml` if a model is retired.
 
 ## Known limitations
 
-- **Judged metrics are pending** for the final code, as described under Results.
+- **Two packs have no judged metrics.** Codebase and farming were scored on deterministic
+  metrics only, because the judge's daily free quota ran out.
+- **One run per configuration.** There are no repeated runs or confidence intervals, so small
+  differences between configurations are within noise.
 - **The Gemini provider has not been run against the live API.** It is written from Google's
   REST reference for the Interactions API and unit-tested against that response shape, but no
   Gemini key was available. Groq is the only provider with live results.
@@ -285,8 +304,9 @@ line-ups change; update the names in `config.yaml` if a model is retired.
   from the cloud machine this was built on, and the government portals were unreachable or
   JavaScript-only. On a home connection `hyper-rag ingest farming` should fetch the rest; set
   `HYPER_RAG_CONTACT` first, since Wikipedia asks crawlers to identify themselves.
-- **The agent's router is its weakest step.** It still declines some in-scope questions, and
-  it depends on the pack description being accurate.
+- **The agent's control steps are its weakest part.** The router still declines some in-scope
+  questions and depends on the pack description being accurate, and the self-check's verdict
+  changes with prompt wording.
 - **A question whose correct answer is the refusal token is treated as a refusal.** The
   codebase pack asks which token the generator emits when it cannot answer; the correct reply,
   `INSUFFICIENT_CONTEXT`, is read as the generator declining.
@@ -296,7 +316,8 @@ line-ups change; update the names in `config.yaml` if a model is retired.
 
 ## What I would do next
 
-1. Finish the judged run and add confidence intervals (bootstrap over questions).
+1. Judge the codebase and farming packs and add confidence intervals (bootstrap over
+   questions).
 2. Grow the golden sets with paraphrased and multi-hop questions written without looking at
    the page wording, and label relevance per passage.
 3. Replace the LLM router with the reranker's top score as an out-of-scope signal: it is
