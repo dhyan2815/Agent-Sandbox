@@ -86,6 +86,11 @@ def eval_answers(
     pack: str,
     offline: bool = typer.Option(False, "--offline", help=OFFLINE_HELP),
     save: bool = typer.Option(False, "--save", help="Also write results/<pack>-<run>.json."),
+    configs: str = typer.Option(
+        "vector,hybrid,hybrid_rerank,agent",
+        "--configs",
+        help="Comma-separated configurations to answer with (fewer = fewer LLM calls).",
+    ),
 ) -> None:
     """Full evaluation: retrieval metrics, then the answer-quality ablation.
 
@@ -124,6 +129,7 @@ def eval_answers(
             judge,
             settings,
             run_dir,
+            configs=tuple(configs.split(",")),
             # Live runs take minutes; show progress. Offline runs finish instantly.
             on_progress=(lambda line: None) if offline else typer.echo,
         )
