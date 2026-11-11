@@ -62,3 +62,30 @@ def cited_numbers(answer: str) -> list[int]:
 
 def strip_citations(answer: str) -> str:
     return re.sub(r"\s*\[\d+\]", "", answer).strip()
+
+
+# Typographic characters models like to emit, mapped to their plain equivalents.
+_PLAIN = str.maketrans(
+    {"\u202f": " ", "\u00a0": " ", "\u2009": " ", "\u2011": "-", "\u2010": "-", "\u2212": "-"}
+)
+# Some models were trained to cite in their own bracket style, e.g. \u30101\u2020L9-L12\u3011.
+_FOREIGN_CITATION = re.compile(r"\u3010(\d+)[^\u3011]*\u3011")
+
+
+def normalise_answer(reply: str) -> str:
+    """Bring a model reply into the one format the rest of the system expects.
+
+    Citations become [n] and typographic spaces/hyphens become ASCII, so citation
+    parsing and string checks do not depend on which model wrote the answer.
+    """
+    reply = _FOREIGN_CITATION.sub(r"[\1]", reply).translate(_PLAIN)
+    return re.sub(r"[ \t]+", " ", reply).strip()
+
+
+def contains_fact(text: str, fact: str) -> bool:
+    """Case-insensitive substring match that ignores all whitespace ('T + 2' matches 'T+2')."""
+
+    def squash(value: str) -> str:
+        return re.sub(r"\s+", "", value.translate(_PLAIN)).lower()
+
+    return squash(fact) in squash(text)

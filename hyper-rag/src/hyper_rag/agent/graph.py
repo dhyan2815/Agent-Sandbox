@@ -27,6 +27,7 @@ from hyper_rag.prompts import (
     route_prompt,
 )
 from hyper_rag.retrieval.retriever import Mode, Retriever
+from hyper_rag.text import normalise_answer
 from hyper_rag.types import Chunk
 
 
@@ -114,7 +115,9 @@ class Agent:
         }
 
     def _generate(self, state: AgentState) -> dict:
-        draft = self.llm.complete(generate_prompt(state["question"], state["passages"])).strip()
+        draft = normalise_answer(
+            self.llm.complete(generate_prompt(state["question"], state["passages"]))
+        )
         update = {"draft": draft, "llm_calls": state["llm_calls"] + 1}
         if INSUFFICIENT in draft:
             update["decline_reason"] = "passages do not contain the answer"

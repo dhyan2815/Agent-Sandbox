@@ -15,6 +15,8 @@ still counts.
 
 import math
 
+from hyper_rag.text import contains_fact
+
 Needs = list[list[str]]
 
 
@@ -61,8 +63,8 @@ def facts_in_top_k(retrieved_texts: list[str], key_facts: list[str], k: int) -> 
     This is the passage-level counterpart to recall: it asks whether the generator was
     actually shown the answer, not just a chunk from the right page.
     """
-    shown = " ".join(retrieved_texts[:k]).lower()
-    return 1.0 if all(fact.lower() in shown for fact in key_facts) else 0.0
+    shown = " ".join(retrieved_texts[:k])
+    return 1.0 if all(contains_fact(shown, fact) for fact in key_facts) else 0.0
 
 
 def mean(values: list[float]) -> float:

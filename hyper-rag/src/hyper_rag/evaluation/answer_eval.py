@@ -23,6 +23,7 @@ from hyper_rag.llm import LLM, parse_json
 from hyper_rag.packs import GoldenQuestion, Pack
 from hyper_rag.prompts import check_prompt, judge_prompt
 from hyper_rag.retrieval.retriever import MODES, Retriever
+from hyper_rag.text import contains_fact
 
 CONFIGS = (*MODES, "agent")
 
@@ -37,6 +38,7 @@ def score_answer(question: GoldenQuestion, answer: Answer, judge: LLM) -> dict:
         "refused": answer.refused,
         "llm_calls": answer.llm_calls,
         "answer": answer.text,
+        "trace": answer.trace,
     }
     if answer.refused:
         if question.answerable:
@@ -66,8 +68,8 @@ def score_answer(question: GoldenQuestion, answer: Answer, judge: LLM) -> dict:
         row["correctness"] = VERDICT_SCORES.get(str(reply.get("verdict")), 0.0)
         # ...and by exact string match on key facts, as a check on the judge itself.
         if question.key_facts:
-            text = answer.text.lower()
-            row["key_facts"] = 1.0 if all(f.lower() in text for f in question.key_facts) else 0.0
+            found = all(contains_fact(answer.text, fact) for fact in question.key_facts)
+            row["key_facts"] = 1.0 if found else 0.0
     return row
 
 

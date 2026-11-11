@@ -46,3 +46,13 @@ def test_cache_calls_the_model_once(settings, tmp_path):
     prompt = generate_prompt("How many business days does a refund take?", [REFUNDS])
     assert cached.complete(prompt) == cached.complete(prompt)
     assert (cached.misses, cached.hits) == (1, 1)
+
+
+def test_answers_are_normalised_to_one_citation_and_character_format():
+    from hyper_rag.text import cited_numbers, contains_fact, normalise_answer
+
+    raw = "Settled in\u202fT\u202f+\u202f2 days\u30101\u2020L9-L12\u3011\u30103\u3011, auto\u2011captured."  # noqa: E501
+    clean = normalise_answer(raw)
+    assert clean == "Settled in T + 2 days[1][3], auto-captured."
+    assert cited_numbers(clean) == [1, 3]
+    assert contains_fact(clean, "T+2") and not contains_fact(clean, "T+3")
