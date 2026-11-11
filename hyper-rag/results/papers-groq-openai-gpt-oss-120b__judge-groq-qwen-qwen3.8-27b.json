@@ -1,10 +1,10 @@
 {
   "pack": "papers",
   "date": "2026-11-11",
-  "command": "hyper-rag eval papers --no-judge --configs hybrid_rerank,agent",
+  "command": "hyper-rag eval papers --configs hybrid_rerank,agent",
   "generator": "groq:openai/gpt-oss-120b",
   "control": "groq:openai/gpt-oss-20b",
-  "judge": "none",
+  "judge": "groq:qwen/qwen3.8-27b",
   "embedder": "BAAI--bge-small-en-v1.5",
   "reranker": "Xenova/ms-marco-MiniLM-L-6-v2",
   "chunks": 654,
@@ -42,9 +42,9 @@
     {
       "config": "hybrid_rerank",
       "questions": 19,
-      "correctness": "n/a",
+      "correctness": 0.9,
       "key_facts": 0.923,
-      "grounded": "n/a",
+      "grounded": 0.929,
       "cited": 1.0,
       "citation_precision": 1.0,
       "refused_unanswerable": 1.0,
@@ -54,13 +54,13 @@
     {
       "config": "agent",
       "questions": 19,
-      "correctness": "n/a",
-      "key_facts": 0.692,
-      "grounded": "n/a",
+      "correctness": 0.967,
+      "key_facts": 0.714,
+      "grounded": 0.933,
       "cited": 1.0,
       "citation_precision": 1.0,
       "refused_unanswerable": 1.0,
-      "refused_answerable": 0.067,
+      "refused_answerable": 0.0,
       "llm_calls": 3.737
     }
   ]
