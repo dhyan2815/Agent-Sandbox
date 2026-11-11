@@ -35,6 +35,23 @@ def test_correct_cited_answer_scores_full_marks(judge):
     assert row["grounded"] == 1.0 and row["citation_precision"] == 1.0
 
 
+def test_without_a_judge_only_deterministic_metrics_are_scored():
+    text = "A normal refund takes 5 to 7 business days. [1]"
+    row = score_answer(QUESTION, build_answer(QUESTION.question, text, [REFUNDS, UPI], [], 1), None)
+    assert row["key_facts"] == 1.0 and row["citation_precision"] == 1.0
+    assert "grounded" not in row and "correctness" not in row
+    assert summarise("agent", [row])["correctness"] == "n/a"
+
+
+def test_groundedness_is_judged_against_the_cited_passages(judge):
+    # The claim is true of passage 1 but the answer cites passage 2, which does not say it.
+    text = "A normal refund takes 5 to 7 business days. [2]"
+    row = score_answer(
+        QUESTION, build_answer(QUESTION.question, text, [REFUNDS, UPI], [], 1), judge
+    )
+    assert row["grounded"] == 0.0
+
+
 def test_citing_the_wrong_document_lowers_citation_precision(judge):
     answer = build_answer(
         QUESTION.question,

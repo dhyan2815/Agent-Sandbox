@@ -30,26 +30,35 @@ CONFIGS = (*MODES, "agent")
 VERDICT_SCORES = {"correct": 1.0, "partial": 0.5, "incorrect": 0.0}
 
 
-def score_answer(question: GoldenQuestion, answer: Answer, judge: LLM) -> dict:
-    """Score one answer. Fields that do not apply to this question are left out."""
+def score_answer(question: GoldenQuestion, answer: Answer, judge: LLM | None) -> dict:
+    """Score one answer. Fields that do not apply to this question are left out.
+
+    With judge=None only the deterministic metrics are computed (citations, key facts,
+    refusals); the two judged metrics, groundedness and correctness, are skipped.
+    """
     row: dict = {
         "id": question.id,
         "answerable": question.answerable,
         "refused": answer.refused,
         "llm_calls": answer.llm_calls,
         "answer": answer.text,
+        "passages": [chunk.id for chunk in answer.passages],
         "trace": answer.trace,
     }
     if answer.refused:
-        if question.answerable:
+        if question.answerable and judge is not None:
             row["correctness"] = 0.0  # declining an answerable question is a wrong answer
         return row
 
     # --- the system gave an answer -------------------------------------------------
-    # Groundedness: is every claim supported by the passages the generator was shown?
-    # Judged for every answer, including answers to unanswerable questions.
-    verdict = parse_json(judge.complete(check_prompt(answer.text, answer.passages)))
-    row["grounded"] = 1.0 if verdict.get("grounded") is True else 0.0
+    # Groundedness: is every claim supported by the passages the answer cites? Judging
+    # against the cited passages (rather than everything retrieved) also catches a
+    # correct claim attributed to the wrong source, and keeps the judge prompt small.
+    # An answer with no citations is checked against all the passages it was given.
+    if judge is not None:
+        evidence = [chunk for _, chunk in answer.citations] or answer.passages
+        verdict = parse_json(judge.complete(check_prompt(answer.text, evidence)))
+        row["grounded"] = 1.0 if verdict.get("grounded") is True else 0.0
 
     # Citations (deterministic, no LLM).
     row["has_citation"] = 1.0 if answer.cited else 0.0
@@ -62,10 +71,10 @@ def score_answer(question: GoldenQuestion, answer: Answer, judge: LLM) -> dict:
             cited_docs = [chunk.doc_id for _, chunk in answer.citations]
             row["citation_precision"] = sum(d in gold_docs for d in cited_docs) / len(cited_docs)
         # Correctness against the reference answer, by the judge model...
-        reply = parse_json(
-            judge.complete(judge_prompt(question.question, question.reference_answer, answer.text))
-        )
-        row["correctness"] = VERDICT_SCORES.get(str(reply.get("verdict")), 0.0)
+        if judge is not None:
+            prompt = judge_prompt(question.question, question.reference_answer, answer.text)
+            reply = parse_json(judge.complete(prompt))
+            row["correctness"] = VERDICT_SCORES.get(str(reply.get("verdict")), 0.0)
         # ...and by exact string match on key facts, as a check on the judge itself.
         if question.key_facts:
             found = all(contains_fact(answer.text, fact) for fact in question.key_facts)
@@ -111,7 +120,7 @@ def run_answer_eval(
     retriever: Retriever,
     generator: LLM,
     control: LLM,
-    judge: LLM,
+    judge: LLM | None,
     settings: Settings,
     run_dir: Path,
     configs: tuple[str, ...] = CONFIGS,
