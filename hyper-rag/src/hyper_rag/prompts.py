@@ -98,7 +98,14 @@ def check_prompt(answer: str, passages: list[Chunk]) -> Prompt:
         "factual claim in it is directly supported by the passages. Reply with JSON only: "
         '{"grounded": true} or {"grounded": false, "unsupported": "<the unsupported claim>"}.'
     )
-    user = f"Passages:\n{format_passages(passages)}\n\nAnswer: {answer}"
+    # The answer goes in a clearly marked block with the question repeated after it. With
+    # a bare "Answer: ..." line at the end of long passages, a small model sometimes
+    # replied that there was no answer to verify.
+    user = (
+        f"Passages:\n{format_passages(passages)}\n\n"
+        f"Answer to verify:\n<answer>\n{answer}\n</answer>\n\n"
+        "Is every factual claim in the answer supported by the passages?"
+    )
     return Prompt(
         "check", system, user, max_tokens=120, inputs={"answer": answer, "passages": passages}
     )
