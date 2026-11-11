@@ -44,3 +44,8 @@ def test_unknown_pack_is_404_and_bad_input_is_422(client):
 
 def test_lists_packs(client):
     assert "sample" in client.get("/packs").json()["packs"]
+
+
+def test_serves_the_web_page(client):
+    response = client.get("/")
+    assert response.status_code == 200 and "Hyper-RAG" in response.text

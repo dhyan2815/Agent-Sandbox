@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyper-RAG</title>
+<style>
+  :root { --bg:#f7f7f5; --card:#fff; --ink:#1c1c1a; --muted:#6b6b66; --line:#e2e2dc; --accent:#0b6e4f; --warn:#8a4b00; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161614; --card:#1f1f1c; --ink:#ecece6; --muted:#9a9a92; --line:#33332e; --accent:#5fc9a2; --warn:#e0a458; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.sub { color: var(--muted); margin: 0 0 24px; }
+  form { display: grid; gap: 10px; grid-template-columns: 150px 1fr auto; }
+  @media (max-width: 600px) { form { grid-template-columns: 1fr; } }
+  select, input, button { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); min-width: 0; }
+  button { background: var(--accent); color: var(--bg); border-color: var(--accent); cursor: pointer; font-weight: 600; }
+  button:disabled { opacity: .6; cursor: wait; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-top: 18px; }
+  section h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  #answer { white-space: pre-wrap; }
+  #answer.refused { color: var(--warn); }
+  ol, ul { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 8px; overflow-wrap: anywhere; }
+  a { color: var(--accent); }
+  details summary { cursor: pointer; color: var(--muted); font-size: .9rem; }
+  details p { color: var(--muted); font-size: .9rem; white-space: pre-wrap; margin: 6px 0 0; }
+  #trace li { font-family: ui-monospace, monospace; font-size: .85rem; color: var(--muted); margin-bottom: 2px; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hyper-RAG</h1>
+  <p class="sub">Ask a document collection. Answers cite their sources, and the agent declines when the sources do not support an answer.</p>
+  <form id="form">
+    <select id="pack" aria-label="Document collection"></select>
+    <input id="question" aria-label="Question" placeholder="Ask a question" required minlength="3" maxlength="500">
+    <button id="ask">Ask</button>
+  </form>
+  <section id="result" hidden>
+    <h2>Answer</h2>
+    <div id="answer"></div>
+  </section>
+  <section id="sources" hidden>
+    <h2>Sources</h2>
+    <ul id="citations"></ul>
+  </section>
+  <section id="steps" hidden>
+    <h2>What the agent did</h2>
+    <ol id="trace"></ol>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+
+// Build DOM nodes with textContent only: answers and passages are untrusted text.
+function node(tag, text, attrs = {}) {
+  const el = document.createElement(tag);
+  if (text) el.textContent = text;
+  Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+  return el;
+}
+
+fetch("/packs").then((r) => r.json()).then(({ packs }) => {
+  packs.forEach((name) => $("pack").append(node("option", name, { value: name })));
+});
+
+$("form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  $("ask").disabled = true;
+  $("ask").textContent = "Thinking";
+  try {
+    const response = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pack: $("pack").value, question: $("question").value }),
+    });
+    const body = await response.json();
+    $("result").hidden = false;
+    if (!response.ok) {
+      $("answer").textContent = "Error: " + (typeof body.detail === "string" ? body.detail : "invalid request");
+      $("answer").className = "refused";
+      $("sources").hidden = $("steps").hidden = true;
+      return;
+    }
+    $("answer").textContent = body.answer;
+    $("answer").className = body.refused ? "refused" : "";
+
+    $("citations").replaceChildren(...body.citations.map((c) => {
+      const item = node("li", `[${c.number}] `);
+      // Only link real web sources; local corpora have file paths, not URLs.
+      item.append(c.url.startsWith("https://") ? node("a", c.title, { href: c.url, target: "_blank", rel: "noopener" }) : node("span", `${c.title} (${c.url})`));
+      const details = node("details");
+      details.append(node("summary", "Show passage"), node("p", c.text));
+      item.append(details);
+      return item;
+    }));
+    $("sources").hidden = body.citations.length === 0;
+
+    $("trace").replaceChildren(...body.trace.map((step) => node("li", step)));
+    $("steps").hidden = false;
+  } catch (error) {
+    $("result").hidden = false;
+    $("answer").textContent = "Could not reach the server.";
+    $("answer").className = "refused";
+  } finally {
+    $("ask").disabled = false;
+    $("ask").textContent = "Ask";
+  }
+});
+</script>
+</body>
+</html>

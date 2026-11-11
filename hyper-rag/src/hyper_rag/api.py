@@ -1,4 +1,4 @@
-"""HTTP API: POST /ask returns an answer with citations.
+"""HTTP API: POST /ask returns an answer with citations. GET / serves a small web page.
 
 Run with:  uvicorn hyper_rag.api:app
 Set HYPER_RAG_OFFLINE=1 to serve with the fake LLM and hashing embedder (no key, no network).
@@ -6,8 +6,10 @@ Set HYPER_RAG_OFFLINE=1 to serve with the fake LLM and hashing embedder (no key,
 
 import os
 from functools import lru_cache
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from hyper_rag.agent import Agent
@@ -50,6 +52,11 @@ def get_settings() -> Settings:
 def get_agent(pack: str) -> Agent:
     # Building an agent loads the index and the embedding model, so keep one per pack.
     return build_agent(pack, get_settings())
+
+
+@app.get("/", include_in_schema=False)
+def index() -> FileResponse:
+    return FileResponse(Path(__file__).parent / "static" / "index.html")
 
 
 @app.get("/health")
