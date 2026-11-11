@@ -1,0 +1,314 @@
+# Hyper-RAG
+
+[![hyper-rag CI](https://github.com/dhyan2815/Agent-Sandbox/actions/workflows/hyper-rag-ci.yml/badge.svg)](https://github.com/dhyan2815/Agent-Sandbox/actions/workflows/hyper-rag-ci.yml)
+
+An agentic RAG system that answers questions over document collections with citations,
+declines when its sources do not support an answer, and ships with the evaluation
+harness that measures how well it does both.
+
+- **Agent:** a LangGraph state machine that routes the question, retrieves, grades the
+  passages, rewrites the query and retries when retrieval is weak, writes a cited answer and
+  runs a groundedness self-check before releasing it.
+- **Retrieval:** dense vectors + BM25, fused with reciprocal rank fusion, reranked by a
+  cross-encoder. Embedding and reranking run locally on CPU.
+- **Evaluation:** a golden question set per domain, retrieval metrics, answer metrics, and an
+  ablation that shows what each component adds. Every number below comes from a run of the
+  code in this repository, with the command that produced it.
+- **Zero running cost:** generation uses Groq's free tier; tests and a full offline eval run
+  with no API key and no network.
+
+![The web UI answering a question about Razorpay webhooks with two cited sources and the agent's steps](docs/demo.png)
+
+## Results
+
+Payments pack: 192 pages of Razorpay and Google Wallet developer documentation, 2,389
+chunks, 38 golden questions (32 answerable, 6 unanswerable). Run on 2026-11-11.
+
+**Retrieval** (`hyper-rag eval-retrieval payments`, no LLM involved)
+
+| Retrieval mode | recall@5 | recall@10 | MRR | nDCG@10 | facts@5 |
+|---|---|---|---|---|---|
+| Vector only | 0.984 | 1.000 | 0.880 | 0.910 | 0.96 |
+| Hybrid (vector + BM25, RRF) | 0.984 | 0.984 | 0.892 | 0.914 | 0.96 |
+| Hybrid + rerank | 0.984 | 0.984 | 0.912 | 0.929 | 0.92 |
+
+**Answers** (`hyper-rag eval payments --no-judge`, generator `openai/gpt-oss-120b` on Groq)
+
+| Configuration | Key facts present | Answers with citations | Citation precision | Unanswerable declined | Answerable wrongly declined | LLM calls per question |
+|---|---|---|---|---|---|---|
+| Vector only, single shot | 0.84 | 1.00 | 0.875 | 6 of 6 | 0 of 32 | 1.0 |
+| Hybrid, single shot | 0.88 | 1.00 | 0.828 | 6 of 6 | 0 of 32 | 1.0 |
+| Hybrid + rerank, single shot | 0.84 | 1.00 | 0.927 | 6 of 6 | 0 of 32 | 1.0 |
+| Full agent | 0.87 | 1.00 | 0.917 | 6 of 6 | 2 of 32 | 3.8 |
+
+What these numbers say, including the parts that do not flatter the system:
+
+1. **Plain vector search was already strong on this set.** Document-level recall@5 is 0.984
+   in every mode. Hybrid search and reranking improve the ranking (MRR 0.880 to 0.912) and
+   the share of citations that point at a correct page (0.875 to 0.927), not recall.
+2. **Hybrid + rerank matters more on harder text.** On the research papers pack, recall@5
+   rises from 0.933 to 1.000 and facts@5 from 0.786 to 0.929 (table below).
+3. **The agent did not beat single-shot RAG on accuracy here, and it costs 3.8 calls instead
+   of 1.** Every configuration declined all six unanswerable questions, so the agent's extra
+   checks had no refusals left to win. It wrongly declined 2 answerable questions.
+4. **One of those two refusals was the self-check doing its job.** Asked which value the
+   `speed` attribute takes for an instant refund, the generator wrote "instant". The docs say
+   `optimum`. All three single-shot configurations returned the wrong answer; the agent's
+   self-check flagged the claim as unsupported and declined.
+
+**Judged metrics are not in the table yet.** Groundedness and answer correctness are scored
+by a second model (`qwen/qwen3.8-27b`). Its free quota of 200,000 tokens per day ran out
+during this work, as did the control model's, so the final judged run has not completed.
+The harness is resumable (`hyper-rag eval payments --save` continues where it stopped). One
+earlier full judged run exists and is kept in
+[`results/history/run1/`](results/history/run1/payments-first-full-run.json): correctness
+0.92 / 0.94 / 0.92 / 0.81 and groundedness 0.91 / 0.88 / 0.97 / 0.93 for the four
+configurations. It predates three fixes described under [What the evaluation
+caught](#what-the-evaluation-caught), so treat it as preliminary.
+
+### All four packs
+
+Retrieval metrics for the best mode (hybrid + rerank), then agent behaviour. Commands:
+`hyper-rag eval <pack> --no-judge --configs hybrid_rerank,agent --save`.
+
+| Pack | Corpus | Chunks | Questions | recall@5 | MRR | facts@5 | Agent: key facts | Agent: citation precision | Agent: unanswerable declined | Agent: answerable wrongly declined |
+|---|---|---|---|---|---|---|---|---|---|---|
+| payments | 192 doc pages | 2,389 | 32 + 6 | 0.984 | 0.912 | 0.92 | 0.87 | 0.917 | 6 of 6 | 2 of 32 |
+| papers | 12 arXiv papers | 654 | 15 + 4 | 1.000 | 1.000 | 0.929 | 0.69 | 1.000 | 4 of 4 | 1 of 15 |
+| codebase | 37 files of this repo | 190 | 14 + 3 | 1.000 | 0.917 | 1.00 | 0.86 | 0.923 | 3 of 3 | 1 of 14 |
+| farming | 8 Wikipedia articles | 223 | 16 + 4 | 1.000 | 1.000 | 1.00 | 1.00 | 1.000 | 4 of 4 | 1 of 16 |
+
+Papers pack, all three retrieval modes:
+
+| Retrieval mode | recall@5 | recall@10 | MRR | nDCG@10 | facts@5 |
+|---|---|---|---|---|---|
+| Vector only | 0.933 | 1.000 | 0.940 | 0.947 | 0.786 |
+| Hybrid | 0.967 | 1.000 | 0.950 | 0.948 | 0.929 |
+| Hybrid + rerank | 1.000 | 1.000 | 1.000 | 1.000 | 0.929 |
+
+The complete tables for every pack are in [`results/`](results/) and print with
+`hyper-rag report`.
+
+### How to read the metrics
+
+| Metric | Meaning |
+|---|---|
+| recall@k | Share of a question's information needs met by the top k chunks. A need is a set of pages, any of which contains that part of the answer. |
+| MRR | 1 / rank of the first relevant chunk, averaged. |
+| nDCG@10 | Rank-weighted relevance of the top 10, counting each need once. |
+| facts@5 | Share of questions whose key answer strings appear in the top 5 chunks. Stricter than recall: the generator must actually be shown the answer. |
+| Key facts present | Share of answerable questions whose answer contains the golden key strings, by exact match. A lower bound: "three days" does not match "3 days". |
+| Citation precision | Share of cited passages that come from a page the golden set lists as correct. |
+| Unanswerable declined | Questions whose answer is not in the corpus, and which the system refused to answer. Higher is better. |
+| Answerable wrongly declined | Questions with an answer in the corpus that the system refused. Lower is better. |
+| Groundedness (judged) | Every claim in the answer is supported by the passages it cites. |
+| Correctness (judged) | The answer states the same key facts as the golden reference answer. |
+
+### What the evaluation caught
+
+The point of building the harness first was to find problems by measurement. It found four:
+
+- **A metric bug.** The first run reported that only 34% of answers had citations. Reading
+  the raw answers showed the model was citing correctly in its own bracket style
+  (`【1†L9-L12】`). Replies are now normalised to `[1]` before parsing.
+- **An over-strict router.** The agent wrongly declined 4 of 32 payments questions and 7 of
+  16 farming questions. Traces showed the router, not retrieval, was rejecting them as out of
+  scope. Rewording the router prompt to decline only clearly unrelated questions, and
+  correcting the farming pack's description, brought this to 2 of 32 and 1 of 16. Before and
+  after are both saved: [`results/history/router-v1/`](results/history/router-v1/).
+- **A self-check that sometimes missed the answer.** On one demo question the smaller model
+  replied "no answer provided to verify". The check prompt now marks the answer explicitly.
+  This fix is in the code but the tables above were produced just before it; the re-run is
+  waiting on the same daily quota.
+- **A rate-limit detail.** Groq charges a request's whole `max_completion_tokens` against the
+  per-minute output limit up front. Oversized output budgets had slowed the judge to one call
+  per minute.
+
+These fixes were made after looking at results on the same golden sets, so the "after"
+numbers are not a clean held-out measurement.
+
+## Architecture
+
+```mermaid
+flowchart TD
+    Q([Question]) --> R{Route}
+    R -- unrelated --> D([Decline])
+    R -- in scope --> RET
+
+    subgraph Retrieval [Hybrid retrieval, local CPU]
+        RET[Dense search<br/>bge-small embeddings] --> F[Reciprocal rank fusion]
+        B[BM25 search] --> F
+        F --> RR[Cross-encoder rerank<br/>top 5]
+    end
+
+    RR --> G{Grade passages}
+    G -- none relevant,<br/>retries left --> W[Rewrite query] --> RET
+    G -- none relevant,<br/>no retries left --> D
+    G -- relevant --> GEN[Generate answer<br/>with citations]
+    GEN -- passages lack the answer --> D
+    GEN --> C{Groundedness<br/>self-check}
+    C -- unsupported claim --> D
+    C -- grounded --> A([Answer + sources])
+```
+
+Each diamond is one small LLM call with a JSON reply. Decisions go to a small model
+(`openai/gpt-oss-20b`); only the answer is written by the larger one (`openai/gpt-oss-120b`).
+
+```
+packs/<name>/        a domain: pack.yaml, ingest.py, golden.jsonl
+src/hyper_rag/
+  llm/               one provider interface: fake, Groq, Gemini; disk cache; retry and backoff
+  retrieval/         embedders, dense search, BM25, fusion, rerank, the three-mode retriever
+  agent/             the LangGraph agent and the single-shot baseline
+  evaluation/        retrieval metrics, answer metrics, resumable ablation runs
+  chunking.py        heading-aware chunks with overlap
+  web.py             polite fetcher (robots.txt, crawl delay, disk copy)
+  cli.py, api.py     command line, FastAPI endpoint and web page
+results/             saved eval outputs that the tables above are copied from
+docs/DECISIONS.md    every design choice, the alternatives and the reason
+```
+
+## Quickstart
+
+Requires Python 3.11 or newer. Run all commands from this `hyper-rag/` folder.
+
+### 1. Offline, no API key (about one minute)
+
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+
+hyper-rag ingest sample --offline
+hyper-rag ask sample "How is the webhook signature computed?" --offline --trace
+```
+
+```
+The signature is an HMAC-SHA256 digest of the raw request body, computed with your webhook secret. [1]
+
+Sources:
+  [1] Webhooks > Verifying signatures
+      packs/sample/corpus/webhooks.md
+
+Trace:
+  route: retrieve
+  retrieve: 5 passages for 'How is the webhook signature computed?'
+  grade: 2 of 5 relevant
+  generate: drafted an answer
+  check: grounded
+```
+
+Offline mode swaps in a rule-based fake LLM, a hashing embedder and a word-overlap reranker.
+It exercises the whole pipeline, and CI runs it on every push, but its numbers measure the
+plumbing, not answer quality.
+
+```bash
+pytest                              # 40 tests, about 2 seconds
+hyper-rag eval sample --offline     # retrieval + answer ablation on the sample pack
+```
+
+### 2. With a real model (free)
+
+```bash
+cp .env.example .env                # then put your key in GROQ_API_KEY
+hyper-rag ingest payments           # fetches ~190 pages at 1 request/second: about 4 minutes
+hyper-rag ask payments "How long does Razorpay retry a failed webhook?" --trace
+```
+
+Get a key at <https://console.groq.com/keys>. The first run downloads the embedding and
+reranker models (about 210 MB) from Hugging Face.
+
+```bash
+hyper-rag eval-retrieval payments   # retrieval metrics, no LLM calls
+hyper-rag eval payments --save      # full ablation; resumable if a rate limit stops it
+uvicorn hyper_rag.api:app           # web page at http://127.0.0.1:8000, API docs at /docs
+```
+
+```bash
+curl -X POST http://127.0.0.1:8000/ask -H "Content-Type: application/json" \
+  -d '{"pack": "payments", "question": "Is UPI Intent supported on desktop web?"}'
+```
+
+## Domain packs
+
+A pack is a folder. The engine lists `packs/` at run time, so adding a domain changes no
+engine code.
+
+| Pack | Sources | Notes |
+|---|---|---|
+| `sample` | Eight hand-written pages about a fictional payments API | Ships in the repo; used by tests and CI |
+| `payments` | Razorpay docs (India edition), Google Wallet generic pass docs | UPI is covered through Razorpay's UPI pages; npci.org.in refuses automated access |
+| `papers` | 12 arXiv papers on RAG and agents (RAG, DPR, ColBERT, FiD, HyDE, Self-RAG, CRAG, RAPTOR, Ragas, Lost in the Middle, ReAct, Reflexion) | First ingest takes about 6 minutes: arXiv asks for a 15 second crawl delay |
+| `farming` | Wikipedia articles on Indian farm schemes and farming practices | See limitations |
+| `codebase` | A repository's Python files and docs, one section per function or class | Defaults to this project; set `git_url` in `pack.yaml` for another repo |
+
+To add one, create `packs/<name>/` with:
+
+- `pack.yaml`: name, description (the router reads it), chunk size, sources.
+- `ingest.py`: a `fetch(pack, raw_dir)` function that yields `Document(id, title, url, text)`.
+- `golden.jsonl`: questions with a reference answer, the documents that contain it, key
+  strings, and some questions the corpus cannot answer.
+
+Scraped content is never committed. Ingest scripts obey robots.txt and crawl delays and
+keep downloads in the git-ignored `data/` folder.
+
+## Configuration
+
+Settings live in [`config.yaml`](config.yaml); any of them can be overridden with a
+`HYPER_RAG_<KEY>` environment variable. Secrets go in `.env`.
+
+| Setting | Default | Purpose |
+|---|---|---|
+| `llm_provider` / `llm_model` | `groq` / `openai/gpt-oss-120b` | Writes answers |
+| `control_model` | `openai/gpt-oss-20b` | Routing, grading, rewriting, self-check |
+| `judge_provider` / `judge_model` | `groq` / `qwen/qwen3.8-27b` | Scores answers in evals; a different model family from the generator |
+| `embedding_model` | `BAAI/bge-small-en-v1.5` | Dense retrieval, local |
+| `reranker_model` | `Xenova/ms-marco-MiniLM-L-6-v2` | Cross-encoder, local |
+| `top_k`, `rrf_k`, `max_rewrites` | 5, 60, 2 | Passages per answer, fusion constant, retry cap |
+
+Model names were checked against the providers' free-tier pages on 2026-11-10. Free
+line-ups change; update the names in `config.yaml` if a model is retired.
+
+## Known limitations
+
+- **Judged metrics are pending** for the final code, as described under Results.
+- **The Gemini provider has not been run against the live API.** It is written from Google's
+  REST reference for the Interactions API and unit-tested against that response shape, but no
+  Gemini key was available. Groq is the only provider with live results.
+- **The golden sets are small and written by one person from the documents themselves.**
+  Questions tend to reuse the documents' wording, which favours dense retrieval and partly
+  explains why vector search alone scores so high. 15 to 38 questions per pack also means one
+  question moves a metric by 3 to 7 points.
+- **Relevance labels are per page, not per passage.** recall@k is lenient; facts@5 is the
+  stricter check, and it only covers questions with an exact key string.
+- **The farming pack is evaluated on 8 of its 22 articles.** Wikipedia refused most requests
+  from the cloud machine this was built on, and the government portals were unreachable or
+  JavaScript-only. On a home connection `hyper-rag ingest farming` should fetch the rest; set
+  `HYPER_RAG_CONTACT` first, since Wikipedia asks crawlers to identify themselves.
+- **The agent's router is its weakest step.** It still declines some in-scope questions, and
+  it depends on the pack description being accurate.
+- **A question whose correct answer is the refusal token is treated as a refusal.** The
+  codebase pack asks which token the generator emits when it cannot answer; the correct reply,
+  `INSUFFICIENT_CONTEXT`, is read as the generator declining.
+- **English only**, and no conversation memory: each question is answered on its own.
+- **The dense index is an in-memory matrix.** That is fine for thousands of chunks and would
+  need a vector database beyond a few hundred thousand.
+
+## What I would do next
+
+1. Finish the judged run and add confidence intervals (bootstrap over questions).
+2. Grow the golden sets with paraphrased and multi-hop questions written without looking at
+   the page wording, and label relevance per passage.
+3. Replace the LLM router with the reranker's top score as an out-of-scope signal: it is
+   free, local and cannot be talked into declining by a vague pack description.
+4. Let the self-check trigger one regeneration with the unsupported claim as feedback before
+   declining.
+5. Run the same ablation with the Gemini provider to see how much of the result is specific
+   to one model.
+6. Add a browser-based fetcher so the farming pack can read government advisory portals.
+
+## More
+
+- [`docs/DECISIONS.md`](docs/DECISIONS.md): design choices, alternatives and reasons.
+- [`docs/PLAN.md`](docs/PLAN.md): the build plan and milestones.
+- No licence has been chosen yet, so default copyright applies.
