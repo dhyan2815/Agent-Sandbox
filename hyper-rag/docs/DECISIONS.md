@@ -123,3 +123,43 @@ Newest entries are at the bottom.
 - **Alternative:** add a language-aware chunker to the engine.
 - **Why:** the rule for this project is that a new domain must not change engine code. The pack
   owns everything domain-specific; the engine only ever sees `Document`s.
+
+## 13. The router only filters out clearly unrelated questions
+
+- **Chosen:** the routing prompt says to retrieve whenever the question touches the
+  collection's subject at all, and to decline only small talk or another field.
+- **What it replaced:** "retrieve if the question could plausibly be answered from the
+  collection". With that wording the small control model declined 4 of 32 answerable payments
+  questions and 7 of 16 farming questions before any search ran.
+- **Why:** a wrong "retrieve" costs one local search and a grading call, and grading can still
+  decline. A wrong "decline" loses an answerable question with no second chance. The two
+  errors are not equally expensive, so the prompt should lean one way.
+- **Still open:** the router trusts the pack description. A cheaper and sturdier signal would
+  be the reranker's best score for the question.
+
+## 14. Groundedness is judged against the passages an answer cites
+
+- **Chosen:** the eval's groundedness judge sees only the cited passages (all passages if the
+  answer cites none).
+- **Alternative:** judge against everything that was retrieved.
+- **Why:** a claim that is true of passage 3 but cited to passage 1 is a citation error a reader
+  would be misled by; judging against cited passages catches it. It also cuts the judge prompt
+  by about 60%, which matters when the judge has 200K tokens per day.
+
+## 15. The judge is a different model family, with reasoning switched off
+
+- **Chosen:** `qwen/qwen3.8-27b` judges answers written by `openai/gpt-oss-120b`. Exact-match
+  key facts are reported next to the judged correctness as a check on the judge.
+- **Why a different model:** a model grading its own output tends to agree with itself.
+- **Why no reasoning:** on the free plan the judge is limited to 1,000 output tokens per minute
+  and reasoning tokens count as output. A verdict is a few tokens of JSON.
+
+## 16. What the free tier taught about running evals
+
+- Budget tokens per day before designing the eval, not after. Four configurations x 38
+  questions x two judged metrics is several hundred calls; at 200K tokens per day per model
+  that is most of a day's quota.
+- Cache every reply and write one result row per question. This run was stopped by a quota
+  four times and never repeated a finished call.
+- Separate what needs a judge from what does not. Citations, refusals and exact-match facts are
+  deterministic and free; `--no-judge` reports them while the judged metrics wait for quota.

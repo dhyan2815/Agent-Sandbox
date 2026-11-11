@@ -68,3 +68,20 @@ relevant eval, commit, push.
 
 Every number in the README comes from a run that was executed, with its command.
 Runs that could not finish are reported as such, not filled in.
+
+## Status (2026-11-11)
+
+| Milestone | State |
+|---|---|
+| 1. Skeleton, tooling, CI, sample pack, fake provider | Done |
+| 2. Ingestion and hybrid retrieval, payments pack, retrieval metrics | Done |
+| 3. LangGraph agent with citations and self-check | Done |
+| 4. Eval harness and ablation on the free tier | Done; see README for the runs and their limits |
+| 5. CLI and FastAPI endpoint | Done |
+| 6. Farming, papers and codebase packs | Done; farming evaluated on a partial corpus |
+| 7. README | Done |
+| 8. Web UI and deployment | UI done; not deployed |
+
+Not built as originally planned: the project lives in a folder of the Agent-Sandbox
+repository instead of its own repository, and the Gemini provider is untested against the
+live API.
