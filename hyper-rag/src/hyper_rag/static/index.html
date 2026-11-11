@@ -87,7 +87,10 @@ $("form").addEventListener("submit", async (event) => {
       $("sources").hidden = $("steps").hidden = true;
       return;
     }
-    $("answer").textContent = body.answer;
+    // Models write **bold**; render it with real elements, never with innerHTML.
+    $("answer").replaceChildren(...body.answer.split(/\*\*(.+?)\*\*/g).map(
+      (part, i) => (i % 2 ? node("strong", part) : document.createTextNode(part))
+    ));
     $("answer").className = body.refused ? "refused" : "";
 
     $("citations").replaceChildren(...body.citations.map((c) => {
