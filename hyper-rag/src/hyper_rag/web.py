@@ -6,6 +6,7 @@ the chunker can use.
 """
 
 import hashlib
+import os
 import re
 import time
 from pathlib import Path
@@ -15,7 +16,10 @@ from urllib.robotparser import RobotFileParser
 import httpx
 from bs4 import BeautifulSoup, NavigableString, Tag
 
-USER_AGENT = "hyper-rag-ingest/0.1 (educational portfolio project; polite crawler)"
+# Sites such as Wikipedia ask automated clients to say who they are. Set
+# HYPER_RAG_CONTACT (a project URL or an email address) to include it in the User-Agent.
+_CONTACT = os.environ.get("HYPER_RAG_CONTACT", "educational portfolio project; polite crawler")
+USER_AGENT = f"hyper-rag-ingest/0.1 ({_CONTACT})"
 
 _BLOCK_TAGS = frozenset(
     "div p li ul ol section article table thead tbody blockquote dl dt dd br details summary "
@@ -54,26 +58,42 @@ class PoliteFetcher:
             else:
                 parser.parse(response.text.splitlines())
             self._robots[host] = parser
-        return self._robots[host].can_fetch(USER_AGENT, url)
+        parser = self._robots[host]
+        # Honour a Crawl-delay directive when it asks for more time than our default.
+        requested = parser.crawl_delay(USER_AGENT)
+        if requested:
+            self.delay_seconds = max(self.delay_seconds, float(requested))
+        return parser.can_fetch(USER_AGENT, url)
 
-    def get(self, url: str) -> str | None:
-        """Return the page HTML, or None if robots.txt disallows it or the request fails."""
-        cached = self.raw_dir / f"{hashlib.sha256(url.encode()).hexdigest()[:24]}.html"
+    def get_bytes(self, url: str, suffix: str = ".html") -> bytes | None:
+        """Return the response body, or None if robots.txt disallows it or the request fails."""
+        cached = self.raw_dir / f"{hashlib.sha256(url.encode()).hexdigest()[:24]}{suffix}"
         if cached.exists():
-            return cached.read_text(encoding="utf-8")
+            return cached.read_bytes()
         if not self._allowed(url):
             print(f"  skipped (robots.txt): {url}")
             return None
-        self._wait()
-        try:
-            response = self._client.get(url)
-            response.raise_for_status()
-        except httpx.HTTPError as error:
-            print(f"  skipped ({error.__class__.__name__}): {url}")
-            return None
+        for attempt in range(3):
+            self._wait()
+            try:
+                response = self._client.get(url)
+                if response.status_code in (429, 503) and attempt < 2:
+                    # The site is asking us to slow down: wait as told, then try again.
+                    time.sleep(float(response.headers.get("retry-after", 20)))
+                    continue
+                response.raise_for_status()
+                break
+            except (httpx.HTTPError, ValueError) as error:
+                print(f"  skipped ({error.__class__.__name__}): {url}")
+                return None
         self.raw_dir.mkdir(parents=True, exist_ok=True)
-        cached.write_text(response.text, encoding="utf-8")
-        return response.text
+        cached.write_bytes(response.content)
+        return response.content
+
+    def get(self, url: str) -> str | None:
+        """Return the page as text (HTML, XML), or None if it could not be fetched."""
+        body = self.get_bytes(url)
+        return None if body is None else body.decode("utf-8", errors="replace")
 
 
 def _clean(text: str) -> str:
