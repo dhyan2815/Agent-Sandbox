@@ -86,6 +86,9 @@ def eval_answers(
     pack: str,
     offline: bool = typer.Option(False, "--offline", help=OFFLINE_HELP),
     save: bool = typer.Option(False, "--save", help="Also write results/<pack>-<run>.json."),
+    no_judge: bool = typer.Option(
+        False, "--no-judge", help="Skip the LLM-judged metrics (groundedness, correctness)."
+    ),
     configs: str = typer.Option(
         "vector,hybrid,hybrid_rerank,agent",
         "--configs",
@@ -110,15 +113,18 @@ def eval_answers(
     retriever = load_retriever(loaded, settings)
     generator = build_llm(settings, "generator")
     control = build_llm(settings, "control")
-    judge = build_llm(settings, "judge")
+    judge = None if no_judge else build_llm(settings, "judge")
+    judge_name = judge.name if judge else "none"
 
     typer.echo(f"Retrieval ({len(golden)} golden questions, embedder {retriever.embedder.name})\n")
     retrieval_rows = evaluate_retrieval(retriever, golden)
     _print_table(retrieval_rows)
 
-    run_name = "offline" if offline else generator.name.replace("/", "-").replace(":", "-")
+    # The run folder is named after generator and judge, so runs never mix their rows.
+    run_name = "offline" if offline else f"{generator.name}__judge-{judge_name}"
+    run_name = run_name.replace("/", "-").replace(":", "-")
     run_dir = pack_data_dir(settings, pack) / "eval" / run_name
-    typer.echo(f"\nAnswers (generator {generator.name}, judge {judge.name})")
+    typer.echo(f"\nAnswers (generator {generator.name}, judge {judge_name})")
     try:
         answer_rows = run_answer_eval(
             loaded,
@@ -143,10 +149,13 @@ def eval_answers(
         report = {
             "pack": pack,
             "date": date.today().isoformat(),
-            "command": f"hyper-rag eval {pack}" + (" --offline" if offline else ""),
+            "command": f"hyper-rag eval {pack}"
+            + (" --offline" if offline else "")
+            + (" --no-judge" if no_judge else "")
+            + (f" --configs {configs}" if configs != "vector,hybrid,hybrid_rerank,agent" else ""),
             "generator": generator.name,
             "control": control.name,
-            "judge": judge.name,
+            "judge": judge_name,
             "embedder": retriever.embedder.name,
             "reranker": settings.reranker_model if settings.reranker == "fastembed" else "lexical",
             "chunks": len(retriever.chunks),
@@ -158,6 +167,23 @@ def eval_answers(
         out.parent.mkdir(exist_ok=True)
         out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         typer.echo(f"\nSaved {out}")
+
+
+@app.command()
+def report() -> None:
+    """Print every saved eval in results/ as markdown tables (the README tables come from this)."""
+    from pathlib import Path
+
+    for path in sorted(Path("results").glob("*.json")):
+        saved = json.loads(path.read_text(encoding="utf-8"))
+        typer.echo(f"\n### {saved['pack']} ({path.name})\n")
+        typer.echo(
+            f"{saved['date']} | `{saved['command']}` | generator `{saved['generator']}` | "
+            f"judge `{saved['judge']}` | {saved['chunks']} chunks, {saved['questions']} questions\n"
+        )
+        _print_table(saved["retrieval"])
+        typer.echo("")
+        _print_table(saved["answers"])
 
 
 if __name__ == "__main__":

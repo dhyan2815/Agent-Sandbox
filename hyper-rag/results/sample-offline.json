@@ -1,6 +1,6 @@
 {
   "pack": "sample",
-  "date": "2026-11-10",
+  "date": "2026-11-11",
   "command": "hyper-rag eval sample --offline",
   "generator": "fake:rule-based",
   "control": "fake:rule-based",

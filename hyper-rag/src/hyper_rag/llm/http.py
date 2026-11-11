@@ -61,7 +61,8 @@ class HttpLLM:
                     raise LLMError(
                         f"{self.name}: HTTP {response.status_code}: {response.text[:300]}"
                     )
-                reason = f"HTTP {response.status_code}"
+                # Keep the provider's own explanation: it names the limit that was hit.
+                reason = f"HTTP {response.status_code}: {response.text[:200]}"
                 wait = parse_retry_after(response.headers.get("retry-after"))
             # Prefer the provider's own hint; otherwise exponential backoff: 2, 4, 8, ... seconds.
             wait = wait if wait is not None else min(2.0 ** (attempt + 1), 60.0)
