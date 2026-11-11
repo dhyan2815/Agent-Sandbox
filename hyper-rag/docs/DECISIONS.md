@@ -60,3 +60,66 @@ Newest entries are at the bottom.
   classifier call.
 - **Why:** Refusal behaviour is one of the evaluated metrics, so it has to be detected exactly.
   Phrase matching misses paraphrases, and an extra call costs rate-limit budget.
+
+## 7. Retrieval is scored against "information needs", at document level
+
+- **Chosen:** each golden question lists one or more needs; a need is a set of documents, any
+  of which contains that part of the answer. Recall@k is the share of needs met in the top k
+  chunks. A second metric, facts@5, checks whether the answer's key strings appear in the top
+  five chunks.
+- **Alternatives:** label individual chunks as relevant; count each listed document separately.
+- **Why:** chunk labels break whenever chunk size changes, which is exactly the parameter one
+  wants to tune. Counting alternative pages separately punishes a system for finding the answer
+  on page A when the label also listed page B. Needs handle both, and multi-part questions get
+  one need per part.
+- **Cost of the choice:** document-level recall is lenient and saturates quickly (0.98 on the
+  payments set for plain vector search). facts@5 is the stricter passage-level check.
+
+## 8. Passages are graded in one batched LLM call, and decisions go to a smaller model
+
+- **Chosen:** one `grade` call returns the numbers of all relevant passages. The agent's
+  decision calls (route, grade, rewrite, self-check) use `control_model`; only the answer is
+  written by the larger `llm_model`.
+- **Alternatives:** grade each passage in its own call (as in the Corrective RAG paper); use one
+  model for everything.
+- **Why:** Groq's free plan allows 8K tokens per minute and 200K per day per model. Per-passage
+  grading multiplies requests by five. Splitting roles across two models gives each its own
+  budget, and classification-style decisions do not need the largest model.
+
+## 9. The self-check fails closed
+
+- **Chosen:** an answer is released only when the checker replies `{"grounded": true}`. A
+  "false", a malformed reply or a missing field all lead to a refusal.
+- **Alternative:** release the answer unless the checker explicitly objects.
+- **Why:** the check exists to stop unsupported answers. If it cannot give a clear yes, the safe
+  default for a documentation assistant is to decline.
+- **Cost of the choice:** measured on the payments set, the agent declines some answerable
+  questions that single-shot RAG answers correctly. See the README results.
+
+## 10. Model replies are normalised before anything else reads them
+
+- **Chosen:** `normalise_answer` rewrites model-specific citation marks (for example
+  `【1†L9-L12】`) to `[1]` and typographic spaces and hyphens to ASCII.
+- **Why:** the first live eval run reported that only 34% of answers had citations and 44%
+  contained their key facts. Reading the answers showed the model was citing correctly, in its
+  own bracket style, and writing `T + 2` with narrow no-break spaces. The metric was wrong, not
+  the system. Normalising once, at the boundary, fixes parsing for every provider.
+- **Lesson:** read the raw outputs before trusting a surprising number.
+
+## 11. Ingestion respects robots.txt even when it costs coverage
+
+- **Chosen:** the fetcher checks robots.txt, honours Crawl-delay, keeps a disk copy and retries
+  politely on 429. Sources that refuse automated access are left out and documented.
+- **What it cost:** npci.org.in (UPI's operator) returns "Access Denied", so UPI is covered
+  through Razorpay's pages. The arXiv API host disallows crawlers, so paper metadata comes from
+  the abstract pages. Indian government farming portals were unreachable or JavaScript-only, so
+  the farming pack reads Wikipedia instead.
+
+## 12. The codebase pack reshapes code into headings instead of adding a code chunker
+
+- **Chosen:** the pack's ingest script uses `ast` to emit each top-level function and class
+  under its own markdown heading. The engine's ordinary heading-aware chunker then cuts at
+  function boundaries.
+- **Alternative:** add a language-aware chunker to the engine.
+- **Why:** the rule for this project is that a new domain must not change engine code. The pack
+  owns everything domain-specific; the engine only ever sees `Document`s.
