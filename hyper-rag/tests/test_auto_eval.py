@@ -1,5 +1,3 @@
-from test_uploads import solar, store  # noqa: F401  (pytest fixtures)
-
 from hyper_rag.evaluation.synthetic import evaluate_collection, latest_report, pick_passages
 
 

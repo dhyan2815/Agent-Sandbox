@@ -1,24 +1,10 @@
 import pytest
 
+from conftest import StubOcr
 from hyper_rag.agent import Agent
 from hyper_rag.llm import FakeLLM
 from hyper_rag.uploads import CollectionError, CollectionNotFound, CollectionStore, mark_lines
-from make_files import make_all, make_pdf, make_xlsx
-from test_parsing import StubOcr
-
-
-@pytest.fixture
-def store(settings):
-    return CollectionStore(settings, ocr=StubOcr())
-
-
-@pytest.fixture
-def solar(store, tmp_path):
-    """A collection holding one file of every supported format."""
-    store.create("Solar docs")
-    for path in make_all(tmp_path / "files"):
-        store.add_file("solar-docs", path.name, path.read_bytes())
-    return store
+from make_files import make_pdf, make_xlsx
 
 
 def ask(store, slug, question, history=None):

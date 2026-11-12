@@ -1,5 +1,6 @@
 import pytest
 
+from conftest import StubOcr
 from hyper_rag.chunking import chunk_document
 from hyper_rag.parsing import ParseError, build_ocr, parse_file
 from hyper_rag.parsing.model import table_to_markdown
@@ -14,16 +15,6 @@ from make_files import (
     make_pptx,
     make_xlsx,
 )
-
-
-class StubOcr:
-    """Stands in for the OCR models: says the same thing about every image."""
-
-    name = "stub"
-
-    def read(self, image) -> str:
-        return "TEXT FROM IMAGE"
-
 
 OCR = StubOcr()
 
