@@ -19,7 +19,40 @@ def _sections(text: str) -> list[tuple[str, str]]:
     return [(heading, "\n".join(lines).strip()) for heading, lines in sections]
 
 
-def _pack_paragraphs(body: str, size: int, overlap: int) -> list[str]:
+def _is_table(paragraph: str) -> bool:
+    lines = paragraph.split("\n")
+    return len(lines) >= 3 and lines[0].startswith("|") and lines[1].startswith("|---")
+
+
+def _split_structured(paragraph: str, size: int) -> list[str]:
+    """Split an oversize paragraph at line boundaries instead of at a character count.
+
+    A table is split between rows, and every piece starts with the header row again:
+    a row of numbers is meaningless without its column names, both to the retriever
+    and to the model that has to read it.
+    """
+    lines = paragraph.split("\n")
+    header = lines[:2] if _is_table(paragraph) else []
+    prefix = "\n".join(header)
+    pieces: list[str] = []
+    current: list[str] = []
+    for line in lines[len(header) :]:
+        while len(line) > size:  # a single line longer than a chunk: nothing left but a cut
+            if current:
+                pieces.append("\n".join([*header, *current]))
+                current = []
+            pieces.append(line[:size])
+            line = line[size:]
+        if current and len(prefix) + 1 + sum(len(c) + 1 for c in current) + len(line) > size:
+            pieces.append("\n".join([*header, *current]))
+            current = []
+        current.append(line)
+    if current:
+        pieces.append("\n".join([*header, *current]))
+    return pieces
+
+
+def _pack_paragraphs(body: str, size: int, overlap: int, structured: bool = False) -> list[str]:
     """Greedily fill pieces up to `size` characters without cutting inside a paragraph.
 
     Each new piece starts with the tail of the previous one (`overlap` characters), so a
@@ -30,6 +63,12 @@ def _pack_paragraphs(body: str, size: int, overlap: int) -> list[str]:
     for paragraph in re.split(r"\n\s*\n", body):
         paragraph = paragraph.strip()
         if not paragraph:
+            continue
+        if structured and len(paragraph) > size:
+            if current:
+                pieces.append(current)
+                current = ""
+            pieces.extend(_split_structured(paragraph, size))
             continue
         # A single paragraph longer than the limit (a big table, a code block) is cut hard.
         while len(paragraph) > size:
@@ -47,12 +86,20 @@ def _pack_paragraphs(body: str, size: int, overlap: int) -> list[str]:
     return pieces
 
 
-def chunk_document(document: Document, size: int, overlap: int) -> list[Chunk]:
+def chunk_document(
+    document: Document, size: int, overlap: int, structured: bool = False
+) -> list[Chunk]:
+    """Split one document into chunks.
+
+    `structured=True` splits oversize paragraphs along their lines and keeps table
+    headers (see _split_structured). Uploaded documents use it. The domain packs keep
+    the original hard cut, so the chunks behind the published eval numbers do not change.
+    """
     chunks: list[Chunk] = []
     for heading, body in _sections(document.text):
         if not body:
             continue
-        for piece in _pack_paragraphs(body, size, overlap):
+        for piece in _pack_paragraphs(body, size, overlap, structured):
             # Prefix every chunk with its document title and section heading. A passage
             # such as "It expires after 5 minutes" is unfindable on its own; with
             # "UPI payments > Collect flow" in front, both BM25 and the embedding see
@@ -74,5 +121,11 @@ def chunk_document(document: Document, size: int, overlap: int) -> list[Chunk]:
     return chunks
 
 
-def chunk_documents(documents: list[Document], size: int, overlap: int) -> list[Chunk]:
-    return [chunk for document in documents for chunk in chunk_document(document, size, overlap)]
+def chunk_documents(
+    documents: list[Document], size: int, overlap: int, structured: bool = False
+) -> list[Chunk]:
+    return [
+        chunk
+        for document in documents
+        for chunk in chunk_document(document, size, overlap, structured)
+    ]
