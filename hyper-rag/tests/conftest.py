@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -5,6 +6,7 @@ import pytest
 from hyper_rag.config import Settings
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).parent))  # so tests can import make_files
 
 
 @pytest.fixture

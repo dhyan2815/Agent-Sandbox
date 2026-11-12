@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     # Agent
     max_rewrites: int = 2
 
+    # Uploaded documents
+    ocr: Literal["rapidocr", "none"] = "rapidocr"  # local OCR for images and scanned pages
+    max_upload_mb: int = 25
+    max_units_per_file: int = 300  # pages / slides / sheets read from one file
+    upload_chunk_size: int = 1200
+    upload_chunk_overlap: int = 150
+
     # Paths
     packs_dir: Path = Path("packs")
     data_dir: Path = Path("data")
