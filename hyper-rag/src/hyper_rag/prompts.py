@@ -17,7 +17,7 @@ REFUSAL_MESSAGE = "I can't answer that from the available sources."
 
 @dataclass(frozen=True)
 class Prompt:
-    task: str  # route | grade | rewrite | generate | check | judge
+    task: str  # route | grade | rewrite | generate | check | judge | condense | synthesize
     system: str
     user: str
     max_tokens: int = 400
@@ -123,4 +123,43 @@ def judge_prompt(question: str, reference: str, answer: str) -> Prompt:
     user = f"Question: {question}\n\nReference answer: {reference}\n\nAnswer to grade: {answer}"
     return Prompt(
         "judge", system, user, max_tokens=40, inputs={"reference": reference, "answer": answer}
+    )
+
+
+def condense_prompt(history: list[tuple[str, str]], question: str) -> Prompt:
+    """Turn a follow-up ("and for the bigger one?") into a question that stands on its own.
+
+    Retrieval sees only the question, so a follow-up has to carry its own subject.
+    Only the last few turns are sent, with answers cut short: the earlier questions
+    carry most of what a pronoun can refer to.
+    """
+    system = (
+        "Rewrite the follow-up question as one standalone question, using the conversation "
+        "to fill in what it refers to. If it already stands on its own, repeat it unchanged. "
+        "Do not answer it. Reply with the question only."
+    )
+    turns = "\n".join(f"User: {q}\nAssistant: {a[:300]}" for q, a in history[-3:])
+    user = f"Conversation:\n{turns}\n\nFollow-up question: {question}"
+    return Prompt(
+        "condense", system, user, max_tokens=200, inputs={"history": history, "question": question}
+    )
+
+
+def synthesize_prompt(passage: Chunk) -> Prompt:
+    """Write one test question from a passage (auto-evaluation of uploaded collections)."""
+    system = (
+        "You write test questions for a document search system. From the passage, write one "
+        "specific question that the passage answers, as a person who has not seen the "
+        'passage would ask it: name the subject, never say "the passage" or "the document". '
+        "Reply with JSON only: "
+        '{"question": "...", "answer": "<one or two sentences>", '
+        '"fact": "<a short phrase copied word for word from the passage that a correct '
+        'answer must contain, such as a number or a name>"}.'
+    )
+    return Prompt(
+        "synthesize",
+        system,
+        f"Passage:\n{passage.text}",
+        max_tokens=400,
+        inputs={"passage": passage},
     )

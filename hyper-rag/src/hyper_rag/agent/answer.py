@@ -28,7 +28,14 @@ class Answer:
             "answer": self.text,
             "refused": self.refused,
             "citations": [
-                {"number": n, "title": c.title, "url": c.url, "chunk_id": c.id, "text": c.text}
+                {
+                    "number": n,
+                    "title": c.title,
+                    "url": c.url,
+                    "chunk_id": c.id,
+                    "doc_id": c.doc_id,
+                    "text": c.text,
+                }
                 for n, c in self.citations
             ],
             "trace": self.trace,

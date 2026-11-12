@@ -61,3 +61,17 @@ class FakeLLM:
         score = coverage(reference, answer)
         verdict = "correct" if score >= 0.6 else "partial" if score >= 0.3 else "incorrect"
         return json.dumps({"verdict": verdict})
+
+    def _condense(self, history: list, question: str) -> str:
+        # Carry the previous question along, so the follow-up keeps its subject.
+        return f"{question} {history[-1][0]}" if history else question
+
+    def _synthesize(self, passage) -> str:
+        # The longest sentence of the passage body, turned into a question about itself.
+        body = passage.text.split("\n", 1)[-1]
+        sentences = [s for s in split_sentences(body) if not s.startswith("|")]
+        if not sentences:
+            return json.dumps({})
+        sentence = max(sentences, key=len)
+        fact = sentence.rstrip(".!?")
+        return json.dumps({"question": f"{fact}?", "answer": sentence, "fact": fact})

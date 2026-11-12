@@ -1,17 +1,21 @@
 """The agent: a LangGraph state machine around retrieval and generation.
 
-    route -> retrieve -> grade -> generate -> check -> done
-       |                  |  ^        |         |
-       |                  v  |        |         |
-       |               rewrite        |         |
-       v                  |           v         v
-    decline <-------------+-----------+---------+
+    (condense) -> route -> retrieve -> grade -> generate -> check -> done
+                    |                  |  ^        |         |
+                    |                  v  |        |         |
+                    |               rewrite        |         |
+                    v                  |           v         v
+                 decline <-------------+-----------+---------+
+
+"condense" only does anything in a conversation: it rewrites a follow-up question into
+one that stands on its own before anything else sees it.
 
 Each node is a small function from state to a partial state update. Every decision
 the agent makes (in scope? relevant? grounded?) is a separate, cheap LLM call with a
 JSON reply, so each one can be inspected in the trace and evaluated on its own.
 """
 
+from collections.abc import Iterator
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -21,6 +25,7 @@ from hyper_rag.llm import LLM, parse_json
 from hyper_rag.prompts import (
     INSUFFICIENT,
     check_prompt,
+    condense_prompt,
     generate_prompt,
     grade_prompt,
     rewrite_prompt,
@@ -32,7 +37,8 @@ from hyper_rag.types import Chunk
 
 
 class AgentState(TypedDict, total=False):
-    question: str
+    question: str  # what must be answered; for a follow-up, its standalone rewrite
+    history: list[tuple[str, str]]  # earlier (question, answer) turns of the conversation
     query: str  # the current search query: the question at first, then rewrites
     tried: list[str]  # every query searched so far
     candidates: list[Chunk]  # what retrieval returned for the current query
@@ -63,6 +69,19 @@ class Agent:
         self.graph = self._build_graph()
 
     # --- nodes ------------------------------------------------------------------
+
+    def _condense(self, state: AgentState) -> dict:
+        if not state.get("history"):
+            return {}
+        reply = self.control.complete(condense_prompt(state["history"], state["question"]))
+        lines = reply.strip().strip('"').splitlines()
+        standalone = lines[0].strip() if lines and lines[0].strip() else state["question"]
+        return {
+            "question": standalone,
+            "query": standalone,
+            "trace": [*state["trace"], f"condense: '{standalone}'"],
+            "llm_calls": state["llm_calls"] + 1,
+        }
 
     def _route(self, state: AgentState) -> dict:
         reply = parse_json(
@@ -160,6 +179,7 @@ class Agent:
 
     def _build_graph(self):
         graph = StateGraph(AgentState)
+        graph.add_node("condense", self._condense)
         graph.add_node("route", self._route)
         graph.add_node("retrieve", self._retrieve)
         graph.add_node("grade", self._grade)
@@ -167,7 +187,8 @@ class Agent:
         graph.add_node("generate", self._generate)
         graph.add_node("check", self._check)
 
-        graph.add_edge(START, "route")
+        graph.add_edge(START, "condense")
+        graph.add_edge("condense", "route")
         graph.add_conditional_edges(
             "route", self._after_route, {"retrieve": "retrieve", "decline": END}
         )
@@ -186,13 +207,43 @@ class Agent:
 
     # --- entry point ------------------------------------------------------------
 
-    def ask(self, question: str) -> Answer:
-        final: AgentState = self.graph.invoke(
-            {"question": question, "query": question, "tried": [], "trace": [], "llm_calls": 0}
-        )
+    def ask_events(
+        self, question: str, history: list[tuple[str, str]] | None = None
+    ) -> Iterator[tuple[str, str | Answer]]:
+        """Run the agent, yielding ("step", trace line) as each node finishes and
+        ("answer", Answer) at the end. The web UI streams these; `ask` just drains them.
+
+        The answer text itself is not streamed token by token: it is only shown once the
+        groundedness check has passed, so a reader never sees a draft that is then withdrawn.
+        """
+        initial: AgentState = {
+            "question": question,
+            "query": question,
+            "history": history or [],
+            "tried": [],
+            "trace": [],
+            "llm_calls": 0,
+        }
+        final: AgentState = initial
+        seen = 0
+        for final in self.graph.stream(initial, stream_mode="values"):
+            for line in final["trace"][seen:]:
+                yield "step", line
+            seen = len(final["trace"])
         passages = final.get("passages", [])
         if final.get("decline_reason"):
-            return build_refusal(
+            answer = build_refusal(
                 question, final["decline_reason"], passages, final["trace"], final["llm_calls"]
             )
-        return build_answer(question, final["draft"], passages, final["trace"], final["llm_calls"])
+            yield "step", answer.trace[-1]
+        else:
+            answer = build_answer(
+                question, final["draft"], passages, final["trace"], final["llm_calls"]
+            )
+        yield "answer", answer
+
+    def ask(self, question: str, history: list[tuple[str, str]] | None = None) -> Answer:
+        for kind, payload in self.ask_events(question, history):
+            if kind == "answer":
+                return payload
+        raise RuntimeError("the agent finished without an answer")  # unreachable
