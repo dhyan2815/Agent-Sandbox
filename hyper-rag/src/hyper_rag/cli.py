@@ -127,7 +127,7 @@ def eval_answers(
     typer.echo(f"\nAnswers (generator {generator.name}, judge {judge_name})")
     try:
         answer_rows = run_answer_eval(
-            loaded,
+            loaded.config.description,
             golden,
             retriever,
             generator,

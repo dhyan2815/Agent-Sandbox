@@ -31,7 +31,7 @@ src/hyper_rag/
     office.py         python-docx, python-pptx, openpyxl
     textual.py        txt, md, html, csv
     image.py          png, jpg, webp, bmp, tiff through OCR
-  collections.py      create / add file / remove file / load retriever / source view
+  uploads.py          create / add file / remove file / load retriever / source view
   evaluation/synthetic.py   write a golden set from a collection's own passages
 data/collections/<slug>/    git-ignored: originals, parsed units, per-file indexes
 ```

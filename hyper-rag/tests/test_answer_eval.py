@@ -93,12 +93,16 @@ def test_sample_pack_ablation_runs_offline_and_resumes(settings, tmp_path):
             return llm.complete(prompt)
 
     with pytest.raises(LLMError):
-        run_answer_eval(pack, golden, retriever, FailsAfter(5), llm, llm, settings, run_dir)
+        run_answer_eval(
+            pack.config.description, golden, retriever, FailsAfter(5), llm, llm, settings, run_dir
+        )
     finished = len((run_dir / "vector.jsonl").read_text().splitlines())
     assert finished == 5
 
     counting = FailsAfter(10_000)
-    summaries = run_answer_eval(pack, golden, retriever, counting, llm, llm, settings, run_dir)
+    summaries = run_answer_eval(
+        pack.config.description, golden, retriever, counting, llm, llm, settings, run_dir
+    )
     # The five finished questions were not asked again: 3 single-shot configs + agent drafts.
     assert counting.calls < 4 * len(golden) - 5 + 1
     assert [s["config"] for s in summaries] == list(CONFIGS)

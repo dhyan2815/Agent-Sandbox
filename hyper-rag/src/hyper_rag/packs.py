@@ -78,8 +78,12 @@ def load_pack(packs_dir: Path, name: str) -> Pack:
 
 
 def load_golden(pack: Pack) -> list[GoldenQuestion]:
+    return read_golden(pack.golden_path)
+
+
+def read_golden(path: Path) -> list[GoldenQuestion]:
     questions = []
-    for line in pack.golden_path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         row = json.loads(line)

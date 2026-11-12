@@ -20,7 +20,7 @@ from hyper_rag.agent import Agent, Answer, single_shot_answer
 from hyper_rag.config import Settings
 from hyper_rag.evaluation.retrieval_metrics import mean
 from hyper_rag.llm import LLM, parse_json
-from hyper_rag.packs import GoldenQuestion, Pack
+from hyper_rag.packs import GoldenQuestion
 from hyper_rag.prompts import check_prompt, judge_prompt
 from hyper_rag.retrieval.retriever import MODES, Retriever
 from hyper_rag.text import contains_fact
@@ -115,7 +115,7 @@ def _load_rows(path: Path) -> list[dict]:
 
 
 def run_answer_eval(
-    pack: Pack,
+    description: str,
     golden: list[GoldenQuestion],
     retriever: Retriever,
     generator: LLM,
@@ -126,12 +126,16 @@ def run_answer_eval(
     configs: tuple[str, ...] = CONFIGS,
     on_progress: Callable[[str], None] = print,
 ) -> list[dict]:
-    """Answer and score every golden question under each configuration. Resumable."""
+    """Answer and score every golden question under each configuration. Resumable.
+
+    `description` is what the agent's router is told the corpus is about: a pack's
+    description, or the generated one of an uploaded collection.
+    """
     run_dir.mkdir(parents=True, exist_ok=True)
     agent = Agent(
         retriever,
         generator,
-        pack.config.description,
+        description,
         max_rewrites=settings.max_rewrites,
         control_llm=control,
     )
