@@ -1,6 +1,7 @@
 """The retrieval pipeline: dense + BM25 -> reciprocal rank fusion -> rerank."""
 
 import time
+from collections.abc import Callable
 from typing import Literal, Protocol
 
 import numpy as np
@@ -55,18 +56,24 @@ class Retriever:
         mode: Mode = "hybrid_rerank",
         top_k: int | None = None,
         on_event: EventSink | None = None,
+        allow: Callable[[Chunk], bool] | None = None,
     ) -> list[ScoredChunk]:
         """Search for `query`. With `on_event`, each stage reports its ranked hits and time:
-        q.embed, r.dense, then for hybrid modes r.bm25 and r.fuse, then r.rerank."""
+        q.embed, r.dense, then for hybrid modes r.bm25 and r.fuse, then r.rerank. With
+        `allow`, chunks it rejects are dropped from both searches before anything else."""
         top_k = top_k or self.settings.top_k
         pool = self.settings.candidates_per_retriever
+        # Over-fetch a little when filtering, so the pool is still full afterwards.
+        fetch = pool * 2 if allow else pool
 
         started = time.perf_counter()
         query_vector = self.embedder.embed_query(query)
         emit(on_event, "q.embed", ms=elapsed_ms(started))
 
         started = time.perf_counter()
-        dense_hits = self.dense.search(query_vector, pool)
+        dense_hits = self.dense.search(query_vector, fetch)
+        if allow:
+            dense_hits = [h for h in dense_hits if allow(self.chunks[h[0]])][:pool]
         if on_event:
             rows, scores = [r for r, _ in dense_hits], [s for _, s in dense_hits]
             emit(on_event, "r.dense", hits=ranked(self._ids(rows), scores), ms=elapsed_ms(started))
@@ -74,7 +81,9 @@ class Retriever:
             return [ScoredChunk(self.chunks[row], score) for row, score in dense_hits[:top_k]]
 
         started = time.perf_counter()
-        bm25_hits = self.bm25.search(query, pool)
+        bm25_hits = self.bm25.search(query, fetch)
+        if allow:
+            bm25_hits = [h for h in bm25_hits if allow(self.chunks[h[0]])][:pool]
         if on_event:
             rows, scores = [r for r, _ in bm25_hits], [s for _, s in bm25_hits]
             emit(on_event, "r.bm25", hits=ranked(self._ids(rows), scores), ms=elapsed_ms(started))

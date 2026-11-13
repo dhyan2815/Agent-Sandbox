@@ -31,8 +31,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# reportlab only builds the PDF fixtures the tests parse.
-dev = ["ruff==0.17.4", "pytest==9.2.0", "reportlab==5.1.0"]
+# Hosted stores (plan v2 phase 2): Qdrant for vectors and keywords, S3/R2 for files.
+hosted = ["qdrant-client==1.20.0", "boto3==1.43.122"]
+# reportlab only builds the PDF fixtures the tests parse; moto is an in-process S3 for the
+# blob store tests; the hosted clients are tested against Qdrant's local mode.
+dev = [
+    "ruff==0.17.4",
+    "pytest==9.2.0",
+    "reportlab==5.1.0",
+    "moto[server]==5.2.5",
+    "qdrant-client==1.20.0",
+    "boto3==1.43.122",
+]
 
 [project.scripts]
 hyper-rag = "hyper_rag.cli:app"

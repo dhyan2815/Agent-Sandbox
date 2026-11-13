@@ -1,0 +1,776 @@
+{
+ "before": [
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 48?",
+   "answer": "The reference code for page 48 is KX-80112. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 48"
+   ],
+   "kept": [
+    "16d8ec1808be/48#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/45#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 49?",
+   "answer": "The reference code for page 49 is KX-88031. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 49"
+   ],
+   "kept": [
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/48#0",
+    "16d8ec1808be/45#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 116?",
+   "answer": "The reference code for page 116 is KX-18604. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 116"
+   ],
+   "kept": [
+    "16d8ec1808be/116#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 120?",
+   "answer": "The reference code for page 120 is KX-50280. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 120"
+   ],
+   "kept": [
+    "16d8ec1808be/120#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 122?",
+   "answer": "The reference code for page 122 is KX-66118. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 122"
+   ],
+   "kept": [
+    "16d8ec1808be/122#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/145#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 131?",
+   "answer": "The reference code for page 131 is KX-37389. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 131"
+   ],
+   "kept": [
+    "16d8ec1808be/131#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 132?",
+   "answer": "The reference code for page 132 is KX-45308. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 132"
+   ],
+   "kept": [
+    "16d8ec1808be/132#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 144?",
+   "answer": "The reference code for page 144 is KX-40336. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 144"
+   ],
+   "kept": [
+    "16d8ec1808be/144#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 151?",
+   "answer": "The reference code for page 151 is KX-95769. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 151"
+   ],
+   "kept": [
+    "16d8ec1808be/151#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/60#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 158?",
+   "answer": "The reference code for page 158 is KX-51202. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 158"
+   ],
+   "kept": [
+    "16d8ec1808be/158#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 162?",
+   "answer": "The reference code for page 162 is KX-82878. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 162"
+   ],
+   "kept": [
+    "16d8ec1808be/162#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 200?",
+   "answer": "The reference code for page 200 is KX-83800. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 200"
+   ],
+   "kept": [
+    "16d8ec1808be/200#0",
+    "16d8ec1808be/97#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/99#0",
+    "16d8ec1808be/169#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "global",
+   "question": "What is chapter 4 about?",
+   "answer": "manual.pdf (Page 61) \u203a Chapter 4: Batteries \u203a 4.1 Batteries: basics > Chapter 4: Batteries [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 61"
+   ],
+   "kept": [
+    "16d8ec1808be/61#0",
+    "16d8ec1808be/73#0",
+    "16d8ec1808be/69#0",
+    "16d8ec1808be/64#0",
+    "16d8ec1808be/70#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What does chapter 7 cover?",
+   "answer": "manual.pdf (Page 121) \u203a Chapter 7: Safety \u203a 7.1 Safety: basics > Chapter 7: Safety [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 121"
+   ],
+   "kept": [
+    "16d8ec1808be/121#0",
+    "16d8ec1808be/123#0",
+    "16d8ec1808be/127#0",
+    "16d8ec1808be/122#0",
+    "16d8ec1808be/130#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Summarise chapter 9.",
+   "answer": "manual.pdf (Page 161) \u203a Chapter 9: Monitoring \u203a 9.1 Monitoring: basics > Chapter 9: Monitoring [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 161"
+   ],
+   "kept": [
+    "16d8ec1808be/161#0",
+    "16d8ec1808be/167#0",
+    "16d8ec1808be/168#0",
+    "16d8ec1808be/162#0",
+    "16d8ec1808be/169#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What is chapter 1 about?",
+   "answer": "manual.pdf (Page 1) \u203a Chapter 1: Site survey \u203a 1.1 Site survey: basics > Chapter 1: Site survey [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 1"
+   ],
+   "kept": [
+    "16d8ec1808be/1#0",
+    "16d8ec1808be/5#0",
+    "16d8ec1808be/6#0",
+    "16d8ec1808be/3#0",
+    "16d8ec1808be/10#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Summarise chapter 10.",
+   "answer": "manual.pdf (Page 181) \u203a Chapter 10: Warranty \u203a 10.1 Warranty: basics > Chapter 10: Warranty [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 181"
+   ],
+   "kept": [
+    "16d8ec1808be/181#0",
+    "16d8ec1808be/182#0",
+    "16d8ec1808be/190#0",
+    "16d8ec1808be/184#0",
+    "16d8ec1808be/188#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Compare chapters 2 and 3.",
+   "answer": "manual.pdf (Page 56) \u203a Chapter 3: Inverters \u203a 3.2 Inverters: in practice [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 56"
+   ],
+   "kept": [
+    "16d8ec1808be/56#0",
+    "16d8ec1808be/54#0",
+    "16d8ec1808be/59#0",
+    "16d8ec1808be/60#0",
+    "16d8ec1808be/58#0"
+   ],
+   "context": 0.5,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Which chapter covers net metering, and what does it say?",
+   "answer": "manual.pdf (Page 101) \u203a Chapter 6: Net metering \u203a 6.1 Net metering: basics > Chapter 6: Net metering [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 101"
+   ],
+   "kept": [
+    "16d8ec1808be/101#0",
+    "16d8ec1808be/109#0",
+    "16d8ec1808be/107#0",
+    "16d8ec1808be/110#0",
+    "16d8ec1808be/104#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What is this book about overall?",
+   "answer": "I can't answer that from the available sources.",
+   "refused": true,
+   "calls": 2,
+   "seconds": 0.0,
+   "cited": [],
+   "kept": [
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/48#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/45#0",
+    "16d8ec1808be/49#0"
+   ],
+   "context": 0.1,
+   "score": 0.0
+  }
+ ],
+ "after": [
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 48?",
+   "answer": "The reference code for page 48 is KX-80112. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 48"
+   ],
+   "kept": [
+    "16d8ec1808be/48#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/45#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 49?",
+   "answer": "The reference code for page 49 is KX-88031. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 49"
+   ],
+   "kept": [
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/48#0",
+    "16d8ec1808be/45#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 116?",
+   "answer": "The reference code for page 116 is KX-18604. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 116"
+   ],
+   "kept": [
+    "16d8ec1808be/116#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 120?",
+   "answer": "The reference code for page 120 is KX-50280. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 120"
+   ],
+   "kept": [
+    "16d8ec1808be/120#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 122?",
+   "answer": "The reference code for page 122 is KX-66118. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 122"
+   ],
+   "kept": [
+    "16d8ec1808be/122#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/145#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 131?",
+   "answer": "The reference code for page 131 is KX-37389. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 131"
+   ],
+   "kept": [
+    "16d8ec1808be/131#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 132?",
+   "answer": "The reference code for page 132 is KX-45308. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 132"
+   ],
+   "kept": [
+    "16d8ec1808be/132#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 144?",
+   "answer": "The reference code for page 144 is KX-40336. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 144"
+   ],
+   "kept": [
+    "16d8ec1808be/144#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 151?",
+   "answer": "The reference code for page 151 is KX-95769. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 151"
+   ],
+   "kept": [
+    "16d8ec1808be/151#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/60#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 158?",
+   "answer": "The reference code for page 158 is KX-51202. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 158"
+   ],
+   "kept": [
+    "16d8ec1808be/158#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 162?",
+   "answer": "The reference code for page 162 is KX-82878. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 162"
+   ],
+   "kept": [
+    "16d8ec1808be/162#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/49#0",
+    "16d8ec1808be/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 200?",
+   "answer": "The reference code for page 200 is KX-83800. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 0.0,
+   "cited": [
+    "Page 200"
+   ],
+   "kept": [
+    "16d8ec1808be/200#0",
+    "16d8ec1808be/97#0",
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/90#0",
+    "16d8ec1808be/83#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "global",
+   "question": "What is chapter 4 about?",
+   "answer": "manual.pdf \u203a Chapter 4: Batteries (chapter summary, pages 61\u201380) [1]",
+   "refused": false,
+   "calls": 4,
+   "seconds": 0.0,
+   "cited": [
+    "Chapter 4: Batteries (chapter summary, pages 61\u201380)"
+   ],
+   "kept": [
+    "16d8ec1808be/61#c3",
+    "16d8ec1808be/61#s10",
+    "16d8ec1808be/71#s11",
+    "16d8ec1808be/61#s9",
+    "16d8ec1808be/61#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What does chapter 7 cover?",
+   "answer": "manual.pdf \u203a Chapter 7: Safety (chapter summary, pages 121\u2013140) [1]",
+   "refused": false,
+   "calls": 4,
+   "seconds": 0.0,
+   "cited": [
+    "Chapter 7: Safety (chapter summary, pages 121\u2013140)"
+   ],
+   "kept": [
+    "16d8ec1808be/121#c6",
+    "16d8ec1808be/121#s18",
+    "16d8ec1808be/121#0",
+    "16d8ec1808be/130#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Summarise chapter 9.",
+   "answer": "manual.pdf \u203a Chapter 9: Monitoring (chapter summary, pages 161\u2013180) [1]",
+   "refused": false,
+   "calls": 4,
+   "seconds": 0.0,
+   "cited": [
+    "Chapter 9: Monitoring (chapter summary, pages 161\u2013180)"
+   ],
+   "kept": [
+    "16d8ec1808be/161#c8",
+    "16d8ec1808be/161#s25",
+    "16d8ec1808be/171#s26",
+    "16d8ec1808be/161#s24"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What is chapter 1 about?",
+   "answer": "manual.pdf \u203a Chapter 1: Site survey (chapter summary, pages 1\u201320) [1]",
+   "refused": false,
+   "calls": 4,
+   "seconds": 0.0,
+   "cited": [
+    "Chapter 1: Site survey (chapter summary, pages 1\u201320)"
+   ],
+   "kept": [
+    "16d8ec1808be/1#c0",
+    "16d8ec1808be/1#s1",
+    "16d8ec1808be/1#0",
+    "16d8ec1808be/5#0",
+    "16d8ec1808be/6#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Summarise chapter 10.",
+   "answer": "manual.pdf \u203a Chapter 10: Warranty (chapter summary, pages 181\u2013200) [1]",
+   "refused": false,
+   "calls": 4,
+   "seconds": 0.0,
+   "cited": [
+    "Chapter 10: Warranty (chapter summary, pages 181\u2013200)"
+   ],
+   "kept": [
+    "16d8ec1808be/181#c9",
+    "16d8ec1808be/191#s29",
+    "16d8ec1808be/181#s28",
+    "16d8ec1808be/181#s27",
+    "16d8ec1808be/1#s1"
+   ],
+   "context": 0.75,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Compare chapters 2 and 3.",
+   "answer": "manual.pdf \u203a Chapter 3: Inverters \u203a 3.2 Inverters: in practice (summary, pages 51\u201360) [3]",
+   "refused": false,
+   "calls": 5,
+   "seconds": 0.0,
+   "cited": [
+    "Chapter 3: Inverters \u203a 3.2 Inverters: in practice (summary, pages 51\u201360)"
+   ],
+   "kept": [
+    "16d8ec1808be/21#c1",
+    "16d8ec1808be/41#c2",
+    "16d8ec1808be/51#s8",
+    "16d8ec1808be/31#s5",
+    "16d8ec1808be/41#s7"
+   ],
+   "context": 0.75,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Which chapter covers net metering, and what does it say?",
+   "answer": "manual.pdf \u203a Chapter 6: Net metering \u203a 6.1 Net metering: basics (summary, pages 101\u2013110) [1]",
+   "refused": false,
+   "calls": 6,
+   "seconds": 0.0,
+   "cited": [
+    "Chapter 6: Net metering \u203a 6.1 Net metering: basics (summary, pages 101\u2013110)"
+   ],
+   "kept": [
+    "16d8ec1808be/101#s16",
+    "16d8ec1808be/101#s15",
+    "16d8ec1808be/101#0",
+    "16d8ec1808be/109#0",
+    "16d8ec1808be/107#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What is this book about overall?",
+   "answer": "I can't answer that from the available sources.",
+   "refused": true,
+   "calls": 2,
+   "seconds": 0.0,
+   "cited": [],
+   "kept": [
+    "16d8ec1808be/46#0",
+    "16d8ec1808be/48#0",
+    "16d8ec1808be/50#0",
+    "16d8ec1808be/45#0",
+    "16d8ec1808be/49#0"
+   ],
+   "context": 0.1,
+   "score": 0.0
+  }
+ ]
+}

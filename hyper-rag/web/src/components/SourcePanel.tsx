@@ -31,7 +31,46 @@ function Line({ spans, markFirst }: { spans: Span[]; markFirst: React.RefObject<
   );
 }
 
-export function SourcePanel({ view, onClose }: { view: SourceView; onClose: () => void }) {
+export type InspectorTab = "source" | "retrieval";
+
+interface InspectorProps {
+  tab: InspectorTab;
+  source: SourceView | null;
+  retrieval: React.ReactNode;
+  onTab: (tab: InspectorTab) => void;
+  onClose: () => void;
+}
+
+/** The right-hand panel: the cited page, or how the answer's passages were ranked. */
+export function Inspector({ tab, source, retrieval, onTab, onClose }: InspectorProps) {
+  return (
+    <aside className="source-panel" id="source-panel" aria-label="Inspector">
+      <div className="source-head">
+        <div className="tabs inspector-tabs" role="tablist">
+          {(["source", "retrieval"] as InspectorTab[]).map((name) => (
+            <button
+              key={name}
+              role="tab"
+              aria-selected={tab === name}
+              className={"tab" + (tab === name ? " active" : "")}
+              onClick={() => onTab(name)}
+              disabled={name === "source" ? !source : !retrieval}
+            >
+              {name === "source" ? "Source" : "Retrieval"}
+            </button>
+          ))}
+        </div>
+        <button id="source-close" aria-label="Close the inspector" onClick={onClose}>
+          Close
+        </button>
+      </div>
+      {tab === "source" && source ? <SourceBody view={source} /> : null}
+      {tab === "retrieval" ? <div className="source-body">{retrieval}</div> : null}
+    </aside>
+  );
+}
+
+function SourceBody({ view }: { view: SourceView }) {
   const { title, subtitle, lines, source } = view;
   const body = useRef<HTMLDivElement>(null);
   const firstHit = useRef<HTMLElement | null>(null);
@@ -44,18 +83,13 @@ export function SourcePanel({ view, onClose }: { view: SourceView; onClose: () =
   }, [view, source]);
 
   return (
-    <aside className="source-panel" id="source-panel" aria-label="Source">
-      <div className="source-head">
-        <div>
-          <h3 id="source-title">{title}</h3>
-          <p id="source-sub">
-            {subtitle}
-            {source?.read_by_ocr && <span className="badge">read by OCR</span>}
-          </p>
-        </div>
-        <button id="source-close" aria-label="Close source panel" onClick={onClose}>
-          Close
-        </button>
+    <>
+      <div className="source-title-row">
+        <h3 id="source-title">{title}</h3>
+        <p id="source-sub">
+          {subtitle}
+          {source?.read_by_ocr && <span className="badge">read by OCR</span>}
+        </p>
       </div>
       <div className="source-body" id="source-body" ref={body}>
         {source && (
@@ -76,6 +110,6 @@ export function SourcePanel({ view, onClose }: { view: SourceView; onClose: () =
           <Line key={i} spans={spans} markFirst={i === firstHitLine ? firstHit : null} />
         ))}
       </div>
-    </aside>
+    </>
   );
 }

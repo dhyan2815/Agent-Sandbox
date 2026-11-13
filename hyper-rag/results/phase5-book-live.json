@@ -1,0 +1,690 @@
+{
+ "before": [
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 48?",
+   "answer": "The reference code for page 48 is KX-80112 [1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 3.2,
+   "cited": [
+    "Page 48"
+   ],
+   "kept": [
+    "8b821e9784d8/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 49?",
+   "answer": "The reference code for page 49 is KX-88031[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 5.3,
+   "cited": [
+    "Page 49"
+   ],
+   "kept": [
+    "8b821e9784d8/49#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 116?",
+   "answer": "The reference code for page 116 is KX-18604[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 4.9,
+   "cited": [
+    "Page 116"
+   ],
+   "kept": [
+    "8b821e9784d8/116#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 120?",
+   "answer": "The reference code for page 120 is KX-50280[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 4.9,
+   "cited": [
+    "Page 120"
+   ],
+   "kept": [
+    "8b821e9784d8/120#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 122?",
+   "answer": "The reference code for page 122 is KX-66118 [1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 4.9,
+   "cited": [
+    "Page 122"
+   ],
+   "kept": [
+    "8b821e9784d8/122#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 131?",
+   "answer": "The reference code for page 131 is KX-37389[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 5.2,
+   "cited": [
+    "Page 131"
+   ],
+   "kept": [
+    "8b821e9784d8/131#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 132?",
+   "answer": "The reference code for page 132 is KX-45308 [1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 4.8,
+   "cited": [
+    "Page 132"
+   ],
+   "kept": [
+    "8b821e9784d8/132#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 144?",
+   "answer": "The reference code for page 144 is KX-40336. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 5.2,
+   "cited": [
+    "Page 144"
+   ],
+   "kept": [
+    "8b821e9784d8/144#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 151?",
+   "answer": "The reference code for page 151 is KX-95769 [1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 4.8,
+   "cited": [
+    "Page 151"
+   ],
+   "kept": [
+    "8b821e9784d8/151#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 158?",
+   "answer": "The reference code for page 158 is KX-51202[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 5.7,
+   "cited": [
+    "Page 158"
+   ],
+   "kept": [
+    "8b821e9784d8/158#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 162?",
+   "answer": "The reference code for page 162 is KX-82878[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 4.4,
+   "cited": [
+    "Page 162"
+   ],
+   "kept": [
+    "8b821e9784d8/162#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 200?",
+   "answer": "The reference code for page 200 is KX-83800[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 5.0,
+   "cited": [
+    "Page 200"
+   ],
+   "kept": [
+    "8b821e9784d8/200#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "global",
+   "question": "What is chapter 4 about?",
+   "answer": "Chapter 4 covers Batteries. [1][2][3][4][5]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 4.8,
+   "cited": [
+    "Page 61",
+    "Page 70",
+    "Page 65",
+    "Page 66",
+    "Page 64"
+   ],
+   "kept": [
+    "8b821e9784d8/61#0",
+    "8b821e9784d8/70#0",
+    "8b821e9784d8/65#0",
+    "8b821e9784d8/66#0",
+    "8b821e9784d8/64#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What does chapter 7 cover?",
+   "answer": "Chapter 7 is the safety chapter. It covers topics such as arc flash, fall protection, isolation and lockout procedures, and the related documentation of safety work in the site book with photos. [1][2][3][4][5]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 5.1,
+   "cited": [
+    "Page 121",
+    "Page 124",
+    "Page 127",
+    "Page 128",
+    "Page 136"
+   ],
+   "kept": [
+    "8b821e9784d8/121#0",
+    "8b821e9784d8/124#0",
+    "8b821e9784d8/127#0",
+    "8b821e9784d8/128#0",
+    "8b821e9784d8/136#0"
+   ],
+   "context": 1.0,
+   "score": 1.0
+  },
+  {
+   "kind": "global",
+   "question": "Summarise chapter 9.",
+   "answer": "Chapter 9 covers the basics of monitoring solar installations. It explains three key aspects\u2014irradiance, yield, and alerts\u2014and how installers verify each before signing off a job. Installers must check the relevant data (irradiance, yield, or alerts) and record the monitoring work in the site book with photos. A frequent error is overlooking one of these factors (irradiance, yield, or alerts) on older houses. Customers often inquire how the monitored parameter (irradiance, yield, or alerts) influences their electricity bill. [1][2][3][4][5]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 13.9,
+   "cited": [
+    "Page 161",
+    "Page 169",
+    "Page 162",
+    "Page 167",
+    "Page 168"
+   ],
+   "kept": [
+    "8b821e9784d8/161#0",
+    "8b821e9784d8/169#0",
+    "8b821e9784d8/162#0",
+    "8b821e9784d8/167#0",
+    "8b821e9784d8/168#0"
+   ],
+   "context": 1.0,
+   "score": 0.75
+  },
+  {
+   "kind": "global",
+   "question": "What is chapter 1 about?",
+   "answer": "Chapter 1 covers the site survey process. [1][2][3][4][5]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 14.2,
+   "cited": [
+    "Page 1",
+    "Page 9",
+    "Page 10",
+    "Page 6",
+    "Page 8"
+   ],
+   "kept": [
+    "8b821e9784d8/1#0",
+    "8b821e9784d8/9#0",
+    "8b821e9784d8/10#0",
+    "8b821e9784d8/6#0",
+    "8b821e9784d8/8#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Summarise chapter 10.",
+   "answer": "Chapter 10 explains the warranty process for installations. It emphasizes that installers must verify warranty-related information\u2014such as product warranty details, claims, or serial numbers\u2014before signing off a job and recording the work (including photos) in the site book. The chapter also notes common mistakes, like overlooking warranty or claim information on older houses, and mentions that customers frequently ask how the product warranty or performance guarantee will affect their bill. [1][2][3][4][5]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 11.3,
+   "cited": [
+    "Page 181",
+    "Page 190",
+    "Page 182",
+    "Page 184",
+    "Page 186"
+   ],
+   "kept": [
+    "8b821e9784d8/181#0",
+    "8b821e9784d8/190#0",
+    "8b821e9784d8/182#0",
+    "8b821e9784d8/184#0",
+    "8b821e9784d8/186#0"
+   ],
+   "context": 1.0,
+   "score": 1.0
+  },
+  {
+   "kind": "global",
+   "question": "Compare chapters 2 and 3.",
+   "answer": "I can't answer that from the available sources.",
+   "refused": true,
+   "calls": 5,
+   "seconds": 23.1,
+   "cited": [],
+   "kept": [],
+   "context": 0.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "Which chapter covers net metering, and what does it say?",
+   "answer": "I can't answer that from the available sources.",
+   "refused": true,
+   "calls": 3,
+   "seconds": 13.7,
+   "cited": [],
+   "kept": [
+    "8b821e9784d8/111#0",
+    "8b821e9784d8/119#0",
+    "8b821e9784d8/115#0",
+    "8b821e9784d8/118#0",
+    "8b821e9784d8/120#0"
+   ],
+   "context": 1.0,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What is this book about overall?",
+   "answer": "I can't answer that from the available sources.",
+   "refused": true,
+   "calls": 5,
+   "seconds": 20.9,
+   "cited": [],
+   "kept": [],
+   "context": 0.0,
+   "score": 0.0
+  }
+ ],
+ "after": [
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 48?",
+   "answer": "The reference code for page 48 is KX-80112 [1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 3.2,
+   "cited": [
+    "Page 48"
+   ],
+   "kept": [
+    "8b821e9784d8/48#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 49?",
+   "answer": "The reference code for page 49 is KX-88031[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 8.4,
+   "cited": [
+    "Page 49"
+   ],
+   "kept": [
+    "8b821e9784d8/49#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 116?",
+   "answer": "The reference code for page 116 is KX-18604[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 8.3,
+   "cited": [
+    "Page 116"
+   ],
+   "kept": [
+    "8b821e9784d8/116#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 120?",
+   "answer": "The reference code for page 120 is KX-50280[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 7.8,
+   "cited": [
+    "Page 120"
+   ],
+   "kept": [
+    "8b821e9784d8/120#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 122?",
+   "answer": "The reference code for page 122 is KX-66118 [1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 7.6,
+   "cited": [
+    "Page 122"
+   ],
+   "kept": [
+    "8b821e9784d8/122#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 131?",
+   "answer": "The reference code for page 131 is KX-37389[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 8.7,
+   "cited": [
+    "Page 131"
+   ],
+   "kept": [
+    "8b821e9784d8/131#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 132?",
+   "answer": "The reference code for page 132 is KX-45308[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 9.5,
+   "cited": [
+    "Page 132"
+   ],
+   "kept": [
+    "8b821e9784d8/132#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 144?",
+   "answer": "The reference code for page 144 is KX-40336. [1]",
+   "refused": false,
+   "calls": 3,
+   "seconds": 7.7,
+   "cited": [
+    "Page 144"
+   ],
+   "kept": [
+    "8b821e9784d8/144#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 151?",
+   "answer": "The reference code for page 151 is KX-95769 [1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 7.8,
+   "cited": [
+    "Page 151"
+   ],
+   "kept": [
+    "8b821e9784d8/151#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 158?",
+   "answer": "The reference code for page 158 is KX-51202[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 8.5,
+   "cited": [
+    "Page 158"
+   ],
+   "kept": [
+    "8b821e9784d8/158#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 162?",
+   "answer": "The reference code for page 162 is KX-82878[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 8.6,
+   "cited": [
+    "Page 162"
+   ],
+   "kept": [
+    "8b821e9784d8/162#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "fact",
+   "question": "What is the reference code for page 200?",
+   "answer": "The reference code for page 200 is KX-83800[1].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 8.6,
+   "cited": [
+    "Page 200"
+   ],
+   "kept": [
+    "8b821e9784d8/200#0"
+   ],
+   "score": 1.0
+  },
+  {
+   "kind": "global",
+   "question": "What is chapter 4 about?",
+   "answer": "Chapter 4 covers batteries, including their basics, practical use, thermal-runaway risks, cycle verification, and the importance of depth-of-discharge considerations[1].",
+   "refused": false,
+   "calls": 4,
+   "seconds": 10.3,
+   "cited": [
+    "Chapter 4: Batteries (chapter summary, pages 61\u201380)"
+   ],
+   "kept": [
+    "8b821e9784d8/61#c3",
+    "8b821e9784d8/61#s9",
+    "8b821e9784d8/61#s10",
+    "8b821e9784d8/71#s11"
+   ],
+   "context": 0.75,
+   "score": 0.0
+  },
+  {
+   "kind": "global",
+   "question": "What does chapter 7 cover?",
+   "answer": "Chapter 7 deals with safety procedures, including verifying fall-protection before signing off a job, proper lockout and isolation practices, and the need to address arc-flash hazards\u2014particularly on older houses\u2014and it also notes customer questions about how fall-protection and isolation measures may affect billing [1][2][3].",
+   "refused": false,
+   "calls": 4,
+   "seconds": 7.6,
+   "cited": [
+    "Chapter 7: Safety (chapter summary, pages 121\u2013140)",
+    "Chapter 7: Safety (summary, pages 121\u2013140)",
+    "Chapter 7: Safety \u203a 7.1 Safety: basics (summary, pages 121\u2013130)"
+   ],
+   "kept": [
+    "8b821e9784d8/121#c6",
+    "8b821e9784d8/121#s18",
+    "8b821e9784d8/121#s19"
+   ],
+   "context": 1.0,
+   "score": 0.5
+  },
+  {
+   "kind": "global",
+   "question": "Summarise chapter 9.",
+   "answer": "Chapter 9 covers system monitoring, emphasizing that installers must verify performance by measuring irradiance and confirming the energy yield before signing off a job. It highlights that overlooking the data logger\u2014especially on older installations\u2014is a frequent mistake that can cause inaccurate assessments [1][2][3][4].",
+   "refused": false,
+   "calls": 4,
+   "seconds": 10.9,
+   "cited": [
+    "Chapter 9: Monitoring (chapter summary, pages 161\u2013180)",
+    "Chapter 9: Monitoring (summary, pages 161\u2013180)",
+    "Chapter 9: Monitoring \u203a 9.1 Monitoring: basics (summary, pages 161\u2013170)",
+    "Chapter 9: Monitoring \u203a 9.2 Monitoring: in practice (summary, pages 171\u2013180)"
+   ],
+   "kept": [
+    "8b821e9784d8/161#c8",
+    "8b821e9784d8/161#s24",
+    "8b821e9784d8/161#s25",
+    "8b821e9784d8/171#s26"
+   ],
+   "context": 0.75,
+   "score": 0.75
+  },
+  {
+   "kind": "global",
+   "question": "What is chapter 1 about?",
+   "answer": "Chapter 1 covers the site-survey process, including evaluation of structural load, shading, and roof orientation before installation[1].",
+   "refused": false,
+   "calls": 4,
+   "seconds": 9.3,
+   "cited": [
+    "Chapter 1: Site survey (chapter summary, pages 1\u201320)"
+   ],
+   "kept": [
+    "8b821e9784d8/1#c0",
+    "8b821e9784d8/1#s0",
+    "8b821e9784d8/1#s1"
+   ],
+   "context": 0.75,
+   "score": 0.75
+  },
+  {
+   "kind": "global",
+   "question": "Summarise chapter 10.",
+   "answer": "Chapter 10 explains that installers must verify a product\u2019s warranty\u2014especially the serial number\u2014before signing off a job, noting that this step is often missed on older houses[1][2]. It outlines how to file warranty claims and describes the performance guarantee, addressing common customer questions about how the serial number can affect billing[1][3]. The chapter stresses that ignoring the warranty or serial-number check on older homes is a frequent error[1][4].",
+   "refused": false,
+   "calls": 4,
+   "seconds": 10.0,
+   "cited": [
+    "Chapter 10: Warranty (chapter summary, pages 181\u2013200)",
+    "Chapter 10: Warranty \u203a 10.1 Warranty: basics (summary, pages 181\u2013190)",
+    "Chapter 10: Warranty \u203a 10.2 Warranty: in practice (summary, pages 191\u2013200)",
+    "Chapter 10: Warranty (summary, pages 181\u2013200)"
+   ],
+   "kept": [
+    "8b821e9784d8/181#c9",
+    "8b821e9784d8/181#s28",
+    "8b821e9784d8/191#s29",
+    "8b821e9784d8/181#s27"
+   ],
+   "context": 1.0,
+   "score": 0.75
+  },
+  {
+   "kind": "global",
+   "question": "Compare chapters 2 and 3.",
+   "answer": "Chapter 2 focuses on solar-panel issues, especially how monocrystalline panels degrade over time and how bypass diodes help maintain output when shading or faults occur [1]. \nChapter 3 deals with inverter performance, describing how inverter clipping reduces energy yield and how the lack of maximum-power-point tracking (MPPT) in older installations worsens those losses [2][3]. \n\nThus, Chapter 2 addresses panel-level degradation and diode function, while Chapter 3 addresses inverter-level clipping and MPPT configuration.",
+   "refused": false,
+   "calls": 5,
+   "seconds": 12.4,
+   "cited": [
+    "Chapter 2: Solar panels (chapter summary, pages 21\u201340)",
+    "Chapter 3: Inverters (chapter summary, pages 41\u201360)",
+    "Chapter 3: Inverters \u203a 3.2 Inverters: in practice (summary, pages 51\u201360)"
+   ],
+   "kept": [
+    "8b821e9784d8/21#c1",
+    "8b821e9784d8/41#c2",
+    "8b821e9784d8/51#s8"
+   ],
+   "context": 0.875,
+   "score": 0.625
+  },
+  {
+   "kind": "global",
+   "question": "Which chapter covers net metering, and what does it say?",
+   "answer": "Chapter 6 of the manual is dedicated to net metering. It explains how net-metering works, emphasizing the impact of electricity exported from a property and warning that installers often overlook export rules on older houses, which can cause billing errors. Installers must verify the applicable tariff before completing an installation, and the chapter clarifies that a bidirectional meter records both imported and exported energy, influencing the customer\u2019s final charge [1].",
+   "refused": false,
+   "calls": 6,
+   "seconds": 9.3,
+   "cited": [
+    "Chapter 6: Net metering (chapter summary, pages 101\u2013120)"
+   ],
+   "kept": [
+    "8b821e9784d8/101#c5",
+    "8b821e9784d8/101#s16"
+   ],
+   "context": 0.75,
+   "score": 0.75
+  },
+  {
+   "kind": "global",
+   "question": "What is this book about overall?",
+   "answer": "The book is a technical manual for solar-energy installers that covers the key aspects of designing, installing, and maintaining photovoltaic systems. It explains panel performance and degradation, inverter operation and clipping, safety procedures such as fall protection and lockout, warranty verification, and post-install maintenance like cleaning and hotspot checks[3][1][2][4][5].",
+   "refused": false,
+   "calls": 3,
+   "seconds": 12.1,
+   "cited": [
+    "Chapter 2: Solar panels (chapter summary, pages 21\u201340)",
+    "Chapter 3: Inverters (chapter summary, pages 41\u201360)",
+    "Chapter 7: Safety (chapter summary, pages 121\u2013140)",
+    "Chapter 10: Warranty (chapter summary, pages 181\u2013200)",
+    "Chapter 8: Maintenance (summary, pages 141\u2013160)"
+   ],
+   "kept": [
+    "8b821e9784d8/41#c2",
+    "8b821e9784d8/121#c6",
+    "8b821e9784d8/21#c1",
+    "8b821e9784d8/181#c9",
+    "8b821e9784d8/141#s21"
+   ],
+   "context": 0.5,
+   "score": 0.2
+  }
+ ]
+}

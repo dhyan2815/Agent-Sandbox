@@ -16,6 +16,10 @@ should only record (append to a list, put on a queue); it runs inside the questi
 
 import time
 from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from hyper_rag.types import ScoredChunk
 
 Event = dict
 EventSink = Callable[[Event], None]
@@ -37,3 +41,7 @@ def ranked(ids: Sequence[str], scores: Sequence[float]) -> list[dict]:
         {"id": chunk_id, "rank": rank, "score": round(float(score), 4)}
         for rank, (chunk_id, score) in enumerate(zip(ids, scores, strict=True), start=1)
     ]
+
+
+def ranked_chunks(hits: "Sequence[ScoredChunk]") -> list[dict]:
+    return ranked([hit.chunk.id for hit in hits], [hit.score for hit in hits])

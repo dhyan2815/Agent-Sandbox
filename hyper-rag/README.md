@@ -347,7 +347,18 @@ npm test                                     # unit tests
 BASE_URL=http://127.0.0.1:8000 npm run e2e   # every UI flow in a real browser (offline server)
 ```
 
-### 4. Docker (and a Hugging Face Space)
+### 4. Big files
+
+Files of any size up to `max_file_mb` (2 GB) are sent in 8 MB parts and survive a dropped
+connection. The server X-rays a PDF first (which pages are plain text, tables, photos,
+scans, blank or repeated, and an estimate of the work), then reads it 32 pages at a time
+in the background. Each window is searchable as soon as it is read, answers say which
+files were only partly searched, and a restart continues from the last window. A new
+edition of a file only re-reads the pages that changed. Measured on a 1.3 GB PDF: read in
+about a minute with the reading process peaking at 175 MB
+([results/phase1-big-files.md](results/phase1-big-files.md)).
+
+### 5. Docker (and a Hugging Face Space)
 
 ```bash
 docker build -t hyper-rag .
@@ -356,8 +367,9 @@ docker run -p 7860:7860 -e GROQ_API_KEY=... -e HYPER_RAG_PASSWORD=... hyper-rag
 
 The image builds the React app, runs as user 1000 on port 7860 and starts uvicorn with
 `--proxy-headers`, which is what a Hugging Face Space (Docker SDK) expects. Put keys and the
-password in the Space's secrets. Its disk is wiped on restart, so uploads do not survive one
-yet; plan v2 phase 2 moves them to R2.
+password in the Space's secrets. Its disk is wiped on restart, so for anything you want to
+keep, set `HYPER_RAG_BLOB_STORE=s3` (R2) and `HYPER_RAG_VECTOR_STORE=qdrant`,
+`HYPER_RAG_LEXICAL_STORE=qdrant` (Qdrant Cloud's free cluster), with their keys as secrets.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/ask -H "Content-Type: application/json" \
@@ -403,6 +415,10 @@ Settings live in [`config.yaml`](config.yaml); any of them can be overridden wit
 | `password` (env `HYPER_RAG_PASSWORD`) | empty: no login | Turns on the single-user login. Set it in `.env` or the host's secrets, never in `config.yaml` |
 | `session_days` | 30 | How long a login lasts |
 | `runs_kept` | 50 | Saved event logs of recent answers per collection, for replay |
+| `max_file_mb`, `max_collection_mb`, `max_collection_pages` | 2048, 9000, 20000 | Budgets for big files (resumable uploads); they replace the old 300-page cap |
+| `window_pages`, `ingest_processes` | 32, 0 | Pages read and committed together; worker processes for parsing (0 = in the reading thread) |
+| `blob_store` | `local` | `s3` for Cloudflare R2 or any S3: `s3_bucket`, `s3_endpoint`, keys in `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` |
+| `vector_store`, `lexical_store` | `numpy`, `bm25` | `qdrant` for both: `qdrant_url`, key in `QDRANT_API_KEY` (needs `pip install -e ".[hosted]"`) |
 
 Model names were checked against the providers' free-tier pages on 2026-11-10. Free
 line-ups change; update the names in `config.yaml` if a model is retired.

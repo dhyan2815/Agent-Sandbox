@@ -1,7 +1,7 @@
 # Plan v2: any-size documents, a live RAG visualizer, and a feature deck
 
-Status: **Phase 0 built** (store interfaces, typed events, saved runs, single-user login,
-the React app and a Docker image; see DECISIONS.md 25 to 29). Phases 1 to 6 are not built. Written 2026-11-13 after reading the code on branch `ccr-0fbd0e60-zbgwzn`
+Status: **Phases 0 to 5 built** (DECISIONS.md 25 to 36; measurements in `results/`). Phase 4,
+the Galaxy, is on the side branch `feat/galaxy` as decided. Phase 6 (deploy) is not built. Written 2026-11-13 after reading the code on branch `ccr-0fbd0e60-zbgwzn`
 (`hyper-rag/`, commit `78286df`).
 
 Constraints decided with the user:

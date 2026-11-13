@@ -204,7 +204,7 @@ def test_failed_indexing_leaves_no_orphan_files(store, monkeypatch):
     def boom(*args, **kwargs):
         raise RuntimeError("embedder down")
 
-    monkeypatch.setattr(store, "_build_index", boom)
+    monkeypatch.setattr(store, "_write_window_index", boom)
     with pytest.raises(RuntimeError):
         store.add_file("orphans", "notes.txt", b"Some searchable text about solar panels.")
     assert list((store.path("orphans") / "files").iterdir()) == []

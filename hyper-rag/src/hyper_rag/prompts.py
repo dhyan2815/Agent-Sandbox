@@ -18,6 +18,7 @@ REFUSAL_MESSAGE = "I can't answer that from the available sources."
 @dataclass(frozen=True)
 class Prompt:
     task: str  # route | grade | rewrite | generate | check | judge | condense | synthesize
+    #           | summarize
     system: str
     user: str
     max_tokens: int = 400
@@ -163,4 +164,22 @@ def synthesize_prompt(passage: Chunk) -> Prompt:
         f"Passage:\n{passage.text}",
         max_tokens=400,
         inputs={"passage": passage},
+    )
+
+
+def chapter_summary_prompt(title: str, sections: list[str]) -> Prompt:
+    """One chapter's summary, written from its sections' extractive summaries (plan v2, A8).
+
+    The input is a few sentences per section, never the chapter's raw text, so one call
+    per chapter stays small on a free tier.
+    """
+    system = (
+        "You summarise one chapter of a document for a reader who has not read it. Use only "
+        "the notes given. Write 3 to 5 plain sentences: what the chapter is about and its "
+        "main points. No preamble, no lists, no citations."
+    )
+    notes = "\n".join(f"- {text}" for text in sections if text)
+    user = f"Chapter: {title}\n\nNotes from its sections:\n{notes}"
+    return Prompt(
+        "summarize", system, user, max_tokens=300, inputs={"title": title, "sections": sections}
     )

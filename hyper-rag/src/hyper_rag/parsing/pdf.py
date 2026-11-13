@@ -1,4 +1,9 @@
-"""PDF parsing with pdfplumber: text in reading order, tables, embedded images, scans."""
+"""PDF parsing: each page by the route the X-ray pass chose for it (see parsing/xray.py).
+
+Simple pages are read from pdfium's text objects in about a millisecond. Pages with tables,
+two columns, large images or no text layer go through pdfplumber below: text in reading
+order, tables, OCR of embedded images and of scanned pages.
+"""
 
 import statistics
 from pathlib import Path
@@ -13,6 +18,13 @@ from hyper_rag.parsing.model import (
     table_to_markdown,
 )
 from hyper_rag.parsing.ocr import Ocr
+from hyper_rag.parsing.xray import (
+    PDFIUM_LOCK,
+    PageInfo,
+    fast_text,
+    strip_boilerplate,
+    xray_pdf,
+)
 
 # A page with fewer characters of real text than this is treated as a scan and read by OCR.
 SCANNED_PAGE_CHARS = 25
@@ -184,21 +196,70 @@ def _parse_page(page, number: int, ocr: Ocr) -> Unit:
     return unit
 
 
-def parse_pdf(path: Path, ocr: Ocr, max_units: int) -> ParsedFile:
+def parse_pdf_pages(
+    path: Path, pages: list[PageInfo], ocr: Ocr, boilerplate: list[str] | set[str] = ()
+) -> tuple[list[Unit], list[str]]:
+    """Parse some pages of a PDF, each by the route the X-ray gave it. Returns the units
+    and any warnings. Opens the file for just these pages, so memory is bounded by the
+    number of pages asked for, not by the size of the book."""
+    import pypdfium2
+
+    boilerplate = set(boilerplate)
+    units: list[Unit] = []
+    warnings: list[str] = []
+    careful = [page.number for page in pages if page.route in ("layout", "images", "ocr")]
+    plumber = None
+    with PDFIUM_LOCK:
+        fast = pypdfium2.PdfDocument(str(path)) if len(careful) < len(pages) else None
+    try:
+        if careful:
+            plumber = pdfplumber.open(path, pages=careful)
+        by_number = {p.page_number: p for p in plumber.pages} if plumber else {}
+        for info in pages:
+            unit = Unit(number=info.number, label=f"Page {info.number}", text="")
+            try:
+                if info.route == "skip":
+                    pass
+                elif info.route == "fast-text":
+                    with PDFIUM_LOCK:
+                        page = fast[info.number - 1]
+                        try:
+                            unit.text = fast_text(page, boilerplate)
+                        finally:
+                            page.close()
+                else:
+                    page = by_number[info.number]
+                    with PDFIUM_LOCK:  # rendering for OCR goes through pdfium
+                        unit = _parse_page(page, info.number, ocr)
+                    unit.text = strip_boilerplate(unit.text, boilerplate)
+                    page.flush_cache()  # pdfplumber keeps every parsed page otherwise
+            except Exception as error:  # one broken page should not lose the document
+                warnings.append(f"Page {info.number} could not be read ({error}).")
+            units.append(unit)
+    finally:
+        if plumber is not None:
+            plumber.close()
+        if fast is not None:
+            with PDFIUM_LOCK:
+                fast.close()
+    return units, warnings
+
+
+def parse_pdf(path: Path, ocr: Ocr, max_units: int | None = None) -> ParsedFile:
+    """Parse a whole PDF: X-ray it, then read each page by its route."""
     parsed = ParsedFile(kind="pdf", unit_name="page")
     try:
-        pdf = pdfplumber.open(path)
+        xray = xray_pdf(path)
+    except ParseError:
+        raise
+    pages = xray.pages
+    if max_units is not None and len(pages) > max_units:
+        parsed.warnings.append(f"Only the first {max_units} of {len(pages)} pages were read.")
+        pages = pages[:max_units]
+    try:
+        units, warnings = parse_pdf_pages(path, pages, ocr, xray.boilerplate)
     except Exception as error:  # pdfminer raises many types for encrypted/corrupt files
         raise ParseError(f"Could not open the PDF ({type(error).__name__}: {error})") from error
-    with pdf:
-        total = len(pdf.pages)
-        if total > max_units:
-            parsed.warnings.append(f"Only the first {max_units} of {total} pages were read.")
-        for number, page in enumerate(pdf.pages[:max_units], start=1):
-            try:
-                parsed.units.append(_parse_page(page, number, ocr))
-            except Exception as error:  # one broken page should not lose the document
-                parsed.warnings.append(f"Page {number} could not be read ({error}).")
-                parsed.units.append(Unit(number=number, label=f"Page {number}", text=""))
-            page.flush_cache()  # pdfplumber keeps every parsed page in memory otherwise
+    parsed.units = units
+    parsed.warnings += warnings
     return parsed

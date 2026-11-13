@@ -32,6 +32,11 @@ class BlobStore(Protocol):
         """Replace the blob atomically: a reader sees the old bytes or the new, never half."""
         ...
 
+    def write_file(self, key: str, source: Path, move: bool = False) -> None:
+        """Store a local file as a blob without reading it into memory. With move=True the
+        source may be consumed (renamed into place)."""
+        ...
+
     def exists(self, key: str) -> bool: ...
 
     def delete(self, key: str) -> None:
@@ -75,6 +80,19 @@ class LocalBlobStore:
         temporary = path.with_name(path.name + ".tmp")
         temporary.write_bytes(data)
         temporary.replace(path)  # atomic on one file system
+
+    def write_file(self, key: str, source: Path, move: bool = False) -> None:
+        path = self._path(key)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if move:
+            try:
+                source.replace(path)  # same file system: a rename, no copy
+                return
+            except OSError:
+                pass
+        temporary = path.with_name(path.name + ".tmp")
+        shutil.copyfile(source, temporary)
+        temporary.replace(path)
 
     def exists(self, key: str) -> bool:
         return self._path(key).is_file()
