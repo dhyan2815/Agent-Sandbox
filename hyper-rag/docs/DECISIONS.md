@@ -509,3 +509,75 @@ run's rerank hits, the question placed from its logged position. The frame rate 
 below the plan's 50, but on SwiftShader, a software renderer on the CPU, because this
 machine has no GPU; the target is for an integrated GPU and is not verified here.
 
+
+## 37. The Galaxy shipped in main, behind a demo-mode setting
+
+Decision 36 kept the Galaxy on a side branch. It was merged into `main` along with the rest
+of the work, so the plan's intent ("a demo and recording mode, not part of the product") is
+kept by a setting instead: `demo_mode` (`HYPER_RAG_DEMO_MODE=1`) is off by default, and the
+Explore tab, with the Galaxy and the metrics board, is hidden unless it is on. The three.js
+code was already loaded only when that tab opens, so a default install never downloads it.
+Alternatives were a normal tab for everyone (more screen for a view that is a sketch of the
+data) and removing it from `main` (the work is in git history, but a demo you cannot switch
+on is a demo nobody records). The cost: the metrics board is hidden with it, though it is
+product-useful; if it is wanted day to day, it should move to its own tab.
+
+## 38. Host readiness: warm-up, a quota guard, a settings check
+
+Phase 6 adds three things for a free host, none of which touch retrieval or answers.
+**Warm-up:** the embedding and reranking models load on a background thread at start-up, so
+`GET /health` answers at once with `warm: warming | ready | failed` (it is open without a
+login and says nothing about data). The page shows a waking-up screen while `/health`
+cannot be reached (a sleeping host) and a banner while the models load. A failed warm-up
+does not stop the app: the models load on the first question instead. **Quota guard:**
+questions, claim checks and LLM exports count toward `model_requests_per_hour` (default
+120) per client address; over it the API answers 429 with Retry-After. It is a sliding
+window kept in memory, so a restart forgets it, and behind a proxy the address is the
+forwarded one only because uvicorn runs with `--proxy-headers`. The point is to stop one
+runaway tab from spending Groq's 200K tokens a day, not to bill anyone. **Settings check:**
+`hyper-rag doctor` and the start-up log report a missing key for the chosen provider, a
+half-configured S3 or Qdrant, a local blob store on a host that wipes its disk, and a
+missing password. On a host (a Space sets `SPACE_ID`) the missing password is an error.
+`GET /ready` probes the stores behind the login and returns 503 with the failing probe.
+
+## 39. The claim checker fails closed, and says what "not found" means
+
+Deck card D4. A text is split into claims by one model call (at most 10; the model is asked
+for 11 so that a longer text is reported as cut, because a model told "at most 10" never
+shows that an 11th existed). Each claim is searched with the same hybrid retrieval the chat
+uses, which is local and free, and the model judges four claims per call against three
+passages each: `supported`, `contradicted` or `not_found`. A verdict only counts if it names
+a passage that exists. A missing verdict, an unknown word or a made-up passage number all
+become `not_found`, which the page words as "the documents do not settle this", never as
+"false". Four claims per call keeps one call near 3,000 tokens, under Groq's 8,000 a minute.
+Every verdict shows its passage and opens it in the source panel, because the model's
+reading is the weakest link and the reader must be able to overrule it.
+Not measured yet: how often a real model's verdicts agree with a person's. The tests cover
+the plumbing against the rule-based stand-in, which judges by word overlap and a missing
+figure, so they say nothing about verdict quality on a real model.
+
+## 40. Export is built from the saved run, and Notion means Markdown
+
+Deck card D6. `POST /collections/{c}/export` takes a run id, not text: the answer is read
+from what the server saved when it answered, so an export can only contain what the system
+said. Markdown (question, answer, sources with a flat quote each) needs no model and is the
+Notion route: Notion, Obsidian and most editors convert pasted Markdown, and a Notion API
+integration would need a token and a database id for a gain of one paste. The LinkedIn
+outline costs one request and is the only format that calls a model; it is told to use only
+the answer's facts, and the page says it is a draft that is not checked again. Refusals
+export as refusals, and cannot be turned into a post. Not built: a LinkedIn variant that
+runs the claim checker over its own draft before showing it.
+
+## 41. The MCP server: five tools, local or remote, a pinned SDK
+
+Deck card D1. `hyper-rag mcp` serves `list_collections`, `search`, `ask`, `get_source` and
+`check_claims` over stdio, on local collections by default, or on a deployed app with
+`--remote URL`, logging in with the password from `HYPER_RAG_REMOTE_PASSWORD` (an
+environment variable, so it is not in shell history or a process list). `search` calls no
+model, so it is the cheap way for another tool to look. All tools are read-only; `ask` and
+`check_claims` spend model requests, and on a host count toward its hourly limit. Errors the
+engine expects (no such collection, a rate limit, a wrong password) reach the calling model
+as messages. The SDK is pinned to `mcp==1.30.0`: its 2.x line exists, and its API was not
+checked here. Return types are `dict[str, Any]` because a bare `dict` makes the SDK send
+text only. Verified through a real stdio client (list tools, ask, an error flagged as an
+error), and in tests against both backends.

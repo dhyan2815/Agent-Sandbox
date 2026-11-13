@@ -154,9 +154,42 @@ try {
   expect(trace.includes("condense:"), `follow-up uses the conversation: ${trace}`);
   step("follow-up question is condensed with the conversation");
 
+  // Export: Markdown downloads as a file; the LinkedIn outline appears as a draft to read.
+  const exportRow = page.locator(".msg.bot [data-testid=export-menu]").first();
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    exportRow.getByRole("button", { name: "Download .md" }).click(),
+  ]);
+  expect(download.suggestedFilename().endsWith(".md"), `download is ${download.suggestedFilename()}`);
+  await exportRow.getByRole("button", { name: "LinkedIn outline" }).click();
+  const outline = await exportRow.getByLabel("LinkedIn post outline").inputValue();
+  expect(outline.includes("two working days") && !outline.includes("[1]"), `outline: ${outline}`);
+  step("an answer exports as a Markdown file and a LinkedIn outline");
+
   await page.click("#new-chat");
   expect((await page.locator(".msg").count()) === 0, "new chat clears the thread");
   step("new chat clears the thread");
+
+  // Claim checker: three claims, judged against the collection, each with its passage.
+  expect((await page.locator(".tab[data-tab=explore]").count()) === 0, "Explore is demo mode only");
+  await page.click(".tab[data-tab=check]");
+  await page.fill(
+    "#check-text",
+    "A standard rooftop installation takes two working days. " +
+      "The inverter is covered by a ten year warranty from the date of installation. " +
+      "The company was founded in 1998 by two brothers in Pune.",
+  );
+  await page.click("#check-run");
+  await page.waitForSelector("[data-testid=check-result] .claim");
+  const verdicts = await page.locator(".claim").evaluateAll((nodes) => nodes.map((n) => n.dataset.verdict));
+  expect(
+    JSON.stringify(verdicts) === JSON.stringify(["supported", "supported", "not_found"]),
+    `verdicts: ${verdicts}`,
+  );
+  await page.locator(".claim.v-supported .claim-passage").first().click();
+  await page.waitForSelector("#source-panel mark");
+  await page.keyboard.press("Escape");
+  step("claim checker marks each claim and opens the deciding passage");
 
   // The page grid: a 40-page PDF, read in windows, one cell per page.
   await page.click(".tab[data-tab=files]");
@@ -195,6 +228,18 @@ try {
   await page.waitForSelector("#welcome");
   expect((await page.textContent("#collection-list")).includes("None yet"), "collection gone");
   step("deleting the collection returns to the welcome screen");
+
+  // A sleeping host: while /health cannot be reached the page says so, then recovers by itself.
+  const waking = await browser.newPage();
+  if (PASSWORD) await waking.context().addCookies(await page.context().cookies());
+  await waking.route("**/health", (route) => route.abort());
+  await waking.goto(BASE + "/");
+  await waking.waitForSelector("#waking");
+  expect((await waking.textContent("#waking")).includes("Waking up the server"), "waking screen text");
+  await waking.unroute("**/health");
+  await waking.waitForSelector("#root .nav", { timeout: 10_000 });
+  await waking.close();
+  step("an unreachable server shows the waking-up screen, then the app when it answers");
 
   // Reduced motion: the strip and charts change state without animating.
   const calm = await browser.newPage({ reducedMotion: "reduce" });
