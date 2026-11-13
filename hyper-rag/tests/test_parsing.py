@@ -131,3 +131,26 @@ def test_long_table_is_split_by_rows_with_the_header_repeated(tmp_path):
 def test_pack_chunking_is_unchanged_by_default():
     document = Document(id="d", title="T", url="", text="x" * 3000)
     assert [len(c.text) for c in chunk_document(document, 1200, 150)] == [1202, 1202, 902]
+
+
+def test_two_column_pdf_is_read_column_by_column(tmp_path):
+    from reportlab.pdfgen import canvas
+
+    path = tmp_path / "columns.pdf"
+    page = canvas.Canvas(str(path), pagesize=(595, 842))
+    page.setFont("Helvetica", 16)
+    page.drawString(60, 790, "A full-width title that spans both of the columns below")
+    page.setFont("Helvetica", 9)
+    for row in range(30):
+        y = 750 - row * 12
+        page.drawString(60, y, f"left column line {row} talks about solar panels here")
+        page.drawString(
+            310, y, f"right column line {row} talks about billing and net metering there"
+        )
+    page.save()
+
+    text = parse_file(path, OCR).units[0].text
+    assert text.startswith("## A full-width title that spans both of the columns below")
+    # All of the left column comes before any of the right column, with word spaces intact.
+    assert text.index("left column line 29 talks about") < text.index("right column line 0 talks")
+    assert "panels here right column" not in text

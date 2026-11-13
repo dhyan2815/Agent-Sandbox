@@ -20,6 +20,12 @@ SCANNED_PAGE_CHARS = 25
 MIN_IMAGE_SIDE = 40
 MAX_IMAGES_PER_PAGE = 8
 OCR_RESOLUTION = 200  # dots per inch when rendering a page or an image region for OCR
+# pdfplumber's default gap for "these two letters are separate words" is 3 points, which
+# is wider than a space in 9-point type: small print came out with its words run together.
+# A tolerance relative to the font size works at every size.
+WORDS = {"x_tolerance_ratio": 0.15}
+MIN_WORDS_FOR_COLUMNS = 60
+GUTTER = 6  # points of white space that count as a column gap
 
 
 def _lines_to_markdown(lines: list[dict], body_size: float) -> str:
@@ -44,11 +50,67 @@ def _lines_to_markdown(lines: list[dict], body_size: float) -> str:
             blocks.append(f"## {text}")
             open_paragraph = False
         elif open_paragraph and not gap:
-            blocks[-1] += f" {text}"
+            if blocks[-1].endswith("-") and text[0].islower():
+                # A word hyphenated across a line break ("evalu-" / "ation"). Rejoining
+                # also glues the rare real hyphen ("llama-" / "index"), a fair trade:
+                # half-words match nothing in keyword search.
+                blocks[-1] = blocks[-1][:-1] + text
+            else:
+                blocks[-1] += f" {text}"
         else:
             blocks.append(text)
             open_paragraph = True
     return "\n\n".join(blocks)
+
+
+def _reading_order(box: tuple, page) -> list[tuple]:
+    """Split a region of a page into boxes to read one after another.
+
+    A two-column page read straight across gives lines made of half a sentence from each
+    column. This looks for a vertical strip of white space near the middle of the region.
+    If there is one, the region becomes: any full-width rows (a title, an abstract), then
+    the left column, then the right column, repeated down the page.
+    """
+    x0, top, x1, bottom = box
+    words = page.crop(box).extract_words(**WORDS)
+    if len(words) < MIN_WORDS_FOR_COLUMNS:
+        return [box]
+    width = x1 - x0
+
+    def crossing(x: float) -> list[dict]:
+        return [w for w in words if w["x0"] < x + GUTTER / 2 and w["x1"] > x - GUTTER / 2]
+
+    candidates = [x0 + width * share / 100 for share in range(35, 66)]
+    gutter = min(candidates, key=lambda x: len(crossing(x)))
+    spanning = crossing(gutter)
+    left = sum(w["x1"] <= gutter for w in words)
+    right = sum(w["x0"] >= gutter for w in words)
+    # Two columns only if almost nothing crosses the strip and both sides carry real text.
+    if len(spanning) > 0.06 * len(words) or min(left, right) < 0.2 * len(words):
+        return [box]
+
+    # Rows that do cross the strip are full-width; everything between them is two columns.
+    boxes: list[tuple] = []
+    cursor = top
+    rows: list[list[float]] = []
+    for word in sorted(spanning, key=lambda w: w["top"]):
+        if rows and word["top"] <= rows[-1][1] + 2:
+            rows[-1][1] = max(rows[-1][1], word["bottom"])
+        else:
+            rows.append([word["top"], word["bottom"]])
+
+    def columns(upper: float, lower: float) -> None:
+        if lower - upper > 2:
+            boxes.extend([(x0, upper, gutter, lower), (gutter, upper, x1, lower)])
+
+    for row_top, row_bottom in rows:
+        row_top, row_bottom = max(row_top - 1, cursor), min(row_bottom + 1, bottom)
+        columns(cursor, row_top)
+        if row_bottom - row_top > 2:
+            boxes.append((x0, row_top, x1, row_bottom))
+        cursor = max(cursor, row_bottom)
+    columns(cursor, bottom)
+    return boxes
 
 
 def _is_real_table(rows: list[list]) -> bool:
@@ -72,10 +134,11 @@ def _parse_page(page, number: int, ocr: Ocr) -> Unit:
 
     def band(upper: float, lower: float) -> None:
         if lower - upper > 2:
-            region = page.crop((x0, upper, x1, lower))
-            text = _lines_to_markdown(region.extract_text_lines(), body_size)
-            if text:
-                parts.append(text)
+            for box in _reading_order((x0, upper, x1, lower), page):
+                lines = page.crop(box).extract_text_lines(**WORDS)
+                text = _lines_to_markdown(lines, body_size)
+                if text:
+                    parts.append(text)
 
     for table in tables:
         table_top = max(table.bbox[1], top)
