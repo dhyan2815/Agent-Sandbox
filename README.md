@@ -25,6 +25,7 @@ A structured playground for experimenting with AI agents and CLI automation tool
 | **Higgsfield AI** | AI image, video, 3D, audio, and full-stack web generation | [`.agents/skills/`](./.agents/skills/) |
 | **HyperFrames** | HTML-to-video: compositions, motion, captions, rendering | [`.agents/skills/`](./.agents/skills/) |
 | **Security Audit** | Source-first vulnerability review ([cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)) | [`.claude/skills/security-audit/`](./.claude/skills/security-audit/) |
+| **Hyper-RAG** | Agentic RAG (LangGraph, hybrid retrieval, citations) with a measured evaluation harness | [`hyper-rag/`](./hyper-rag/) |
 | **ML & Python Playground** | Jupyter notebooks & scripts for ML, Pandas, NumPy, and algorithms | [`playground/`](./playground/) |
 | **Excalidraw & Visuals** | Architecture & workflow diagrams | [`visuals/`](./visuals/) |
 | **DESIGN.md** | Brand-consistent UI generation system | [`designs/DESIGN.md`](./designs/DESIGN.md) |
@@ -43,6 +44,7 @@ Agent Sandbox/
 ├── content/ researches/ # Content drafts & research notes
 ├── designs/             # DESIGN.md brand UI specifications & templates
 ├── docs/                # Experiment logs, MCP server specs & technical documentation
+├── hyper-rag/           # Agentic RAG system with eval harness (Python project, own README)
 ├── linkedin-data/       # Cached analytics & reference data for LinkedIn automation
 ├── mcp/                 # Custom Model Context Protocol (MCP) server implementations
 ├── n8n-workflows/       # Exported n8n workflow blueprints (Chatbots, Document Assistants)

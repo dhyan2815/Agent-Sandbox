@@ -1,0 +1,91 @@
+{
+  "pack": "sample",
+  "date": "2026-11-11",
+  "command": "hyper-rag eval sample --offline",
+  "generator": "fake:rule-based",
+  "control": "fake:rule-based",
+  "judge": "fake:rule-based",
+  "embedder": "hashing-512",
+  "reranker": "lexical",
+  "chunks": 38,
+  "questions": 18,
+  "retrieval": [
+    {
+      "mode": "vector",
+      "questions": 14,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.964,
+      "ndcg@10": 0.974,
+      "facts@5": 0.857
+    },
+    {
+      "mode": "hybrid",
+      "questions": 14,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.964,
+      "ndcg@10": 0.974,
+      "facts@5": 1.0
+    },
+    {
+      "mode": "hybrid_rerank",
+      "questions": 14,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0,
+      "facts@5": 1.0
+    }
+  ],
+  "answers": [
+    {
+      "config": "vector",
+      "questions": 18,
+      "correctness": 0.821,
+      "key_facts": 0.846,
+      "grounded": 1.0,
+      "cited": 1.0,
+      "citation_precision": 1.0,
+      "refused_unanswerable": 1.0,
+      "refused_answerable": 0.071,
+      "llm_calls": 1.0
+    },
+    {
+      "config": "hybrid",
+      "questions": 18,
+      "correctness": 0.964,
+      "key_facts": 0.929,
+      "grounded": 1.0,
+      "cited": 1.0,
+      "citation_precision": 1.0,
+      "refused_unanswerable": 1.0,
+      "refused_answerable": 0.0,
+      "llm_calls": 1.0
+    },
+    {
+      "config": "hybrid_rerank",
+      "questions": 18,
+      "correctness": 0.964,
+      "key_facts": 0.929,
+      "grounded": 1.0,
+      "cited": 1.0,
+      "citation_precision": 1.0,
+      "refused_unanswerable": 1.0,
+      "refused_answerable": 0.0,
+      "llm_calls": 1.0
+    },
+    {
+      "config": "agent",
+      "questions": 18,
+      "correctness": 0.964,
+      "key_facts": 0.929,
+      "grounded": 1.0,
+      "cited": 1.0,
+      "citation_precision": 1.0,
+      "refused_unanswerable": 1.0,
+      "refused_answerable": 0.0,
+      "llm_calls": 4.222
+    }
+  ]
+}

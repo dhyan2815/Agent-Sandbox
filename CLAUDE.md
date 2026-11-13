@@ -17,6 +17,17 @@ The repository currently contains no source files. When code is added, consider 
 - **Configuration**: Note any environment‑variable based configuration or config files (e.g., `.env`, `config.yaml`).
 - **Entry Point**: Explain how the application is started (e.g., a `main` module, a CLI entry point, a web server). Update this once the entry point exists.
 
+## hyper-rag/ (Python project)
+- `hyper-rag/` is a self-contained Python 3.11+ project (agentic RAG with an eval harness). Run its commands from inside that folder.
+- **Install**: `python -m venv .venv && .venv/bin/pip install -e ".[dev]"`
+- **Uploads**: `hyper-rag collection create|add|ask|eval` and the web UI (`uvicorn hyper_rag.api:app`) work on user-uploaded files; parsers live in `src/hyper_rag/parsing/`, storage in `uploads.py`.
+- **Lint**: `ruff check . && ruff format --check .`
+- **Tests**: `pytest` (single test: `pytest tests/test_agent.py::test_name`). Tests need no API key or network.
+- **Offline eval**: `hyper-rag ingest sample --offline && hyper-rag eval sample --offline`
+- **Login**: off unless `HYPER_RAG_PASSWORD` is set (in `.env` or host secrets). Storage goes through `src/hyper_rag/stores/` interfaces; engine events through `events.py` (plan v2 phase 0).
+- **Web app** (`hyper-rag/web/`, Node 24): `npm ci && npm run build` (typecheck + build into `web/dist`, served by uvicorn; not committed), `npm test`, `BASE_URL=... npm run e2e`. Docker: `docker build -t hyper-rag .` from `hyper-rag/`.
+- Design choices are logged in `hyper-rag/docs/DECISIONS.md`; never commit `hyper-rag/data/` or `.env` or `hyper-rag/web/dist/`.
+
 ## Repository‑Specific Rules
 - No `.cursor` or Copilot rule files are present. When such files are added, summarize the most important directives here.
 - The `README.md` file clarifies that this repository is an experimental playground for CLI tools and AI agents, focusing on Claude Code, Gemini CLI, and n8n.

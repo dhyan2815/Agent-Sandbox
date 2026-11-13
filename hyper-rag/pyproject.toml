@@ -1,0 +1,68 @@
+[project]
+name = "hyper-rag"
+version = "0.1.0"
+description = "Agentic RAG with hybrid retrieval, citations and a measured evaluation harness"
+readme = "README.md"
+requires-python = ">=3.11"
+# Exact pins: an eval result is only reproducible if the stack under it is fixed.
+dependencies = [
+    "langgraph==1.2.20",
+    "pydantic==2.14.3",
+    "pydantic-settings==2.16.2",
+    "pyyaml==6.0.3",
+    "numpy==2.5.4",
+    "rank-bm25==0.2.2",
+    "fastembed==0.9.1",
+    "httpx==0.28.1",
+    "typer==0.29.0",
+    "fastapi==0.162.2",
+    "uvicorn==0.54.0",
+    "beautifulsoup4==4.15.0",
+    "pypdf==7.0.0",
+    # Uploaded documents: parsing and local OCR.
+    "pdfplumber==0.11.10",
+    "pypdfium2==5.15.2",
+    "python-docx==1.2.0",
+    "python-pptx==1.0.2",
+    "openpyxl==3.1.5",
+    "pillow==13.0.0",
+    "rapidocr==3.10.0",
+    "python-multipart==0.0.33",
+]
+
+[project.optional-dependencies]
+# Hosted stores (plan v2 phase 2): Qdrant for vectors and keywords, S3/R2 for files.
+hosted = ["qdrant-client==1.20.0", "boto3==1.43.122"]
+# reportlab only builds the PDF fixtures the tests parse; moto is an in-process S3 for the
+# blob store tests; the hosted clients are tested against Qdrant's local mode.
+dev = [
+    "ruff==0.17.4",
+    "pytest==9.2.0",
+    "reportlab==5.1.0",
+    "moto[server]==5.2.5",
+    "qdrant-client==1.20.0",
+    "boto3==1.43.122",
+]
+
+[project.scripts]
+hyper-rag = "hyper_rag.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hyper_rag"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["SIM905"]  # a split() word list reads better than 70 quoted literals
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

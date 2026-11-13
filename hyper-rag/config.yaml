@@ -1,0 +1,51 @@
+# Engine settings. Secrets live in .env, not here.
+# Override any key with an environment variable: HYPER_RAG_<KEY>, e.g. HYPER_RAG_LLM_PROVIDER=groq
+
+# --- Generation -------------------------------------------------------------
+# Model names were checked against the providers' free-tier pages on 2026-11-10:
+#   https://console.groq.com/docs/rate-limits     (free plan: 30 requests/min, 8K tokens/min,
+#                                                  200K tokens/day, per model)
+#   https://ai.google.dev/gemini-api/docs/pricing (free tier: e.g. gemini-3.5-flash-lite,
+#                                                  gemini-3.8-flash)
+# Free line-ups change often; if a call fails with "model not found", update the names here.
+llm_provider: groq              # fake | groq | gemini
+llm_model: openai/gpt-oss-120b
+
+# The agent's yes/no decisions (route, grade, rewrite, self-check) go to a smaller model.
+# They are classification tasks that do not need the large model, and on a free tier
+# this keeps them from spending the large model's daily token budget.
+control_model: openai/gpt-oss-20b
+
+# The judge scores answers in the eval. It is a different model family from the
+# generator so that a model is never grading its own output, and on Groq each model
+# has its own rate-limit budget.
+judge_provider: groq            # fake | groq | gemini
+judge_model: qwen/qwen3.8-27b
+
+# Groq reasoning effort. The judge runs with reasoning off: on the free plan this model
+# is capped at 1,000 output tokens per minute and reasoning tokens count as output, so
+# reasoning would limit an eval to about one judged answer per minute.
+reasoning_effort: low           # gpt-oss models accept low | medium | high
+judge_reasoning_effort: none    # qwen models also accept none
+
+# Seconds between calls to a provider. 2.5s keeps a run under 30 requests/minute.
+min_seconds_between_calls: 2.5
+max_retries: 6
+
+# --- Retrieval (local, CPU) -------------------------------------------------
+embedder: fastembed             # fastembed | hashing (offline, for tests)
+embedding_model: BAAI/bge-small-en-v1.5
+reranker: fastembed             # fastembed | lexical (offline, for tests)
+reranker_model: Xenova/ms-marco-MiniLM-L-6-v2
+
+candidates_per_retriever: 30    # how many hits dense and BM25 each contribute to fusion
+rerank_pool: 20                 # how many fused candidates the cross-encoder rescores
+top_k: 5                        # passages handed to the generator
+rrf_k: 60                       # RRF constant from the original paper (Cormack et al., 2009)
+
+# --- Agent ------------------------------------------------------------------
+max_rewrites: 2                 # query rewrites before the agent declines
+
+# --- Paths ------------------------------------------------------------------
+packs_dir: packs
+data_dir: data

@@ -1,0 +1,82 @@
+name: hyper-rag CI
+
+on:
+  push:
+    paths:
+      - "hyper-rag/**"
+      - ".github/workflows/hyper-rag-ci.yml"
+  pull_request:
+    paths:
+      - "hyper-rag/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hyper-rag
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: hyper-rag/pyproject.toml
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+      # No API key and no model download: tests use the fake LLM and the hashing embedder.
+      - name: Tests
+        run: pytest
+      # End-to-end on the hand-written sample pack: ingest, retrieve, run the agent,
+      # score the answers. Same code path as a real run, with the offline stand-ins.
+      - name: Offline eval
+        run: |
+          hyper-rag ingest sample --offline
+          hyper-rag eval sample --offline
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: hyper-rag
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Node 24 ships the npm (11.x) the lockfile was written with.
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: hyper-rag/web/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: hyper-rag/pyproject.toml
+      - name: Install
+        run: |
+          npm ci --prefix web
+          pip install -e .
+      # Typecheck, then the production build that FastAPI serves.
+      - name: Build
+        run: npm run build --prefix web
+      - name: Unit tests
+        run: npm test --prefix web
+      # Every flow of the classic page, in a real browser against a running server,
+      # with the login turned on. Offline mode: no key, no model download.
+      - name: End-to-end
+        env:
+          HYPER_RAG_OFFLINE: "1"
+          HYPER_RAG_PASSWORD: ci-only-password
+        run: |
+          (cd web && npx playwright install --with-deps chromium)
+          hyper-rag ingest sample --offline
+          uvicorn hyper_rag.api:app --port 8000 > uvicorn.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8000/health && break; sleep 1; done
+          BASE_URL=http://127.0.0.1:8000 E2E_PASSWORD=ci-only-password npm run e2e --prefix web
+      - name: Server log
+        if: failure()
+        run: cat uvicorn.log
