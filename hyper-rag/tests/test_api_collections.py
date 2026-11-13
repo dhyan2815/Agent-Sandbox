@@ -73,7 +73,8 @@ def test_streamed_answer_sends_steps_then_the_answer(client, uploaded):
             json.loads(line[6:]) for line in response.iter_lines() if line.startswith("data: ")
         ]
     steps = [e for e in events if e["type"] == "step"]
-    typed = [e["t"] for e in events if e["type"] == "event"]
+    # q.position (the Galaxy's placement of the question) comes first on this branch.
+    typed = [e["t"] for e in events if e["type"] == "event" and e["t"] != "q.position"]
     assert {e["type"] for e in events[:-1]} == {"step", "event"}
     assert steps[0]["text"].startswith("retrieve: ")  # uploads skip the router
     assert typed[:6] == ["a.retrieve", "q.embed", "r.dense", "r.bm25", "r.fuse", "r.rerank"]
@@ -82,10 +83,10 @@ def test_streamed_answer_sends_steps_then_the_answer(client, uploaded):
 
     # The run was saved with every event, so it can be replayed.
     run = client.get(f"/collections/solar/runs/{events[-1]['run_id']}").json()
-    assert [e["t"] for e in run["events"]] == typed
+    assert [e["t"] for e in run["events"] if e["t"] != "q.position"] == typed
     assert run["answer"]["answer"] == events[-1]["answer"]
     listed = client.get("/collections/solar/runs").json()["runs"]
-    assert listed[0]["id"] == run["id"] and listed[0]["events"] == len(typed)
+    assert listed[0]["id"] == run["id"] and listed[0]["events"] == len(typed) + 1  # + q.position
 
 
 def test_originals_pdf_inline_html_only_as_download(client, uploaded, tmp_path):

@@ -234,3 +234,27 @@ tr.grid-row td { background: var(--bg); }
   .metro .active .dot { animation: none; box-shadow: 0 0 0 3px var(--soft); }
 }
 @media (max-width: 900px) { .metro { padding-left: 16px; padding-right: 16px; } }
+
+/* --- Explore: the Galaxy and the metrics board (plan v2 phase 4, side branch) --- */
+.pad.wide { max-width: 1400px; }
+.galaxy { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+.galaxy-canvas { position: relative; height: min(62vh, 640px); border-radius: 12px; overflow: hidden; background: #0b0d12; }
+.galaxy-hud { position: absolute; left: 12px; bottom: 10px; right: 12px; display: flex; flex-direction: column; gap: 2px; font-size: .75rem; color: #c9d1e0; pointer-events: none; }
+.galaxy-hud .hovered { color: #fff; font-weight: 600; }
+.galaxy-side .legend, .galaxy-files { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .78rem; color: var(--muted); }
+.galaxy-side i, .galaxy-files i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; box-shadow: inset 0 0 0 1px var(--line); }
+.top5 { padding-left: 20px; font-size: .84rem; }
+.top5 li { margin-bottom: 6px; }
+.top5 small { display: block; color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 22px; }
+.metrics h4 { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+.metric-bar { display: grid; grid-template-columns: 80px 1fr 64px; gap: 8px; align-items: center; font-size: .8rem; }
+.metric-bar .track { height: 8px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.metric-bar .track span { display: block; height: 100%; background: var(--accent); }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tiles div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.tiles strong { display: block; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.tiles span { color: var(--muted); font-size: .78rem; }
+.histogram { display: flex; align-items: flex-end; gap: 3px; height: 80px; border-bottom: 1px solid var(--line); }
+.histogram span { flex: 1; background: var(--st-rerank); border-radius: 2px 2px 0 0; min-height: 1px; }
+@media (max-width: 900px) { .galaxy { grid-template-columns: 1fr; } }

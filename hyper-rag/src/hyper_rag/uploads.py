@@ -153,6 +153,7 @@ class CollectionStore:
         self._chunks: dict[str, list[Chunk]] = {}  # per-window chunk lists, by blob key
         self._priority: dict[tuple[str, str], set[int]] = {}  # windows a question asked for
         self._tier0: dict[tuple[str, str], BM25Index] = {}
+        self._maps: dict[str, tuple[str, dict]] = {}  # Galaxy layouts, by collection
         self.embedding_cache = EmbeddingCache(settings.data_dir / "cache" / "embeddings.sqlite3")
 
     # --- lazily built components (each loads a model, so only when first needed) ----------
@@ -1138,6 +1139,60 @@ class CollectionStore:
         with self._lock:
             self._retrievers[slug] = (meta["updated"], retriever)
         return retriever
+
+    # --- the Galaxy view (plan v2 phase 4, a demo and recording mode) --------------------
+
+    def map(self, slug: str) -> dict:
+        """Every passage of the collection placed in 3D, and the projection that placed them.
+
+        Vectors are read from the blob store (the windows' .npy files), so this works the
+        same whatever the vector store is. Cached until the collection changes."""
+        from hyper_rag.projection import fit
+
+        meta = self.get(slug)
+        cached = self._maps.get(slug)
+        if cached and cached[0] == meta["updated"]:
+            return cached[1]
+        ids, titles, files, matrices = [], [], [], []
+        for record in meta["files"]:
+            for key in self.blobs.list(self._index_key(slug, record["id"])):
+                if not key.endswith("chunks.jsonl"):
+                    continue
+                lines = self.blobs.read_bytes(key).decode("utf-8").splitlines()
+                if not lines:
+                    continue
+                stem = key[: -len("chunks.jsonl")]
+                npy = stem + ("npy" if self.blobs.exists(stem + "npy") else "embeddings.npy")
+                matrices.append(np.load(io.BytesIO(self.blobs.read_bytes(npy))))
+                for line in lines:
+                    chunk = json.loads(line)
+                    ids.append(chunk["id"])
+                    titles.append(chunk["title"])
+                    files.append(record["id"])
+        if not ids:
+            raise CollectionError("This collection has no passages to map yet.")
+        matrix = np.vstack(matrices).astype(np.float32)
+        projection = fit(matrix)
+        xyz = np.round(projection.place(matrix), 4)
+        result = {
+            "points": [
+                {"id": cid, "file_id": fid, "title": title, "xyz": point.tolist()}
+                for cid, fid, title, point in zip(ids, files, titles, xyz, strict=True)
+            ],
+            "files": [{"id": r["id"], "name": r["name"]} for r in meta["files"]],
+            "explained": projection.explained,
+            "projection": projection,
+        }
+        self._maps[slug] = (meta["updated"], result)
+        return result
+
+    def place_question(self, slug: str, question: str) -> list[float] | None:
+        try:
+            projection = self.map(slug)["projection"]
+        except CollectionError:
+            return None
+        vector = self.embedder.embed_query(question)
+        return np.round(projection.place(vector)[0], 4).tolist()
 
     # --- click-through citations ---------------------------------------------------------
 
