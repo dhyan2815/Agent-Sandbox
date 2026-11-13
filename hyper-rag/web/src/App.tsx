@@ -167,11 +167,13 @@ export function App() {
   const inspectedTurn = turns.find((t) => t.id === inspector?.turnId) ?? latest;
   const fileNames = new Map((collection?.files ?? []).map((f) => [f.id, f]));
   const label = (chunkId: string) => {
-    const match = chunkId.match(/^([0-9a-f]{12})\/(\d+)#(\d+)$/);
+    const match = chunkId.match(/^([0-9a-f]{12})\/(\d+)#([sc]?)(\d+)$/);
     const file = match && fileNames.get(match[1]);
     if (!file || !match) return chunkId;
     const unit = file.kind === "pdf" ? `p.${match[2]}` : `§${match[2]}`;
-    return `${file.name} ${unit}${match[3] !== "0" ? ` (${Number(match[3]) + 1})` : ""}`;
+    if (match[3] === "c") return `${file.name}: chapter ${Number(match[4]) + 1} summary`;
+    if (match[3] === "s") return `${file.name} ${unit}: section summary`;
+    return `${file.name} ${unit}${match[4] !== "0" ? ` (${Number(match[4]) + 1})` : ""}`;
   };
   const openChunk = (chunkId: string) =>
     openCitation({ number: 0, title: label(chunkId), url: "", chunk_id: chunkId, doc_id: "", text: "" });

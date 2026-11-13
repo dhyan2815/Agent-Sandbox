@@ -208,7 +208,7 @@ function ProgressRow({ slug, file, span, onRemove }: { slug: string; file: FileR
   let status: string;
   if (file.status === "failed") status = `Could not be read: ${file.error ?? "unknown error"}`;
   else if (file.status === "queued") status = "Waiting to be read";
-  else if (total) status = `Reading ${share}% · pages 1–${done.toLocaleString()} of ${total.toLocaleString()} searchable`;
+  else if (total) status = `Reading ${share}% · ${done.toLocaleString()} of ${total.toLocaleString()} pages searchable`;
   else status = "Reading…";
   return (
     <>

@@ -29,6 +29,7 @@ import json
 import os
 import shutil
 import threading
+import time
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager
 from functools import lru_cache
@@ -43,11 +44,13 @@ from hyper_rag import auth
 from hyper_rag.agent import Agent, Answer
 from hyper_rag.background import IngestWorker, OffsetMismatch, UploadSessions
 from hyper_rag.config import Settings, load_settings
+from hyper_rag.events import elapsed_ms
 from hyper_rag.llm import LLM, LLMError, build_llm
 from hyper_rag.packs import list_packs
 from hyper_rag.parsing import SUPPORTED
 from hyper_rag.service import build_agent
 from hyper_rag.stores import JobStore, build_job_store
+from hyper_rag.structure import PassagesOnly, SummaryFirst, chapter_numbers, is_global
 from hyper_rag.uploads import CollectionError, CollectionNotFound, CollectionStore
 
 
@@ -154,12 +157,14 @@ def get_llms() -> tuple[LLM, LLM]:
     return build_llm(settings, "generator"), build_llm(settings, "control")
 
 
-def collection_agent(slug: str) -> Agent:
+def collection_agent(slug: str, chapters: set[int] | None = None, whole: bool = False) -> Agent:
     # Cheap to build per request: the store caches the retriever until the files change.
     store = get_store()
     generator, control = get_llms()
+    retriever = store.retriever(slug)
+    retriever = SummaryFirst(retriever, chapters) if whole else PassagesOnly(retriever)
     return Agent(
-        retriever=store.retriever(slug),
+        retriever=retriever,
         llm=generator,
         pack_description=store.description(slug),
         max_rewrites=get_settings().max_rewrites,
@@ -494,12 +499,47 @@ def _history(request: CollectionAskRequest) -> list[tuple[str, str]]:
     return [(turn.question, turn.answer) for turn in request.history]
 
 
+def _prepare(slug: str, question: str) -> tuple[list[dict], dict]:
+    """Work a question asks for before it is answered (plan v2 phase 5).
+
+    While files are being read, the pages the question probably needs are read first and
+    waited for (a few seconds at most). A question about a whole book or chapter gets the
+    chapter summaries it needs, written once and kept. Returns the events and the options
+    for the agent's retriever.
+    """
+    store, settings = get_store(), get_settings()
+    events: list[dict] = []
+    if store.coverage(slug):
+        started = time.perf_counter()
+        promoted = store.promote(slug, question)
+        if promoted:
+            complete = store.wait_for_windows(slug, promoted, settings.jit_wait_seconds)
+            events.append(
+                {
+                    "t": "q.promote",
+                    "files": promoted,
+                    "complete": complete,
+                    "ms": elapsed_ms(started),
+                }
+            )
+    options: dict = {}
+    if settings.book_structure and is_global(question):
+        numbers = chapter_numbers(question)
+        generator, _ = get_llms()
+        store.ensure_chapter_summaries(slug, generator, numbers or None, on_event=events.append)
+        events.append({"t": "q.global", "chapters": sorted(numbers)})
+        options = {"whole": True, "chapters": numbers}
+    return events, options
+
+
 def _answer_events(
-    slug: str, agent: Agent, request: CollectionAskRequest
+    slug: str, agent: Agent, request: CollectionAskRequest, prelude: list[dict] | None = None
 ) -> Iterator[tuple[str, str | dict]]:
     """Run the agent and save its run. Yields ("event", dict), ("step", str), and last
     ("answer", the answer's dict with its run_id)."""
-    events: list[dict] = []
+    events: list[dict] = list(prelude or [])
+    for event in events:
+        yield "event", event
     reading = get_store().coverage(slug)
     if reading:
         # Honest about a half-read collection: only the pages read so far were searched.
@@ -523,8 +563,9 @@ def _answer_events(
 @app.post("/collections/{slug}/ask", response_model=AskResponse)
 def ask_collection(slug: str, request: CollectionAskRequest) -> dict:
     try:
-        agent = collection_agent(slug)
-        for kind, payload in _answer_events(slug, agent, request):
+        prelude, options = _prepare(slug, request.question)
+        agent = collection_agent(slug, **options)
+        for kind, payload in _answer_events(slug, agent, request, prelude):
             if kind == "answer":
                 return payload
     except (CollectionError, LLMError) as error:
@@ -542,13 +583,14 @@ def ask_collection_stream(slug: str, request: CollectionAskRequest) -> Streaming
     {"type": "error", "detail": ...}          instead of the answer, if a call failed
     """
     try:
-        agent = collection_agent(slug)
+        prelude, options = _prepare(slug, request.question)
+        agent = collection_agent(slug, **options)
     except (CollectionError, LLMError) as error:
         raise _http_error(error) from error
 
     def events() -> Iterator[str]:
         try:
-            for kind, payload in _answer_events(slug, agent, request):
+            for kind, payload in _answer_events(slug, agent, request, prelude):
                 if kind == "event":
                     body = {"type": "event", **payload}
                 elif kind == "step":

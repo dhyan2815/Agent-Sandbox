@@ -66,6 +66,11 @@ class FakeLLM:
         # Carry the previous question along, so the follow-up keeps its subject.
         return f"{question} {history[-1][0]}" if history else question
 
+    def _summarize(self, title: str, sections: list) -> str:
+        # Extractive: the first sentence of each section's notes, after the chapter title.
+        firsts = [split_sentences(text)[0] for text in sections if text and split_sentences(text)]
+        return f"{title}. " + " ".join(firsts[:5])
+
     def _synthesize(self, passage) -> str:
         # The longest sentence of the passage body, turned into a question about itself.
         body = passage.text.split("\n", 1)[-1]

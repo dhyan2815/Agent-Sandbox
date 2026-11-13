@@ -118,7 +118,7 @@ function BotMessage({ turn, onCite, onReplay, onRetrieval }: MessageProps) {
           {body.reading
             .map((r) =>
               r.pages_total
-                ? `${r.name} (searched pages 1–${r.pages_done.toLocaleString()} of ${r.pages_total.toLocaleString()})`
+                ? `${r.name} (searched ${r.pages_done.toLocaleString()} of ${r.pages_total.toLocaleString()} pages)`
                 : `${r.name} (not searched yet)`,
             )
             .join("; ")}

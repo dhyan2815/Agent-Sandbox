@@ -64,6 +64,7 @@ class XRay:
     pages: list[PageInfo]
     outline: list[dict] = field(default_factory=list)  # {"level", "title", "page"}
     boilerplate: list[str] = field(default_factory=list)  # normalised header/footer lines
+    texts: list[str] = field(default_factory=list, repr=False)  # text layer, page by page
 
     def counts(self) -> dict[str, int]:
         counted = Counter(page.route for page in self.pages)
@@ -219,9 +220,11 @@ def xray_pdf(path: Path, batch: int = 32) -> XRay:
             outline = []
             try:
                 for item in pdf.get_toc():
-                    if item.page_index is not None:
+                    dest = item.get_dest()  # pypdfium2 5: methods, not attributes
+                    index = dest.get_index() if dest is not None else None
+                    if index is not None:
                         outline.append(
-                            {"level": item.level, "title": item.title, "page": item.page_index + 1}
+                            {"level": item.level, "title": item.get_title(), "page": index + 1}
                         )
             except Exception:  # a broken outline is not worth failing the file for
                 outline = []
@@ -249,7 +252,8 @@ def xray_pdf(path: Path, batch: int = 32) -> XRay:
         if images == "?":
             continue  # unreadable in the X-ray: already routed to the careful parser
         _route(info, seen)
-    return XRay(pages=pages, outline=outline, boilerplate=boilerplate)
+    texts = [text for _, text, _ in measured]
+    return XRay(pages=pages, outline=outline, boilerplate=boilerplate, texts=texts)
 
 
 def _object_text(obj, textpage) -> str:

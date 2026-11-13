@@ -194,6 +194,7 @@ tr.reading td { white-space: normal; vertical-align: top; }
 .seg.grade, .bar-fill.grade { background: var(--st-grade); } .seg.rewrite, .bar-fill.rewrite { background: var(--st-rewrite); }
 .seg.generate, .bar-fill.generate { background: var(--st-generate); } .seg.check, .bar-fill.check { background: var(--st-check); }
 .seg.condense, .bar-fill.condense, .seg.route, .bar-fill.route { background: var(--st-condense); }
+.seg.summarize, .bar-fill.summarize { background: var(--st-fuse); }
 
 .inspector-tabs { margin-top: 0; }
 .source-title-row { padding: 12px 16px 0; }

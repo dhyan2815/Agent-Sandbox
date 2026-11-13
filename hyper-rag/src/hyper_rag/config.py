@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     ingest_processes: int = 0  # >0: parse windows in this many worker processes
     ingest_workers: int = 1  # files read at the same time in the background
     upload_part_mb: float = 8  # resumable upload part size (MB)
+    # Book structure (plan v2 phase 5)
+    book_structure: bool = True  # outline paths, section summaries, chapter summaries
+    max_chapter_summaries: int = 40  # LLM calls a "summarise the book" question may make
+    summary_min_pages: int = 20  # shorter PDFs get no summaries: they are their own summary
+    jit_wait_seconds: float = 15.0  # how long a question waits for pages it asked for
     upload_chunk_size: int = 1200
     upload_chunk_overlap: int = 150
 

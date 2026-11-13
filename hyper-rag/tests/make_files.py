@@ -197,6 +197,7 @@ def make_book(
     blank_every: int = 0,
     repeat_page: int = 0,
     changed: dict[int, str] | None = None,
+    outline: bool = False,
 ) -> Path:
     """A long PDF: a running header and "Page n of N" footer on every page, a chapter
     heading every ten pages, and one fact per page that only that page states.
@@ -219,6 +220,15 @@ def make_book(
         pdf.drawString(60, height - 40, "Northwind Solar field manual - internal edition")
         pdf.drawString(width / 2 - 30, 30, f"Page {printed} of {total}")
         y = height - 90
+        if outline and number % 10 == 1:
+            chapter = number // 10 + 1
+            pdf.bookmarkPage(f"c{chapter}")
+            pdf.addOutlineEntry(f"Chapter {chapter}: Site work part {chapter}", f"c{chapter}", 0)
+        if outline and number % 10 in (1, 6):
+            part = 1 if number % 10 == 1 else 2
+            key = f"c{number // 10 + 1}s{part}"
+            pdf.bookmarkPage(key)
+            pdf.addOutlineEntry(f"{number // 10 + 1}.{part} Rows {number} onward", key, 1)
         if number % 10 == 1:
             pdf.setFont("Helvetica-Bold", 18)
             pdf.drawString(60, y, f"Chapter {number // 10 + 1}: Site work part {number // 10 + 1}")

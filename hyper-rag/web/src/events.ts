@@ -34,6 +34,7 @@ const LLM_STAGES: Record<string, [string, string]> = {
   "a.rewrite": ["rewrite", "Rewrite"],
   "a.generate": ["generate", "Write"],
   "a.check": ["check", "Check"],
+  "a.summarize": ["summarize", "Summarise"],
 };
 
 const RETRIEVAL_STAGES: Record<string, [string, string]> = {
@@ -60,6 +61,7 @@ export function stages(events: EngineEvent[]): Stage[] {
     else if (event.t === "a.rewrite") detail = `“${event.query}”`;
     else if (event.t === "a.generate") detail = event.insufficient ? "no answer in passages" : "";
     else if (event.t === "q.condense") detail = `“${event.standalone}”`;
+    else if (event.t === "a.summarize") detail = `chapter ${event.chapter}: ${event.title}`;
     else if (retrieval && event.t !== "q.embed") detail = `${hits(event).length} passages`;
     out.push({
       key,

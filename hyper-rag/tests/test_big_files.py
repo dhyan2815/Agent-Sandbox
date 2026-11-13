@@ -122,7 +122,10 @@ def test_a_crash_resumes_after_the_last_committed_window(books, small_windows, t
     assert done["status"] == "ready" and done["pages_done"] == 40
     assert min(resumed_pages) == 17  # windows 0 and 1 (pages 1-16) were not read again
     assert sorted(set(parsed_pages[:16]) | set(resumed_pages)) == list(range(1, 41))
-    assert len(restarted.retriever("manual").chunks) == done["chunks"]
+    chunks = restarted.retriever("manual").chunks
+    summaries = [c for c in chunks if "#s" in c.id]
+    assert len(chunks) - len(summaries) == done["chunks"]
+    assert len(summaries) == done["sections"] == 4  # one per chapter of the book
 
 
 def test_questions_do_not_wait_for_a_big_file(books, tmp_path):

@@ -446,3 +446,35 @@ and the bars are CSS, which kept the bundle at about 90 KB gzipped.
 
 Pack answers (POST /ask) are not streamed and carry no events, so packs show the classic
 step list and no strip.
+
+## 35. Book structure: outline paths, summaries for questions about a whole, reading on demand
+
+Plan v2 phase 5 (`structure.py`). Pages get their outline path (the PDF's bookmarks, read
+with pypdfium2 5's `get_title`/`get_dest`; the earlier attribute calls failed silently and
+returned no outline at all) in the titles of their passages. Files of 20 pages or more get
+section summaries when they are read: extractive, chosen with the local embedder, no LLM.
+A question about a whole ("what is chapter 3 about", "summarise the book", "compare
+chapters 2 and 5") gets chapter summaries, one LLM call per chapter written from the
+section summaries, then kept; they are searched first and a chapter named in the question
+is put first.
+
+The first measurement on the long-book set (`scripts/bench_book.py`) made things worse:
+fact questions fell from 1.0 to 0.33 and the topic terms in the passages used for chapter
+questions from 0.47 to 0.06. Two causes. Section summaries repeated sentences such as
+"The reference code for page 23 is ...", which outranked the page that held the asked
+fact; summaries are now left out of ordinary questions entirely (`PassagesOnly`, a filter
+applied before fusion). And "the sentences nearest the centroid" are the most typical
+ones, which in a book are its template lines; sentence shapes found in more than 30% of
+sections are now skipped and the rest picked with maximal marginal relevance. With both
+fixes the offline run is level with "before" (fact 1.0 both; topic terms in the kept
+passages 0.825 both) at half a model call more per question; the offline stand-in cannot
+write a summary answer, so the live run (`results/phase5-book-live.md`) is the comparison
+that counts. Short documents get no summaries: on the 3-page test PDF a summary outranked
+the page itself.
+
+Reading on demand (A5): the X-ray keeps each page's text layer, searchable with BM25 the
+moment a file is uploaded. While files are being read, a question's best pages move their
+windows to the front of the queue and the question waits up to 15 seconds for them
+(`jit_wait_seconds`); the run log records which pages were promoted. In the test a question
+about page 60 of 64 had its window read before the windows in between. Scanned pages have
+no text layer, so they cannot be found this way and are read in order.

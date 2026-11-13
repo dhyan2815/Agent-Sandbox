@@ -37,6 +37,7 @@ from hyper_rag.events import EventSink, elapsed_ms, emit
 from hyper_rag.parsing import SUPPORTED, Ocr, ParseError, Unit, build_ocr, parse_file
 from hyper_rag.parsing.pdf import parse_pdf_pages
 from hyper_rag.parsing.xray import PDFIUM_LOCK, PageInfo, XRay, xray_pdf
+from hyper_rag.retrieval.bm25 import BM25Index
 from hyper_rag.retrieval.embedders import Embedder, build_embedder
 from hyper_rag.retrieval.rerank import Reranker, build_reranker
 from hyper_rag.retrieval.retriever import Retriever
@@ -49,6 +50,16 @@ from hyper_rag.stores import (
     build_vector_store,
 )
 from hyper_rag.stores.cache import EmbeddingCache, PageCache
+from hyper_rag.structure import (
+    Section,
+    body_sentences,
+    chapter_numbers,
+    common_shapes,
+    extractive_summary,
+    outline_entries,
+    page_paths,
+    sections,
+)
 from hyper_rag.text import split_sentences
 from hyper_rag.types import Chunk, Document
 
@@ -140,6 +151,8 @@ class CollectionStore:
         self._lock = threading.RLock()
         self._retrievers: dict[str, tuple[str, Retriever]] = {}
         self._chunks: dict[str, list[Chunk]] = {}  # per-window chunk lists, by blob key
+        self._priority: dict[tuple[str, str], set[int]] = {}  # windows a question asked for
+        self._tier0: dict[tuple[str, str], BM25Index] = {}
         self.embedding_cache = EmbeddingCache(settings.data_dir / "cache" / "embeddings.sqlite3")
 
     # --- lazily built components (each loads a model, so only when first needed) ----------
@@ -281,8 +294,17 @@ class CollectionStore:
     def _index_key(self, slug: str, file_id: str) -> str:
         return self._key(slug, f"index-{self.embedder.name}", file_id)
 
-    def _window_index_key(self, slug: str, file_id: str, window: int, ext: str) -> str:
-        return f"{self._index_key(slug, file_id)}/w{window:05d}.{ext}"
+    def _window_index_key(self, slug: str, file_id: str, window: int | str, ext: str) -> str:
+        """A window's index ("w00003"), or a summary part ("s00000" sections, "s00001"
+        chapters), which is indexed the same way."""
+        part = window if isinstance(window, str) else f"w{window:05d}"
+        return f"{self._index_key(slug, file_id)}/{part}.{ext}"
+
+    def _summaries_key(self, slug: str, file_id: str) -> str:
+        return f"{self._parsed_prefix(slug, file_id)}/summaries.json"
+
+    def _tier0_key(self, slug: str, file_id: str) -> str:
+        return f"{self._parsed_prefix(slug, file_id)}/tier0.json"
 
     def _namespace(self, slug: str) -> str:
         # Vectors from different embedding models are not comparable: one namespace each.
@@ -515,6 +537,10 @@ class CollectionStore:
                 "outline": xray.outline,
                 "boilerplate": xray.boilerplate,
             }
+            # Tier 0 (plan v2, A5): the text layer of every page, searchable within seconds
+            # of the upload, so a question can say which pages to read first.
+            tier0 = json.dumps([text[:TIER0_CHARS] for text in xray.texts], ensure_ascii=False)
+            self.blobs.write_bytes(self._tier0_key(slug, record["id"]), tier0.encode("utf-8"))
             self.blobs.write_bytes(key, json.dumps(body).encode("utf-8"))
         pages = xray.pages
         # The page budget replaces the old 300-page cap: a safety valve on a free tier.
@@ -544,6 +570,7 @@ class CollectionStore:
             "windows": [pages[i : i + size] for i in range(0, len(pages), size)],
             "boilerplate": xray.boilerplate,
             "warning": warning,
+            "paths": page_paths(xray.outline, len(pages)) if xray.outline else {},
         }
 
     def _parsed_windows(self, slug: str, record: dict, plan: dict):
@@ -569,8 +596,19 @@ class CollectionStore:
         processes = self.settings.ingest_processes
         ocr_name = self.settings.ocr if processes > 0 else self.ocr.name
         cache = PageCache(self.blobs, ocr_name, plan["boilerplate"])
+        priority = self._priority.setdefault((slug, file_id), set())
+
+        def next_window(remaining: dict):
+            # A question may have asked for some windows first (plan v2, A5).
+            wanted = sorted(w for w in priority if w in remaining)
+            window = wanted[0] if wanted else min(remaining)
+            priority.discard(window)
+            return window, remaining.pop(window)
+
         if processes <= 0:
-            for window, pages in todo:
+            remaining = dict(todo)
+            while remaining:
+                window, pages = next_window(remaining)
                 started = time.perf_counter()
                 cached, missing = _from_cache(cache, pages)
                 units, warnings = parse_pdf_pages(path, missing, self.ocr, plan["boilerplate"])
@@ -582,10 +620,10 @@ class CollectionStore:
 
         with ProcessPoolExecutor(max_workers=processes) as pool:
             ahead = []
-            queue = list(todo)
+            queue = dict(todo)
             while queue or ahead:
                 while queue and len(ahead) < processes + 1:
-                    window, pages = queue.pop(0)
+                    window, pages = next_window(queue)
                     cached, missing = _from_cache(cache, pages)
                     future = pool.submit(
                         parse_window_in_process,
@@ -630,7 +668,7 @@ class CollectionStore:
             json.dumps(body, ensure_ascii=False).encode("utf-8"),
         )
         chunks = chunk_documents(
-            self._documents(slug, record, unit_name, unit_dicts),
+            self._documents(slug, record, unit_name, unit_dicts, plan.get("paths")),
             self.settings.upload_chunk_size,
             self.settings.upload_chunk_overlap,
             structured=True,
@@ -639,7 +677,7 @@ class CollectionStore:
         return chunks
 
     def _write_window_index(
-        self, slug: str, file_id: str, window: int, chunks: list[Chunk]
+        self, slug: str, file_id: str, window: int | str, chunks: list[Chunk]
     ) -> None:
         if chunks:
             embeddings, _ = self.embedding_cache.embed(
@@ -656,7 +694,8 @@ class CollectionStore:
         lines = "".join(json.dumps(c.to_dict(), ensure_ascii=False) + "\n" for c in chunks)
         chunks_key = self._window_index_key(slug, file_id, window, "chunks.jsonl")
         self.blobs.write_bytes(chunks_key, lines.encode("utf-8"))
-        self._register(slug, f"{file_id}#w{window:05d}", chunks_key, chunks, embeddings)
+        part = window if isinstance(window, str) else f"w{window:05d}"
+        self._register(slug, f"{file_id}#{part}", chunks_key, chunks, embeddings)
 
     def _finish(self, slug: str, record: dict, started: float) -> dict:
         file_id = record["id"]
@@ -688,6 +727,21 @@ class CollectionStore:
             }
 
         record = self._update_record(slug, file_id, finish)
+        if self.settings.book_structure and record["kind"] == "pdf":
+            try:
+                count = self.build_summaries(slug, record)
+                if count:
+                    record = self._update_record(slug, file_id, lambda r: {**r, "sections": count})
+            except Exception as error:  # summaries help; their failure must not fail the file
+                note = f"No summaries: {error}"
+                record = self._update_record(
+                    slug,
+                    file_id,
+                    lambda r: {
+                        **r,
+                        "report": {**r["report"], "warnings": [*r["report"]["warnings"], note]},
+                    },
+                )
         with self._lock:
             meta = self.get(slug)
             old = [r for r in meta["files"] if r["id"] in replaces and r["id"] != file_id]
@@ -760,9 +814,9 @@ class CollectionStore:
         xray = json.loads(self.blobs.read_bytes(self._xray_key(slug, file_id)))
         size = record.get("window_pages") or self.settings.window_pages
         committed = {
-            int(re.search(r"/w(\d{5})\.chunks\.jsonl$", key).group(1))
+            int(match.group(1))
             for key in self.blobs.list(self._index_key(slug, file_id))
-            if key.endswith(".chunks.jsonl")
+            if (match := re.search(r"/w(\d{5})\.chunks\.jsonl$", key))
         }
         pages = []
         for page in xray["pages"][: record.get("pages_total") or None]:
@@ -793,13 +847,181 @@ class CollectionStore:
             if r.get("status", "ready") in ("queued", "reading")
         ]
 
+    # --- book structure (plan v2 phase 5) --------------------------------------------------
+
+    def _saved_sections(self, slug: str, file_id: str) -> list[dict]:
+        key = self._summaries_key(slug, file_id)
+        return json.loads(self.blobs.read_bytes(key))["sections"] if self.blobs.exists(key) else []
+
+    def build_summaries(self, slug: str, record: dict) -> int:
+        """Section summaries for a finished PDF, extractive and free, indexed with its
+        passages. Returns how many sections were summarised (0 if it has no structure)."""
+        file_id = record["id"]
+        _, units = self.units(slug, file_id)
+        xray = json.loads(self.blobs.read_bytes(self._xray_key(slug, file_id)))
+        found = sections(outline_entries(xray["outline"], units), len(units))
+        if len(found) < 2 or len(units) < self.settings.summary_min_pages:
+            return 0  # a short document is its own summary
+        by_page = {unit["number"]: unit for unit in units}
+        texts = [
+            body_sentences([by_page[n] for n in range(sec.start, sec.end + 1) if n in by_page])
+            for sec in found
+        ]
+        common = common_shapes(texts)
+        for section, sentences in zip(found, texts, strict=True):
+            section.text = extractive_summary(self.embedder, sentences, common=common)
+        found = [section for section in found if section.text]
+        body = {"sections": [section.to_dict() for section in found]}
+        self.blobs.write_bytes(self._summaries_key(slug, file_id), json.dumps(body).encode())
+        self._index_summaries(slug, record, list(enumerate(found)), "s00000", "s")
+        return len(found)
+
+    def _index_summaries(
+        self, slug: str, record: dict, found: list[tuple[int, Section]], part: str, marker: str
+    ) -> None:
+        """Index summaries as passages. A chapter summary's id ends in "#c<chapter - 1>", so a
+        question naming chapter 3 can find it."""
+        url = f"/collections/{slug}/files/{record['id']}"
+        chunks = []
+        for number, section in found:
+            kind = "chapter summary" if marker == "c" else "summary"
+            title = (
+                f"{record['name']} › {section.path} ({kind}, pages {section.start}–{section.end})"
+            )
+            chunks.append(
+                Chunk(
+                    id=f"{record['id']}/{section.start}#{marker}{number}",
+                    doc_id=f"{record['id']}/{section.start}",
+                    title=title,
+                    url=f"{url}#page={section.start}",
+                    text=f"{title}\n{section.text}",
+                )
+            )
+        self._write_window_index(slug, record["id"], part, chunks)
+        with self._lock:  # the collection changed: rebuild its retriever on the next search
+            self._retrievers.pop(slug, None)
+
+    def ensure_chapter_summaries(
+        self, slug: str, llm, wanted: set[int] | None = None, on_event: EventSink | None = None
+    ) -> int:
+        """Write the chapter summaries a question needs, one LLM call each, from the sections'
+        extractive summaries; kept for every later question. Returns the calls made."""
+        from hyper_rag.llm import complete_with_usage
+        from hyper_rag.prompts import chapter_summary_prompt
+
+        budget = self.settings.max_chapter_summaries
+        calls = 0
+        for record in self.get(slug)["files"]:
+            saved = self._saved_sections(slug, record["id"])
+            chapters = [s for s in saved if s["level"] == 0]
+            if not chapters:
+                continue
+            changed = False
+            for ordinal, chapter in enumerate(chapters, start=1):
+                if chapter.get("llm") or (wanted and ordinal not in wanted) or calls >= budget:
+                    continue
+                notes = [chapter["text"]] + [
+                    s["text"]
+                    for s in saved
+                    if s["level"] == 1 and chapter["start"] <= s["start"] <= chapter["end"]
+                ]
+                started = time.perf_counter()
+                reply, usage = complete_with_usage(
+                    llm, chapter_summary_prompt(chapter["title"], notes)
+                )
+                chapter["llm"] = " ".join(reply.split())
+                calls += 1
+                changed = True
+                emit(
+                    on_event,
+                    "a.summarize",
+                    file=record["id"],
+                    chapter=ordinal,
+                    title=chapter["title"],
+                    ms=elapsed_ms(started),
+                    model=usage.get("model", llm.name),
+                )
+            if changed:
+                self.blobs.write_bytes(
+                    self._summaries_key(slug, record["id"]),
+                    json.dumps({"sections": saved}).encode(),
+                )
+                written = [
+                    (ordinal - 1, Section(0, c["title"], c["start"], c["end"], c["path"], c["llm"]))
+                    for ordinal, c in enumerate(chapters, start=1)
+                    if c.get("llm")
+                ]
+                self._index_summaries(slug, record, written, "s00001", "c")
+        return calls
+
+    def promote(self, slug: str, question: str) -> list[dict]:
+        """Move the windows a question probably needs to the front of the reading queue.
+
+        The X-ray's text layer (tier 0) is searched with BM25 as soon as a file is uploaded;
+        its best pages decide which windows are read next. Scanned pages have no text layer,
+        so they cannot be found this way and are read in order.
+        """
+        promoted = []
+        for record in self.get(slug)["files"]:
+            if record.get("status") not in ("queued", "reading") or record["kind"] != "pdf":
+                continue
+            key = (slug, record["id"])
+            if key not in self._tier0:
+                if not self.blobs.exists(self._tier0_key(slug, record["id"])):
+                    continue
+                texts = json.loads(self.blobs.read_bytes(self._tier0_key(slug, record["id"])))
+                self._tier0[key] = BM25Index(texts)
+            hits = self._tier0[key].search(question, 6)
+            size = record.get("window_pages") or self.settings.window_pages
+            pages = sorted(row + 1 for row, _ in hits)
+            windows = sorted(
+                {(page - 1) // size for page in pages}
+                - {
+                    int(m.group(1))
+                    for k in self.blobs.list(self._index_key(slug, record["id"]))
+                    if (m := re.search(r"/w(\d{5})\.chunks\.jsonl$", k))
+                }
+            )
+            if windows:
+                self._priority.setdefault(key, set()).update(windows)
+                promoted.append({"file_id": record["id"], "pages": pages, "windows": windows})
+        return promoted
+
+    def wait_for_windows(self, slug: str, promoted: list[dict], seconds: float) -> bool:
+        """Wait up to `seconds` for promoted windows to be committed. True if they all were."""
+        deadline = time.monotonic() + seconds
+        while True:
+            missing = [
+                (item["file_id"], window)
+                for item in promoted
+                for window in item["windows"]
+                if not self.blobs.exists(
+                    self._window_index_key(slug, item["file_id"], window, "chunks.jsonl")
+                )
+            ]
+            if not missing:
+                return True
+            if time.monotonic() >= deadline:
+                return False
+            time.sleep(0.2)
+
+    def chapter_numbers(self, question: str) -> set[int]:
+        return chapter_numbers(question)
+
     # --- index ---------------------------------------------------------------------------
 
     def _documents(
-        self, slug: str, record: dict, unit_name: str | None, units: list[dict]
+        self,
+        slug: str,
+        record: dict,
+        unit_name: str | None,
+        units: list[dict],
+        paths: dict[int, str] | None = None,
     ) -> list[Document]:
-        """One Document per unit, so a citation resolves to a page, slide or sheet."""
+        """One Document per unit, so a citation resolves to a page, slide or sheet. With an
+        outline, the title also says where the page sits: "book.pdf (Page 37) › Ch 3 › 3.2"."""
         documents = []
+        paths = paths or {}
         for unit in units:
             if not unit["text"].strip():
                 continue
@@ -811,7 +1033,8 @@ class CollectionStore:
             documents.append(
                 Document(
                     id=f"{record['id']}/{unit['number']}",
-                    title=f"{record['name']} ({unit['label']})" if labelled else record["name"],
+                    title=(f"{record['name']} ({unit['label']})" if labelled else record["name"])
+                    + (f" › {paths[unit['number']]}" if unit["number"] in paths else ""),
                     url=url,
                     text=unit["text"],
                 )
@@ -839,8 +1062,8 @@ class CollectionStore:
         namespace = self._namespace(slug)
         chunks: list[Chunk] = []
         for key in keys:
-            match = re.search(r"/w(\d{5})\.chunks\.jsonl$", key)
-            group = f"{file_id}#w{match.group(1)}" if match else file_id
+            match = re.search(r"/([ws]\d{5})\.chunks\.jsonl$", key)
+            group = f"{file_id}#{match.group(1)}" if match else file_id
             cached = self._chunks.get(key)
             if (
                 cached is not None
@@ -920,7 +1143,7 @@ class CollectionStore:
 
     def source(self, slug: str, chunk_id: str) -> dict:
         """Everything the UI needs to show where a cited passage came from."""
-        match = re.fullmatch(r"([0-9a-f]{12})/(\d+)#(\d+)", chunk_id)
+        match = re.fullmatch(r"([0-9a-f]{12})/(\d+)#([sc]?)(\d+)", chunk_id)
         if not match:
             raise CollectionNotFound(f"No passage '{chunk_id}'")
         file_id, unit_number = match.group(1), int(match.group(2))
@@ -930,6 +1153,13 @@ class CollectionStore:
         chunk = next((c for c in chunks if c.id == chunk_id), None)
         if unit is None or chunk is None:
             raise CollectionNotFound(f"No passage '{chunk_id}'")
+        if match.group(3):
+            # A summary: show it whole, next to the page its section starts on.
+            body = chunk.text.split("\n", 1)[-1]
+            lines = [[{"text": sentence, "hit": True}] for sentence in split_sentences(body)]
+            unit = {**unit, "label": chunk.title.split(" › ", 1)[-1]}
+        else:
+            lines = mark_lines(unit["text"], chunk.text)
         has_preview = record["kind"] in ("pdf", "image")
         base = f"/collections/{slug}/files/{file_id}"
         return {
@@ -942,7 +1172,7 @@ class CollectionStore:
             "read_by_ocr": unit["ocr"],
             "file_url": base + (f"#page={unit_number}" if record["kind"] == "pdf" else ""),
             "preview_url": f"{base}/preview/{unit_number}" if has_preview else None,
-            "lines": mark_lines(unit["text"], chunk.text),
+            "lines": lines,
         }
 
     def preview(self, slug: str, file_id: str, unit_number: int) -> tuple[bytes, str]:
@@ -1012,6 +1242,7 @@ class CollectionStore:
 
 
 MAX_REPORT_WARNINGS = 50
+TIER0_CHARS = 3000  # per page, for the just-in-time keyword index
 
 
 def _empty_report(kind: str, unit_name: str | None) -> dict:
