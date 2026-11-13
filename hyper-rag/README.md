@@ -2,9 +2,12 @@
 
 [![hyper-rag CI](https://github.com/dhyan2815/Agent-Sandbox/actions/workflows/hyper-rag-ci.yml/badge.svg)](https://github.com/dhyan2815/Agent-Sandbox/actions/workflows/hyper-rag-ci.yml)
 
-An agentic RAG system that answers questions over document collections with citations,
-declines when its sources do not support an answer, and ships with the evaluation
-harness that measures how well it does both.
+Upload your own documents (PDF, Word, PowerPoint, Excel, images, text) and ask questions
+about them. Answers cite the page they came from, the system declines when the documents do
+not support an answer, and an evaluation harness measures how well it does both.
+
+- **Upload anything:** tables stay tables, text inside images and scanned pages is read by
+  OCR on your machine, and a parse report shows what was extracted from every file.
 
 - **Agent:** a LangGraph state machine that routes the question, retrieves, grades the
   passages, rewrites the query and retries when retrieval is weak, writes a cited answer and
@@ -17,7 +20,92 @@ harness that measures how well it does both.
 - **Zero running cost:** generation uses Groq's free tier; tests and a full offline eval run
   with no API key and no network.
 
-![The web UI answering a question about Razorpay webhooks with two cited sources and the agent's steps](docs/demo.png)
+![The web UI: a question answered from a scanned PDF page, with the cited page and the passage read by OCR shown on the right](docs/demo-uploads.png)
+
+## Ask your own documents
+
+```bash
+uvicorn hyper_rag.api:app           # then open http://127.0.0.1:8000
+```
+
+Create a collection, drop files on the Files tab, ask on the Chat tab. Or from the terminal:
+
+```bash
+hyper-rag collection create "Solar docs"
+hyper-rag collection add solar-docs guide.pdf handbook.docx pricing.pptx output.xlsx invoice.png
+hyper-rag collection ask solar-docs "What is the warranty on the inverter?" --trace
+hyper-rag collection eval solar-docs --questions 8
+```
+
+| Format | What is extracted | A citation points to |
+|---|---|---|
+| PDF | Text in reading order (two-column pages are read column by column), ruled tables, text in embedded images; pages with no text layer are read whole by OCR | Page |
+| Word `.docx` | Headings, lists, tables, text in inline images | Section (top-level heading) |
+| PowerPoint `.pptx` | Titles, text, tables, text in pictures, speaker notes | Slide |
+| Excel `.xlsx` | Every non-empty sheet as a table, formulas as their last calculated value | Sheet |
+| Images `.png .jpg .webp .bmp .tiff` | Text, by OCR | The image |
+| `.txt .md .html .csv .tsv .json` | Text; CSV as a table | The file |
+
+What you get on top of plain question answering:
+
+- **Click-through citations.** Each `[n]` opens the page it cites: a rendering of the PDF
+  page (or the image) and the extracted text with the cited sentences highlighted.
+- **A parse report per file.** Pages, tables, images found, images OCR read text from, pages
+  read by OCR, passages indexed, warnings. A file that contributes nothing to search says so.
+- **Follow-up questions.** "And the battery?" is rewritten into a standalone question from the
+  conversation before retrieval. The UI shows each agent step as it happens.
+- **Auto-evaluation.** One click writes test questions from your documents' own passages and
+  runs the same harness the domain packs use.
+
+![The Files tab: the parse report for nine uploaded files](docs/demo-files.png)
+
+### What happened when I used it
+
+One collection of nine files: one generated file per format (the fixtures in
+`tests/make_files.py`: an invented solar installer's guide, handbook, price deck, output
+sheet, invoice image and so on) plus a real two-column research paper
+([arXiv 2309.15217](https://arxiv.org/abs/2309.15217)). 57 passages. Run on 2026-11-13
+through the web UI with `openai/gpt-oss-120b` on Groq's free tier.
+
+Seven questions asked by hand:
+
+| Question | Where the answer is | Result |
+|---|---|---|
+| What is the warranty on the inverter, and who covers it? | Table in a PDF | Correct, cites page 2 |
+| And the battery? (follow-up) | Same table | Correct |
+| What is the support phone number? | Image embedded in a PDF page (OCR) | Correct |
+| How much is the site survey fee? | Scanned PDF page (OCR) | Correct on the second run, see below |
+| Subsidy for a 5 kW system and the payback period? | Slide table and slide picture (OCR) | Correct |
+| Which three quality aspects does Ragas measure? | Two-column paper | Correct, cites page 3 |
+| Who is the CEO of Northwind Solar? | Nowhere | Declined |
+
+Auto-evaluation on six generated questions, no judge model
+(saved in `results/uploads-demo-collection.json`):
+
+| Configuration | Right page in top 5 | Contains the expected fact | Cites the right page | Wrongly declined | LLM calls |
+|---|---|---|---|---|---|
+| Hybrid + rerank, single shot | 6 of 6 | 4 of 5 | 1.0 | 0 of 6 | 1.0 |
+| Full agent | 6 of 6 | 5 of 5 | 1.0 | 0 of 6 | 3.0 |
+
+Read these as a smoke test. Six questions, each written by the model from the passage it is
+then scored against, one run, and five of the six had a fact short enough to check by exact
+match. Retrieval at 1.0 on questions like that says the index is intact, not that search is
+solved.
+
+Using it on real input found three bugs that the generated test files had not:
+
+1. **Two-column PDFs were read straight across**, giving lines made of half a sentence from
+   each column, and 9-point text lost its word spaces. Fixed: the parser now finds the column
+   gap and uses a font-relative word spacing.
+2. **The router declined the site-survey question.** Its picture of an uploaded collection
+   is guessed from file names and headings, and the answer was on a scanned page with neither.
+   Fixed: uploaded collections skip the router; grading decides.
+3. **The first auto-evaluation scored correct answers as wrong** (0.4 to 0.5 on "contains the
+   fact"), because the model had picked whole sentences and table fragments as the fact.
+   Fixed: facts longer than four words are dropped.
+
+The rest of this README covers the engine underneath and its measured evaluation on four
+built-in domain packs.
 
 ## Results
 
@@ -219,7 +307,7 @@ It exercises the whole pipeline, and CI runs it on every push, but its numbers m
 plumbing, not answer quality.
 
 ```bash
-pytest                              # 40 tests, about 2 seconds
+pytest                              # 83 tests, about 10 seconds
 hyper-rag eval sample --offline     # retrieval + answer ablation on the sample pack
 ```
 
@@ -310,7 +398,20 @@ line-ups change; update the names in `config.yaml` if a model is retired.
 - **A question whose correct answer is the refusal token is treated as a refusal.** The
   codebase pack asks which token the generator emits when it cannot answer; the correct reply,
   `INSUFFICIENT_CONTEXT`, is read as the generator declining.
-- **English only**, and no conversation memory: each question is answered on its own.
+- **English only.** OCR and the embedding model are both English-first.
+- **Uploads: OCR reads text, not pictures.** A chart or photo with no text in it contributes
+  nothing. No vision model is used.
+- **Uploads: only ruled tables are detected in PDFs.** A table drawn without lines comes
+  through as lines of text, usually still answerable but without column headers. Column
+  detection handles two columns, not three.
+- **Uploads: no legacy `.doc`, `.ppt`, `.xls`,** and Word citations point to a section, not a
+  page, because Word files have no fixed pages.
+- **Uploads: out-of-scope questions are expensive.** With the router off, declining takes
+  about six model calls (two query rewrites) instead of one.
+- **Uploads: the API has no login** and conversations live in the browser tab only. Run it
+  on your own machine, not on a shared network.
+- **Auto-evaluation is a health check, not a benchmark.** Its questions are written from the
+  passages they are scored against and include no unanswerable ones.
 - **The dense index is an in-memory matrix.** That is fine for thousands of chunks and would
   need a vector database beyond a few hundred thousand.
 
@@ -332,4 +433,5 @@ line-ups change; update the names in `config.yaml` if a model is retired.
 
 - [`docs/DECISIONS.md`](docs/DECISIONS.md): design choices, alternatives and reasons.
 - [`docs/PLAN.md`](docs/PLAN.md): the build plan and milestones.
+- [`docs/PLAN-uploads.md`](docs/PLAN-uploads.md): the plan for document upload and what was decided.
 - No licence has been chosen yet, so default copyright applies.

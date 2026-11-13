@@ -61,3 +61,14 @@ gives the engine the same things a pack does: documents, a description, a golden
   they are easier than questions a person would ask. They measure "is the system
   working on this collection", not absolute quality.
 - The API has no login. It is meant to run on your own machine.
+
+## Status (2026-11-13)
+
+All ten steps are done. Differences from the plan above:
+
+- Chat streams the agent's steps, not the answer's tokens (DECISIONS 22).
+- Uploaded collections skip the router (DECISIONS 21); "nothing in the agent graph changes"
+  became one new node (condense) and one optional edge.
+- The live run was one collection of nine files on Groq; results and the three bugs it
+  found are in the README. Not done: a judged auto-evaluation, any test on Windows, files
+  larger than a few megabytes, and a scanned document of more than a few pages.

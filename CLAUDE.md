@@ -20,6 +20,7 @@ The repository currently contains no source files. When code is added, consider 
 ## hyper-rag/ (Python project)
 - `hyper-rag/` is a self-contained Python 3.11+ project (agentic RAG with an eval harness). Run its commands from inside that folder.
 - **Install**: `python -m venv .venv && .venv/bin/pip install -e ".[dev]"`
+- **Uploads**: `hyper-rag collection create|add|ask|eval` and the web UI (`uvicorn hyper_rag.api:app`) work on user-uploaded files; parsers live in `src/hyper_rag/parsing/`, storage in `uploads.py`.
 - **Lint**: `ruff check . && ruff format --check .`
 - **Tests**: `pytest` (single test: `pytest tests/test_agent.py::test_name`). Tests need no API key or network.
 - **Offline eval**: `hyper-rag ingest sample --offline && hyper-rag eval sample --offline`

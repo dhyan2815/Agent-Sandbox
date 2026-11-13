@@ -163,3 +163,75 @@ Newest entries are at the bottom.
   four times and never repeated a finished call.
 - Separate what needs a judge from what does not. Citations, refusals and exact-match facts are
   deterministic and free; `--no-judge` reports them while the judged metrics wait for quota.
+
+## 17. Every upload format becomes the same markdown units
+
+Each parser (PDF, Word, PowerPoint, Excel, image, text) returns a list of units: a page, a
+slide, a sheet or a section, each as markdown with `#` headings and pipe tables. Alternatives:
+a document-parsing framework (unstructured, docling), or a layout model. Those handle more
+edge cases but pull in PyTorch and model downloads, which the laptop constraint and the
+"install in a minute" goal rule out. One library per format (pdfplumber, python-docx,
+python-pptx, openpyxl) is small, readable and easy to explain. The cost is on hard layouts:
+borderless tables and three-column pages are not recovered.
+
+## 18. OCR with RapidOCR, and no vision model
+
+RapidOCR runs PaddleOCR's small models through ONNX Runtime, which fastembed already
+installs, and ships its models inside the wheel. Tesseract needs a system binary, the usual
+way OCR setups break on Windows. EasyOCR needs PyTorch. A vision model would describe charts
+and photos, which OCR cannot, but it sends every image to a provider and spends the free
+daily quota; the user chose local only. A PDF page with almost no text layer is rendered
+and read whole; otherwise each embedded image is cropped and read on its own.
+
+## 19. Tables are split by rows with the header repeated
+
+A long sheet becomes many chunks. Cutting at a character count leaves chunks that are rows
+of numbers with no column names, useless to the retriever and to the model. Splitting between
+rows and repeating the header keeps each chunk readable alone. It is opt-in
+(`structured=True`) and only uploads use it, so the chunks behind the published pack results
+did not change. Known gap: 1,200 characters of numbers can exceed the embedding model's 512
+tokens, so the vector for a dense table chunk may only cover its first part; BM25 sees all
+of it.
+
+## 20. One index per file inside a collection
+
+Adding a file embeds only that file; removing one deletes a folder; the collection's
+retriever stacks the per-file matrices at load time. A single index per collection would need
+rewriting on every change. Each unit is a `Document`, so a citation resolves to a page, slide
+or sheet with no change to the retriever or the agent. Uploading a file with an existing name
+replaces it; identical bytes are detected by hash and skipped.
+
+## 21. Uploaded collections skip the router
+
+Decision 13 kept the router as a cheap filter that reads a hand-written pack description. A
+collection has no such description, so one is assembled from file names and headings. In the
+first live run the router used it to decline "How much is the site survey fee?", whose answer
+was on a scanned page with no heading. Collections now go straight to retrieval and let
+grading decide. Declining an out-of-scope question costs about six calls instead of one. The
+reranker's top score as a free scope signal (already on the to-do list) is the better fix.
+
+## 22. Answers are shown after the self-check, not streamed token by token
+
+The UI streams the agent's steps as they finish (searching, grading, writing, checking) and
+shows the answer once the groundedness check has passed. Streaming tokens would feel faster,
+but the check can still reject the draft, and showing text that is then withdrawn is worse
+than a few seconds of waiting. It would also show the model's raw citation format before it
+is normalised.
+
+## 23. Auto-evaluation: generated questions, strict about what they prove
+
+Nobody writes a golden set for files they just uploaded, so the generator model writes one
+question per sampled passage (spread over files, fixed seed) and the normal harness runs on
+it. Limits, stated in the UI and the README: questions share their passage's wording, so
+retrieval looks better than it is; there are no unanswerable questions; the exact-match
+"fact" is kept only if it is at most four words and really occurs in the passage, after the
+first run showed whole sentences being used as facts. The judge is off by default because it
+doubles the calls on a free tier.
+
+## 24. Upload safety for a local, single-user tool
+
+The API has no authentication and says so. Within that: collection ids are slugs checked
+before touching the file system, stored files are named by content hash, not by the uploaded
+name, uploads have a size limit and an extension allow-list, and only PDFs and images are
+served inline. Every other upload is sent back as a download, so an uploaded HTML file is
+never rendered as a page of the app. The UI builds every node with `textContent`.
