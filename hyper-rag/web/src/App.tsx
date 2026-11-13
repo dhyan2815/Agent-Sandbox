@@ -6,7 +6,10 @@ import { ChatView, type Turn, askQuestion } from "./components/ChatView";
 import { EvalView } from "./components/EvalView";
 import { FilesView } from "./components/FilesView";
 import { Sidebar } from "./components/Sidebar";
-import { SourcePanel, type SourceView } from "./components/SourcePanel";
+import { Inspector, type InspectorTab, type SourceView } from "./components/SourcePanel";
+import { type EngineEvent, quota } from "./events";
+import { Metro } from "./viz/Metro";
+import { RankRace } from "./viz/RankRace";
 
 export type Where = { kind: "collection" | "pack"; id: string };
 export type Tab = "chat" | "files" | "eval";
@@ -36,7 +39,14 @@ export function App() {
   const [tab, setTab] = useState<Tab>("chat");
   const [chats, setChats] = useState<Record<string, Turn[]>>({});
   const [busy, setBusy] = useState(false);
-  const [source, setSource] = useState<SourceView | null>(null);
+  const [source, setSourceView] = useState<SourceView | null>(null);
+  const [inspector, setInspector] = useState<{ tab: InspectorTab; turnId: number | null } | null>(null);
+  const [replay, setReplay] = useState<{ events: EngineEvent[]; done: boolean } | null>(null);
+  const replayTimer = useRef<number[]>([]);
+  const setSource = useCallback((view: SourceView | null) => {
+    setSourceView(view);
+    setInspector(view ? { tab: "source", turnId: null } : null);
+  }, []);
 
   const list = collections.data ?? [];
   const collection = where?.kind === "collection" ? list.find((c) => c.slug === where.id) : undefined;
@@ -82,7 +92,8 @@ export function App() {
         .slice(-3)
         .map((t) => ({ question: t.question, answer: (t.answer as AnswerBody).answer.slice(0, 4000) }));
       const id = Date.now();
-      setChats((all) => ({ ...all, [key]: [...(all[key] ?? []), { id, question, steps: [] }] }));
+      setChats((all) => ({ ...all, [key]: [...(all[key] ?? []), { id, question, steps: [], events: [] }] }));
+      stopReplay();
       setBusy(true);
       await askQuestion(where, question, history, (change) => updateTurn(key, id, change));
       setBusy(false);
@@ -117,6 +128,55 @@ export function App() {
     [where],
   );
 
+  // --- the visualizer: the strip follows the latest answer, or a replay of an earlier one
+
+  const turns = where ? (chats[keyOf(where)] ?? []) : [];
+  const latest = turns[turns.length - 1];
+  const stopReplay = () => {
+    replayTimer.current.forEach(clearTimeout);
+    replayTimer.current = [];
+    setReplay(null);
+  };
+  const startReplay = (turn: Turn) => {
+    stopReplay();
+    // The saved run is the source of truth; the events held in the tab are the same ones.
+    const play = (events: EngineEvent[]) => {
+      const total = events.reduce((sum, e) => sum + (typeof e.ms === "number" ? e.ms : 0), 0);
+      const scale = total > 0 ? Math.min(1, 3000 / total) : 1; // a replay takes at most 3 s
+      let at = 0;
+      setReplay({ events: [], done: false });
+      events.forEach((event, i) => {
+        at += (typeof event.ms === "number" ? event.ms : 0) * scale + 40;
+        replayTimer.current.push(
+          window.setTimeout(
+            () => setReplay({ events: events.slice(0, i + 1), done: i === events.length - 1 }),
+            at,
+          ),
+        );
+      });
+    };
+    const runId = turn.answer?.run_id;
+    if (runId && where?.kind === "collection") {
+      api<{ events: EngineEvent[] }>(`/collections/${where.id}/runs/${runId}`)
+        .then((run) => play(run.events))
+        .catch(() => play(turn.events));
+    } else play(turn.events);
+  };
+  const stripEvents = replay ? replay.events : (latest?.events ?? []);
+  const stripFinished = replay ? replay.done : Boolean(latest?.answer || latest?.error || !latest);
+  const inspectedTurn = turns.find((t) => t.id === inspector?.turnId) ?? latest;
+  const fileNames = new Map((collection?.files ?? []).map((f) => [f.id, f]));
+  const label = (chunkId: string) => {
+    const match = chunkId.match(/^([0-9a-f]{12})\/(\d+)#(\d+)$/);
+    const file = match && fileNames.get(match[1]);
+    if (!file || !match) return chunkId;
+    const unit = file.kind === "pdf" ? `p.${match[2]}` : `§${match[2]}`;
+    return `${file.name} ${unit}${match[3] !== "0" ? ` (${Number(match[3]) + 1})` : ""}`;
+  };
+  const openChunk = (chunkId: string) =>
+    openCitation({ number: 0, title: label(chunkId), url: "", chunk_id: chunkId, doc_id: "", text: "" });
+  const budget = quota(turns.flatMap((t) => t.events));
+
   const removeCollection = async () => {
     if (!collection) return;
     const message = `Delete "${collection.name}" and its ${plural(collection.files.length, "uploaded file")}? This cannot be undone.`;
@@ -134,7 +194,7 @@ export function App() {
   const chunks = collection?.files.reduce((sum, f) => sum + f.chunks, 0) ?? 0;
 
   return (
-    <div className={"app" + (source ? " with-source" : "")} id="app">
+    <div className={"app" + (inspector ? " with-source" : "")} id="app">
       <Sidebar
         config={cfg}
         collections={list}
@@ -190,6 +250,12 @@ export function App() {
                   : isCollection
                     ? ""
                     : "A built-in corpus that ships with the project"}
+                {budget && typeof budget.requests_left_today === "number" && (
+                  <span className="quota" title={`Reported by ${String(budget.model)} with its last reply`}>
+                    {" · "}
+                    {budget.requests_left_today.toLocaleString()} model requests left today
+                  </span>
+                )}
               </p>
               {isCollection && (
                 <button
@@ -231,6 +297,18 @@ export function App() {
             onNewChat={() => !busy && setChats((all) => ({ ...all, [keyOf(where)]: [] }))}
             onCite={openCitation}
             onUpload={() => setTab("files")}
+            onReplay={startReplay}
+            onRetrieval={(turn) => setInspector({ tab: "retrieval", turnId: turn.id })}
+            strip={
+              isCollection ? (
+                <Metro
+                  events={stripEvents}
+                  finished={stripFinished}
+                  replaying={Boolean(replay)}
+                  onStation={() => setInspector({ tab: "retrieval", turnId: latest?.id ?? null })}
+                />
+              ) : null
+            }
           />
         )}
         {collection && tab === "files" && cfg && (
@@ -239,7 +317,27 @@ export function App() {
         {collection && tab === "eval" && cfg && <EvalView slug={collection.slug} config={cfg} />}
       </main>
 
-      {source && <SourcePanel view={source} onClose={() => setSource(null)} />}
+      {inspector && (
+        <Inspector
+          tab={inspector.tab}
+          source={source}
+          retrieval={
+            inspectedTurn?.events.length ? (
+              <>
+                <h3 className="inspector-title">Why these passages</h3>
+                <p className="note">{inspectedTurn.question}</p>
+                <RankRace
+                  events={inspectedTurn.events}
+                  label={label}
+                  onOpen={where?.kind === "collection" ? openChunk : undefined}
+                />
+              </>
+            ) : null
+          }
+          onTab={(tab) => setInspector((now) => (now ? { ...now, tab } : now))}
+          onClose={() => setSource(null)}
+        />
+      )}
     </div>
   );
 }

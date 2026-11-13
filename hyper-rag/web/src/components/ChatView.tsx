@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { nextStep, plural, segments } from "../answer";
 import { type AnswerBody, type Citation, type Collection, postJson, streamAnswer } from "../api";
 import type { Where } from "../App";
+import type { EngineEvent } from "../events";
+import { markArrived } from "../viz/latency";
+import { Waterfall } from "../viz/Waterfall";
 
 export interface Turn {
   id: number;
@@ -10,6 +13,7 @@ export interface Turn {
   working?: string | null;
   answer?: AnswerBody;
   error?: string;
+  events: EngineEvent[]; // the engine's typed events, as they streamed in
 }
 
 type Change = (change: (turn: Turn) => Turn) => void;
@@ -31,7 +35,11 @@ export async function askQuestion(
     }
     let answered = false;
     await streamAnswer(`/collections/${where.id}/ask/stream`, { question, history }, (message) => {
-      if (message.type === "step") {
+      if (message.type === "event") {
+        markArrived();
+        const { type: _event, ...event } = message;
+        update((t) => ({ ...t, events: [...t.events, event as EngineEvent] }));
+      } else if (message.type === "step") {
         update((t) => ({ ...t, steps: [...t.steps, message.text], working: nextStep(message.text) }));
       } else if (message.type === "answer") {
         answered = true;
@@ -71,7 +79,14 @@ function AnswerText({ body, onCite }: { body: AnswerBody; onCite: (c: Citation) 
   );
 }
 
-function BotMessage({ turn, onCite }: { turn: Turn; onCite: (c: Citation) => void }) {
+interface MessageProps {
+  turn: Turn;
+  onCite: (c: Citation) => void;
+  onReplay: (turn: Turn) => void;
+  onRetrieval: (turn: Turn) => void;
+}
+
+function BotMessage({ turn, onCite, onReplay, onRetrieval }: MessageProps) {
   const body = turn.answer;
   if (turn.error) {
     return (
@@ -120,6 +135,13 @@ function BotMessage({ turn, onCite }: { turn: Turn; onCite: (c: Citation) => voi
           ))}
         </div>
       )}
+      {turn.events.length > 0 ? (
+        <Waterfall
+          events={turn.events}
+          onReplay={() => onReplay(turn)}
+          onRetrieval={() => onRetrieval(turn)}
+        />
+      ) : null}
       <details className="trace">
         <summary>
           What the agent did ({plural(body.trace.length, "step")},{" "}
@@ -144,9 +166,13 @@ interface Props {
   onNewChat: () => void;
   onCite: (citation: Citation) => void;
   onUpload: () => void;
+  onReplay: (turn: Turn) => void;
+  onRetrieval: (turn: Turn) => void;
+  strip?: React.ReactNode;
 }
 
-export function ChatView({ where, collection, turns, busy, onAsk, onNewChat, onCite, onUpload }: Props) {
+export function ChatView(props: Props) {
+  const { where, collection, turns, busy, onAsk, onNewChat, onCite, onUpload, onReplay, onRetrieval, strip } = props;
   const [question, setQuestion] = useState("");
   const box = useRef<HTMLTextAreaElement>(null);
   const messages = useRef<HTMLDivElement>(null);
@@ -178,6 +204,7 @@ export function ChatView({ where, collection, turns, busy, onAsk, onNewChat, onC
 
   return (
     <div className="view" id="chat-view">
+      {strip}
       <div id="messages" ref={messages}>
         <div className="thread" id="thread">
           {empty ? (
@@ -198,7 +225,7 @@ export function ChatView({ where, collection, turns, busy, onAsk, onNewChat, onC
               {turns.map((turn) => (
                 <div key={turn.id} style={{ display: "contents" }}>
                   <div className="msg user">{turn.question}</div>
-                  <BotMessage turn={turn} onCite={onCite} />
+                  <BotMessage turn={turn} onCite={onCite} onReplay={onReplay} onRetrieval={onRetrieval} />
                 </div>
               ))}
             </>

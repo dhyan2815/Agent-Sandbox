@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { plural, sizeText } from "../answer";
 import { type Collection, type Config, type FileRecord, api, isReading, uploadResumable } from "../api";
+import { PageGrid } from "../viz/PageGrid";
 
 interface QueueItem {
   id: number;
@@ -21,6 +22,14 @@ const NUMERIC = new Set([3, 4, 5, 6, 7, 8]);
 export function FilesView({ collection, config, onChanged }: Props) {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [over, setOver] = useState(false);
+  const [gridOpen, setGridOpen] = useState<Set<string>>(new Set());
+  const toggleGrid = (id: string) =>
+    setGridOpen((open) => {
+      const next = new Set(open);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const picker = useRef<HTMLInputElement>(null);
   const slug = collection.slug;
 
@@ -139,12 +148,28 @@ export function FilesView({ collection, config, onChanged }: Props) {
                         <td className="num">{file.chunks}</td>
                         <td className="num">{sizeText(file.size)}</td>
                         <td className="num">{file.seconds} s</td>
-                        <td>
+                        <td className="actions">
+                          {file.kind === "pdf" && (
+                            <button
+                              className="quiet"
+                              aria-expanded={gridOpen.has(file.id)}
+                              onClick={() => toggleGrid(file.id)}
+                            >
+                              Pages
+                            </button>
+                          )}
                           <button className="quiet" onClick={() => remove(file)}>
                             Remove
                           </button>
                         </td>
                       </tr>,
+                      gridOpen.has(file.id) ? (
+                        <tr key={`${file.id}-grid`} className="grid-row">
+                          <td colSpan={HEAD.length}>
+                            <PageGrid slug={slug} fileId={file.id} live={false} />
+                          </td>
+                        </tr>
+                      ) : null,
                       ...r.warnings.map((warning, i) => (
                         <tr key={`${file.id}-w${i}`} className="warn">
                           <td colSpan={HEAD.length}>{warning}</td>
@@ -207,6 +232,9 @@ function ProgressRow({ slug, file, span, onRemove }: { slug: string; file: FileR
             </p>
           )}
           {file.xray?.warning && <p className="note">{file.xray.warning}</p>}
+          {file.kind === "pdf" && file.status !== "failed" && (
+            <PageGrid slug={slug} fileId={file.id} live={isReading(file)} />
+          )}
         </td>
         <td>
           <button className="quiet" onClick={onRemove}>

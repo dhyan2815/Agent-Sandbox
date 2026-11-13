@@ -421,3 +421,28 @@ running lines removed, and a parser version. Passages are embedded once per text
 manual with one rewritten page parsed exactly that page; a resumed job never parses a page
 twice either. The hash ignores page numbers in headers and footers, so pages that moved
 because an earlier page was inserted are still recognised as unchanged.
+
+## 34. The visualizer reads only the event log, and is checked against it
+
+Plan v2 phase 3, built as the user chose (decision answers, question 3): the Metro strip
+above the chat, a waterfall under each answer with a replay button, Rank Race and the
+page's source as inspector tabs, and the Page Grid in the Files tab. The Galaxy is not part
+of it (phase 4, side branch).
+
+All of it is drawn by pure functions over the event list (`web/src/events.ts`, unit
+tested): stages and their times, each station's state, and for the Rank Race the rank of
+every fused passage at each stage of the last retrieval round and what the grader did with
+it. A replay fetches the saved run and feeds the same functions, compressed to at most
+three seconds, so a replay cannot draw anything the answer did not do. Passages are labelled
+from the collection's file list (file name and page), since events carry ids only.
+
+The acceptance checks are in the end-to-end script and CI: the strip's per-station
+milliseconds and every waterfall row equal the saved run's events, the Rank Race has one row
+per fused passage and marks exactly the passages the grader kept, a replay ends on the
+same numbers, event-to-screen latency (stream message to painted frame) stayed under
+100 ms (12 ms at most in the run here), and with `prefers-reduced-motion` the strip's
+transitions and pulse are off. No chart library was added: the bump chart is a small SVG
+and the bars are CSS, which kept the bundle at about 90 KB gzipped.
+
+Pack answers (POST /ask) are not streamed and carry no events, so packs show the classic
+step list and no strip.
