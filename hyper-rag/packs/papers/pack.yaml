@@ -1,0 +1,25 @@
+# Research papers on retrieval-augmented generation and LLM agents.
+# Source: arXiv. Titles and abstracts come from the abstract pages; full text is
+# extracted from the PDFs. robots.txt allows /abs and /pdf with a 15 second crawl delay,
+# which the fetcher honours, so the first ingest takes about six minutes. PDFs stay in data/ (git-ignored).
+name: papers
+description: Research papers on retrieval-augmented generation (RAG), dense retrieval, reranking, RAG evaluation and LLM agents (for example RAG, DPR, ColBERT, HyDE, Self-RAG, CRAG, RAPTOR, RAGAS, ReAct, Reflexion).
+chunk_size: 1200
+chunk_overlap: 150
+sources:
+  - name: arxiv
+    abs_url: https://arxiv.org/abs/
+    pdf_url: https://arxiv.org/pdf/
+    ids:
+      - "2005.11401"   # Retrieval-Augmented Generation
+      - "2004.04906"   # Dense Passage Retrieval
+      - "2004.12832"   # ColBERT
+      - "2007.01282"   # Fusion-in-Decoder
+      - "2212.10496"   # HyDE
+      - "2310.11511"   # Self-RAG
+      - "2401.15884"   # Corrective RAG
+      - "2401.18059"   # RAPTOR
+      - "2309.15217"   # RAGAS
+      - "2307.03172"   # Lost in the Middle
+      - "2210.03629"   # ReAct
+      - "2303.11366"   # Reflexion

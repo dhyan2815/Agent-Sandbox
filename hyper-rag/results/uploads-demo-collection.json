@@ -1,0 +1,106 @@
+{
+  "collection": "solar-docs",
+  "date": "2026-11-13",
+  "generator": "groq:openai/gpt-oss-120b",
+  "control": "groq:openai/gpt-oss-20b",
+  "judge": "none",
+  "embedder": "BAAI--bge-small-en-v1.5",
+  "chunks": 57,
+  "questions": 6,
+  "golden": [
+    {
+      "id": "auto-01",
+      "question": "Which table demonstrates that the proposed metrics are much closer aligned with human judgments than the baselines?",
+      "reference_answer": "Table 1 shows that the proposed metrics are much closer aligned with the human judgments than the predictions from the two baselines.",
+      "source_title": "ragas-paper.pdf (Page 5)"
+    },
+    {
+      "id": "auto-02",
+      "question": "What is the cost of the annual service visit?",
+      "reference_answer": "The annual service visit costs 2400 rupees.",
+      "source_title": "handbook.docx > Service visits"
+    },
+    {
+      "id": "auto-03",
+      "question": "What is the warranty period for the solar panel?",
+      "reference_answer": "The solar panel has a 25\u2011year warranty.",
+      "source_title": "guide.pdf (Page 2) > Warranty"
+    },
+    {
+      "id": "auto-04",
+      "question": "What type of framework does the paper propose to speed up evaluation cycles for retrieval-augmented generation?",
+      "reference_answer": "The paper proposes an automated evaluation framework for RAG architectures to enable faster evaluation cycles.",
+      "source_title": "ragas-paper.pdf (Page 1) > Ragas: Automated Evaluation of Retrieval Augmented Generation"
+    },
+    {
+      "id": "auto-05",
+      "question": "How many days does a standard rooftop installation require?",
+      "reference_answer": "A standard rooftop installation takes two working days.",
+      "source_title": "guide.pdf (Page 1) > Scheduling"
+    },
+    {
+      "id": "auto-06",
+      "question": "In the paper, how is the metric |V| defined in terms of statements?",
+      "reference_answer": "|V| is defined as the number of statements |S| that were supported according to the LLM, where |S| is the total number of statements.",
+      "source_title": "ragas-paper.pdf (Page 3)"
+    }
+  ],
+  "retrieval": [
+    {
+      "mode": "vector",
+      "questions": 6,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0,
+      "facts@5": 1.0
+    },
+    {
+      "mode": "hybrid",
+      "questions": 6,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0,
+      "facts@5": 1.0
+    },
+    {
+      "mode": "hybrid_rerank",
+      "questions": 6,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 1.0,
+      "ndcg@10": 1.0,
+      "facts@5": 1.0
+    }
+  ],
+  "answers": [
+    {
+      "config": "hybrid_rerank",
+      "questions": 6,
+      "correctness": "n/a",
+      "key_facts": 0.8,
+      "grounded": "n/a",
+      "cited": 1.0,
+      "citation_precision": 1.0,
+      "refused_unanswerable": "n/a",
+      "refused_answerable": 0.0,
+      "llm_calls": 1.0
+    },
+    {
+      "config": "agent",
+      "questions": 6,
+      "correctness": "n/a",
+      "key_facts": 1.0,
+      "grounded": "n/a",
+      "cited": 1.0,
+      "citation_precision": 1.0,
+      "refused_unanswerable": "n/a",
+      "refused_answerable": 0.0,
+      "llm_calls": 3.0
+    }
+  ],
+  "note": "Questions were written by the generator model from this collection's own passages, so they are easier than real questions. See evaluation/synthetic.py.",
+  "command": "hyper-rag collection eval solar-docs --questions 6 --regenerate (run from the web UI's Evaluation tab)",
+  "files": "tests/make_files.py fixtures (8 generated files, one per format) plus arXiv 2309.15217 (Ragas) as ragas-paper.pdf"
+}

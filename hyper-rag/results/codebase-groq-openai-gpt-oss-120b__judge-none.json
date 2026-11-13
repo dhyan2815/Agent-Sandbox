@@ -1,0 +1,67 @@
+{
+  "pack": "codebase",
+  "date": "2026-11-11",
+  "command": "hyper-rag eval codebase --no-judge --configs hybrid_rerank,agent",
+  "generator": "groq:openai/gpt-oss-120b",
+  "control": "groq:openai/gpt-oss-20b",
+  "judge": "none",
+  "embedder": "BAAI--bge-small-en-v1.5",
+  "reranker": "Xenova/ms-marco-MiniLM-L-6-v2",
+  "chunks": 190,
+  "questions": 17,
+  "retrieval": [
+    {
+      "mode": "vector",
+      "questions": 14,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.952,
+      "ndcg@10": 0.964,
+      "facts@5": 1.0
+    },
+    {
+      "mode": "hybrid",
+      "questions": 14,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.917,
+      "ndcg@10": 0.938,
+      "facts@5": 1.0
+    },
+    {
+      "mode": "hybrid_rerank",
+      "questions": 14,
+      "recall@5": 1.0,
+      "recall@10": 1.0,
+      "mrr": 0.917,
+      "ndcg@10": 0.938,
+      "facts@5": 1.0
+    }
+  ],
+  "answers": [
+    {
+      "config": "hybrid_rerank",
+      "questions": 17,
+      "correctness": "n/a",
+      "key_facts": 0.857,
+      "grounded": "n/a",
+      "cited": 1.0,
+      "citation_precision": 0.923,
+      "refused_unanswerable": 1.0,
+      "refused_answerable": 0.071,
+      "llm_calls": 1.0
+    },
+    {
+      "config": "agent",
+      "questions": 17,
+      "correctness": "n/a",
+      "key_facts": 0.857,
+      "grounded": "n/a",
+      "cited": 1.0,
+      "citation_precision": 0.923,
+      "refused_unanswerable": 1.0,
+      "refused_answerable": 0.071,
+      "llm_calls": 4.294
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+# Indian farming schemes and practices.
+# Source: English Wikipedia articles (text licensed CC BY-SA 4.0), fetched from their
+# public /wiki/ pages, which robots.txt allows. Nothing downloaded is committed.
+#
+# Why not government portals: pmkisan.gov.in did not respond to automated requests, and
+# pmfby.gov.in and vikaspedia.in serve their content through JavaScript, which this
+# plain-HTTP ingester does not execute. Adding them needs a browser-based fetcher.
+name: farming
+description: Farming and agriculture, with a focus on India - government schemes and institutions for farmers (PM-KISAN, crop insurance, Kisan Credit Card, NABARD, minimum support price, e-NAM, irrigation schemes), crop seasons, and farming practices such as drip irrigation, crop rotation, pest management, composting and vermicompost.
+chunk_size: 1200
+chunk_overlap: 150
+sources:
+  - name: wikipedia
+    base_url: https://en.wikipedia.org/wiki/
+    articles:
+      - Pradhan_Mantri_Kisan_Samman_Nidhi
+      - Pradhan_Mantri_Fasal_Bima_Yojana
+      - Kisan_Credit_Card
+      - Minimum_support_price_(India)
+      - National_Agriculture_Market
+      - Soil_Health_Card_Scheme
+      - Pradhan_Mantri_Krishi_Sinchai_Yojana
+      - Agriculture_in_India
+      - Kharif_crop
+      - Rabi_crop
+      - Zaid_crop
+      - Green_Revolution_in_India
+      - Agricultural_produce_market_committee
+      - Food_Corporation_of_India
+      - National_Bank_for_Agriculture_and_Rural_Development
+      - Drip_irrigation
+      - Crop_rotation
+      - System_of_Rice_Intensification
+      - Integrated_pest_management
+      - Vermicompost
+      - Kisan_Call_Centre
+      - Organic_farming_in_India
