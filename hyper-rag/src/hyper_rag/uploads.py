@@ -8,16 +8,23 @@ A collection is the upload-driven counterpart of a domain pack. On disk:
       parsed/<id>.json           the extracted units (pages, slides, sheets, sections)
       index-<embedder>/<id>/     chunks.jsonl + embeddings.npy for that one file
 
+      runs/<id>.json             saved event logs of recent answers, for replay
+
 The index is kept per file. Adding a document embeds only that document, removing one
-deletes a folder, and the collection's retriever is the files' indexes stacked together.
+deletes a folder, and the collection's retriever searches the files' indexes together.
+
+Those paths are keys in a BlobStore (a local folder today), and the vectors and keyword
+index live in a VectorStore and a LexicalStore, so hosted stores can replace the local
+ones without this module changing (plan v2, A7).
 """
 
 import hashlib
+import io
 import json
 import re
-import shutil
 import threading
 import time
+import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -26,11 +33,17 @@ import numpy as np
 from hyper_rag.chunking import chunk_documents
 from hyper_rag.config import Settings
 from hyper_rag.parsing import SUPPORTED, Ocr, ParseError, build_ocr, parse_file
-from hyper_rag.retrieval.bm25 import BM25Index
-from hyper_rag.retrieval.dense import DenseIndex
 from hyper_rag.retrieval.embedders import Embedder, build_embedder
 from hyper_rag.retrieval.rerank import Reranker, build_reranker
 from hyper_rag.retrieval.retriever import Retriever
+from hyper_rag.stores import (
+    BlobStore,
+    LexicalStore,
+    VectorStore,
+    build_blob_store,
+    build_lexical_store,
+    build_vector_store,
+)
 from hyper_rag.text import split_sentences
 from hyper_rag.types import Chunk, Document
 
@@ -85,6 +98,20 @@ def mark_lines(unit_text: str, chunk_text: str) -> list[list[dict]]:
     return lines
 
 
+class _Positions:
+    """Adapts a namespaced store, which answers with chunk ids, to the retriever, which
+    works with positions in its list of chunks."""
+
+    def __init__(self, store: VectorStore | LexicalStore, namespace: str, chunks: list[Chunk]):
+        self.store = store
+        self.namespace = namespace
+        self.position = {chunk.id: row for row, chunk in enumerate(chunks)}
+
+    def search(self, query, k: int) -> list[tuple[int, float]]:
+        hits = self.store.search(self.namespace, query, k)
+        return [(self.position[cid], score) for cid, score in hits if cid in self.position]
+
+
 class CollectionStore:
     def __init__(
         self,
@@ -92,15 +119,22 @@ class CollectionStore:
         ocr: Ocr | None = None,
         embedder: Embedder | None = None,
         reranker: Reranker | None = None,
+        blobs: BlobStore | None = None,
+        vectors: VectorStore | None = None,
+        lexical: LexicalStore | None = None,
     ):
         self.settings = settings
         self.root = settings.data_dir / "collections"
+        self.blobs = blobs or build_blob_store(settings)
+        self.vectors = vectors or build_vector_store(settings)
+        self.lexical = lexical or build_lexical_store(settings)
         self._ocr = ocr
         self._embedder = embedder
         self._reranker = reranker
         # Uploads arrive on worker threads; one writer at a time keeps collection.json whole.
         self._lock = threading.RLock()
         self._retrievers: dict[str, tuple[str, Retriever]] = {}
+        self._chunks: dict[str, list[Chunk]] = {}  # per-file chunk lists, by index key
 
     # --- lazily built components (each loads a model, so only when first needed) ----------
 
@@ -124,35 +158,37 @@ class CollectionStore:
 
     # --- collections ---------------------------------------------------------------------
 
-    def path(self, slug: str) -> Path:
+    def _key(self, slug: str, *parts: str) -> str:
         # A slug only ever contains [a-z0-9-], so it cannot climb out of the root folder.
         if not slug or slugify(slug) != slug:
             raise CollectionNotFound(f"No collection '{slug}'")
-        return self.root / slug
+        return "/".join(["collections", slug, *parts])
 
-    def _meta_path(self, slug: str) -> Path:
-        return self.path(slug) / "collection.json"
+    def path(self, slug: str) -> Path:
+        """The collection's local working folder (evaluation files live here)."""
+        return self.settings.data_dir / self._key(slug)
+
+    def _meta_key(self, slug: str) -> str:
+        return self._key(slug, "collection.json")
 
     def get(self, slug: str) -> dict:
-        meta_path = self._meta_path(slug)
-        if not meta_path.exists():
-            raise CollectionNotFound(f"No collection '{slug}'")
-        return json.loads(meta_path.read_text(encoding="utf-8"))
+        try:
+            return json.loads(self.blobs.read_bytes(self._meta_key(slug)))
+        except KeyError:
+            raise CollectionNotFound(f"No collection '{slug}'") from None
 
     def _save(self, meta: dict) -> None:
         meta["updated"] = _now()
-        meta_path = self._meta_path(meta["slug"])
-        temporary = meta_path.with_suffix(".tmp")
-        temporary.write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
-        temporary.replace(meta_path)  # atomic: a crash never leaves half a file
+        data = json.dumps(meta, indent=2, ensure_ascii=False).encode("utf-8")
+        self.blobs.write_bytes(self._meta_key(meta["slug"]), data)  # atomic
         self._retrievers.pop(meta["slug"], None)
 
     def all(self) -> list[dict]:
-        if not self.root.exists():
-            return []
+        keys = [k for k in self.blobs.list("collections") if k.count("/") == 2]
         metas = [
-            json.loads(path.read_text(encoding="utf-8"))
-            for path in sorted(self.root.glob("*/collection.json"))
+            json.loads(self.blobs.read_bytes(key))
+            for key in keys
+            if key.endswith("/collection.json")
         ]
         return sorted(metas, key=lambda meta: meta["created"])
 
@@ -162,9 +198,8 @@ class CollectionStore:
         if not slug:
             raise CollectionError("A collection name needs at least one letter or digit.")
         with self._lock:
-            if self._meta_path(slug).exists():
+            if self.blobs.exists(self._meta_key(slug)):
                 raise CollectionError(f"A collection named '{name}' already exists.")
-            self.path(slug).mkdir(parents=True)
             meta = {
                 "slug": slug,
                 "name": name,
@@ -178,8 +213,14 @@ class CollectionStore:
     def delete(self, slug: str) -> None:
         with self._lock:
             self.get(slug)
-            shutil.rmtree(self.path(slug))
+            self.blobs.delete_prefix(self._key(slug))
+            for namespace in self._namespaces(slug):
+                self.vectors.drop(namespace)
+                self.lexical.drop(namespace)
             self._retrievers.pop(slug, None)
+            prefix = self._key(slug) + "/"
+            for key in [k for k in self._chunks if k.startswith(prefix)]:
+                del self._chunks[key]
 
     def description(self, slug: str) -> str:
         """What the agent's router is told this collection is about.
@@ -204,15 +245,28 @@ class CollectionStore:
                 return record
         raise CollectionNotFound(f"No file '{file_id}' in collection '{slug}'")
 
+    def _original_key(self, slug: str, record: dict) -> str:
+        return self._key(slug, "files", f"{record['id']}{record['suffix']}")
+
     def file_path(self, slug: str, file_id: str) -> Path:
-        record = self.file_record(slug, file_id)
-        return self.path(slug) / "files" / f"{record['id']}{record['suffix']}"
+        """A local file holding the original upload (downloaded first by a remote store)."""
+        return self.blobs.local_path(self._original_key(slug, self.file_record(slug, file_id)))
 
-    def _parsed_path(self, slug: str, file_id: str) -> Path:
-        return self.path(slug) / "parsed" / f"{file_id}.json"
+    def _parsed_key(self, slug: str, file_id: str) -> str:
+        return self._key(slug, "parsed", f"{file_id}.json")
 
-    def _index_dir(self, slug: str, file_id: str) -> Path:
-        return self.path(slug) / f"index-{self.embedder.name}" / file_id
+    def _index_key(self, slug: str, file_id: str) -> str:
+        return self._key(slug, f"index-{self.embedder.name}", file_id)
+
+    def _namespace(self, slug: str) -> str:
+        # Vectors from different embedding models are not comparable: one namespace each.
+        return f"{slug}:{self.embedder.name}"
+
+    def _namespaces(self, slug: str) -> set[str]:
+        """Every namespace this collection may have in the stores, whatever the embedder."""
+        names = {key.split("/")[2] for key in self.blobs.list(self._key(slug))}
+        embedders = {name[len("index-") :] for name in names if name.startswith("index-")}
+        return {f"{slug}:{embedder}" for embedder in embedders} | {self._namespace(slug)}
 
     def add_file(self, slug: str, filename: str, data: bytes) -> dict:
         """Store, parse, chunk and embed one uploaded file. Returns its record."""
@@ -241,17 +295,18 @@ class CollectionStore:
             replaced = [record for record in meta["files"] if record["name"] == name]
 
             file_id = digest[:12]
-            directory = self.path(slug)
-            (directory / "files").mkdir(exist_ok=True)
-            (directory / "parsed").mkdir(exist_ok=True)
-            original = directory / "files" / f"{file_id}{suffix}"
-            original.write_bytes(data)
+            original_key = self._key(slug, "files", f"{file_id}{suffix}")
+            self.blobs.write_bytes(original_key, data)
 
             started = time.monotonic()
             try:
-                parsed = parse_file(original, self.ocr, self.settings.max_units_per_file)
+                parsed = parse_file(
+                    self.blobs.local_path(original_key),
+                    self.ocr,
+                    self.settings.max_units_per_file,
+                )
             except ParseError as error:
-                original.unlink(missing_ok=True)
+                self.blobs.delete(original_key)
                 raise CollectionError(f"'{name}': {error}") from error
             report = parsed.report()
             if report["characters"] == 0:
@@ -259,10 +314,10 @@ class CollectionStore:
                     "No text could be extracted, so this file cannot be searched."
                 )
             units = [unit.to_dict() for unit in parsed.units]
-            self._parsed_path(slug, file_id).write_text(
-                json.dumps({"unit_name": parsed.unit_name, "units": units}, ensure_ascii=False),
-                encoding="utf-8",
+            parsed_json = json.dumps(
+                {"unit_name": parsed.unit_name, "units": units}, ensure_ascii=False
             )
+            self.blobs.write_bytes(self._parsed_key(slug, file_id), parsed_json.encode("utf-8"))
             record = {
                 "id": file_id,
                 "name": name,
@@ -298,14 +353,19 @@ class CollectionStore:
             self._save(meta)
 
     def _discard(self, slug: str, record: dict) -> None:
-        directory = self.path(slug)
-        (directory / "files" / f"{record['id']}{record['suffix']}").unlink(missing_ok=True)
-        self._parsed_path(slug, record["id"]).unlink(missing_ok=True)
-        for index_dir in directory.glob(f"index-*/{record['id']}"):
-            shutil.rmtree(index_dir)
+        file_id = record["id"]
+        self.blobs.delete(self._original_key(slug, record))
+        self.blobs.delete(self._parsed_key(slug, file_id))
+        for namespace in self._namespaces(slug):
+            embedder = namespace.split(":", 1)[1]
+            index_key = self._key(slug, f"index-{embedder}", file_id)
+            self.blobs.delete_prefix(index_key)
+            self._chunks.pop(index_key, None)
+            self.vectors.remove(namespace, file_id)
+            self.lexical.remove(namespace, file_id)
 
     def units(self, slug: str, file_id: str) -> tuple[str, list[dict]]:
-        parsed = json.loads(self._parsed_path(slug, file_id).read_text(encoding="utf-8"))
+        parsed = json.loads(self.blobs.read_bytes(self._parsed_key(slug, file_id)))
         return parsed["unit_name"], parsed["units"]
 
     # --- index ---------------------------------------------------------------------------
@@ -343,21 +403,44 @@ class CollectionStore:
             embeddings = self.embedder.embed_documents([chunk.text for chunk in chunks])
         else:
             embeddings = np.zeros((0, 1), dtype=np.float32)
-        index_dir = self._index_dir(slug, record["id"])
-        index_dir.mkdir(parents=True, exist_ok=True)
-        with (index_dir / "chunks.jsonl").open("w", encoding="utf-8") as handle:
-            for chunk in chunks:
-                handle.write(json.dumps(chunk.to_dict(), ensure_ascii=False) + "\n")
-        np.save(index_dir / "embeddings.npy", embeddings)
+        index_key = self._index_key(slug, record["id"])
+        lines = "".join(json.dumps(c.to_dict(), ensure_ascii=False) + "\n" for c in chunks)
+        self.blobs.write_bytes(f"{index_key}/chunks.jsonl", lines.encode("utf-8"))
+        buffer = io.BytesIO()
+        np.save(buffer, embeddings)
+        self.blobs.write_bytes(f"{index_key}/embeddings.npy", buffer.getvalue())
+        self._register(slug, record["id"], chunks, embeddings)
         return chunks, embeddings
 
-    def _load_index(self, slug: str, record: dict) -> tuple[list[Chunk], np.ndarray]:
-        index_dir = self._index_dir(slug, record["id"])
-        if not (index_dir / "chunks.jsonl").exists():
+    def _register(
+        self, slug: str, file_id: str, chunks: list[Chunk], embeddings: np.ndarray
+    ) -> None:
+        """Put one file's index into the vector and keyword stores."""
+        namespace = self._namespace(slug)
+        ids = [chunk.id for chunk in chunks]
+        self.vectors.add(namespace, file_id, ids, embeddings if chunks else embeddings[:0])
+        self.lexical.add(namespace, file_id, ids, [chunk.text for chunk in chunks])
+        self._chunks[self._index_key(slug, file_id)] = chunks
+
+    def _file_chunks(self, slug: str, record: dict) -> list[Chunk]:
+        """One file's chunks, making sure the stores hold its index for this embedder."""
+        index_key = self._index_key(slug, record["id"])
+        namespace = self._namespace(slug)
+        cached = self._chunks.get(index_key)
+        if (
+            cached is not None
+            and self.vectors.has(namespace, record["id"])
+            and self.lexical.has(namespace, record["id"])
+        ):
+            return cached
+        if not self.blobs.exists(f"{index_key}/chunks.jsonl"):
             # The file was indexed with a different embedding model: index it for this one.
-            return self._build_index(slug, record)
-        lines = (index_dir / "chunks.jsonl").read_text(encoding="utf-8").splitlines()
-        return [Chunk(**json.loads(line)) for line in lines], np.load(index_dir / "embeddings.npy")
+            return self._build_index(slug, record)[0]
+        lines = self.blobs.read_bytes(f"{index_key}/chunks.jsonl").decode("utf-8").splitlines()
+        chunks = [Chunk(**json.loads(line)) for line in lines]
+        embeddings = np.load(io.BytesIO(self.blobs.read_bytes(f"{index_key}/embeddings.npy")))
+        self._register(slug, record["id"], chunks, embeddings)
+        return chunks
 
     def retriever(self, slug: str) -> Retriever:
         with self._lock:
@@ -366,20 +449,17 @@ class CollectionStore:
             if cached and cached[0] == meta["updated"]:
                 return cached[1]
             chunks: list[Chunk] = []
-            matrices = []
             for record in meta["files"]:
-                file_chunks, embeddings = self._load_index(slug, record)
-                if file_chunks:
-                    chunks.extend(file_chunks)
-                    matrices.append(embeddings)
+                chunks.extend(self._file_chunks(slug, record))
             if not chunks:
                 raise CollectionError(
                     f"Collection '{meta['name']}' has no searchable text yet. Upload a document."
                 )
+            namespace = self._namespace(slug)
             retriever = Retriever(
                 chunks=chunks,
-                dense=DenseIndex(np.vstack(matrices)),
-                bm25=BM25Index([chunk.text for chunk in chunks]),
+                dense=_Positions(self.vectors, namespace, chunks),
+                bm25=_Positions(self.lexical, namespace, chunks),
                 embedder=self.embedder,
                 reranker=self.reranker,
                 settings=self.settings,
@@ -398,7 +478,7 @@ class CollectionStore:
         record = self.file_record(slug, file_id)
         unit_name, units = self.units(slug, file_id)
         unit = next((u for u in units if u["number"] == unit_number), None)
-        chunks, _ = self._load_index(slug, record)
+        chunks = self._file_chunks(slug, record)
         chunk = next((c for c in chunks if c.id == chunk_id), None)
         if unit is None or chunk is None:
             raise CollectionNotFound(f"No passage '{chunk_id}'")
@@ -425,8 +505,6 @@ class CollectionStore:
             return path.read_bytes(), _IMAGE_TYPES.get(record["suffix"], "image/png")
         if record["kind"] != "pdf":
             raise CollectionNotFound("This file type has no page preview.")
-        import io
-
         import pypdfium2
 
         pdf = pypdfium2.PdfDocument(str(path))
@@ -439,6 +517,49 @@ class CollectionStore:
         buffer = io.BytesIO()
         image.save(buffer, format="PNG")
         return buffer.getvalue(), "image/png"
+
+    # --- saved runs: the event log of each recent answer, for replay -------------------
+
+    def save_run(self, slug: str, run: dict) -> str:
+        """Keep the events of one answered question. Returns the run id.
+
+        Ids sort by time, so the newest runs are the last keys; only the newest
+        `runs_kept` are kept.
+        """
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%f")
+        run_id = f"{stamp}-{uuid.uuid4().hex[:6]}"
+        self.get(slug)  # the collection must exist
+        body = json.dumps({"id": run_id, "created": _now(), **run}, ensure_ascii=False)
+        self.blobs.write_bytes(self._key(slug, "runs", f"{run_id}.json"), body.encode("utf-8"))
+        for old in self.blobs.list(self._key(slug, "runs"))[: -self.settings.runs_kept]:
+            self.blobs.delete(old)
+        return run_id
+
+    def runs(self, slug: str) -> list[dict]:
+        """Summaries of the saved runs, newest first."""
+        self.get(slug)
+        summaries = []
+        for key in reversed(self.blobs.list(self._key(slug, "runs"))):
+            run = json.loads(self.blobs.read_bytes(key))
+            answer = run.get("answer") or {}
+            summaries.append(
+                {
+                    "id": run["id"],
+                    "created": run["created"],
+                    "question": answer.get("question", ""),
+                    "refused": answer.get("refused"),
+                    "events": len(run.get("events", [])),
+                }
+            )
+        return summaries
+
+    def run(self, slug: str, run_id: str) -> dict:
+        if not re.fullmatch(r"\d{8}T\d{12}-[0-9a-f]{6}", run_id):
+            raise CollectionNotFound(f"No run '{run_id}'")
+        try:
+            return json.loads(self.blobs.read_bytes(self._key(slug, "runs", f"{run_id}.json")))
+        except KeyError:
+            raise CollectionNotFound(f"No run '{run_id}'") from None
 
 
 def _first_headings(units: list[dict], limit: int = 6) -> list[str]:

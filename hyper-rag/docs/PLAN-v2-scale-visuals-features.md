@@ -1,7 +1,9 @@
 # Plan v2: any-size documents, a live RAG visualizer, and a feature deck
 
-Status: **proposal, nothing here is built.** Written 2026-11-13 after reading the code on
-branch `ccr-0fbd0e60-zbgwzn` (`hyper-rag/`, commit `78286df`).
+Status: **Phase 0 backend built** (store interfaces, typed events, saved runs, single-user
+login; see DECISIONS.md 25 to 28). The React UI is the rest of Phase 0; Phases 1 to 6 are not
+built. Written 2026-11-13 after reading the code on branch `ccr-0fbd0e60-zbgwzn`
+(`hyper-rag/`, commit `78286df`).
 
 Constraints decided with the user:
 
@@ -314,8 +316,16 @@ sends typed events with timings and the actual objects involved:
 {"t":"a.generate",  "ms":2100, "tokens_in":2900, "tokens_out":120}
 {"t":"a.check",     "grounded":true, "ms":700}
 {"t":"answer",      … the current AnswerResponse …}
-{"t":"quota",       "model":"openai/gpt-oss-120b", "tokens_left_today":171200}
+{"t":"llm.quota",   "model":"groq:openai/gpt-oss-120b", "requests_left_today":999, "tokens_left_this_minute":7907}
 ```
+
+As built in phase 0 (`hyper_rag/events.py`): the stream sends these as
+`{"type": "event", "t": ..., ...}` next to the existing step lines. Agent decisions are
+`a.route`, `a.retrieve` (query and attempt), `a.grade`, `a.rewrite`, `a.generate`, `a.check`
+and `a.decline`; each model call carries `ms`, `model`, and `tokens_in`/`tokens_out` or
+`cached` when known. Groq reports no daily token counter, so `llm.quota` carries requests
+left today and tokens left this minute (DECISIONS.md 26). `xyz` coordinates are not emitted
+yet; they belong to the Galaxy, which moved to a side branch.
 
 - Events are emitted by the nodes in `agent/graph.py` and by the `Retriever` through an
   optional `on_event` callback, so the current `ask()` and `ask_events()` keep working.
@@ -570,7 +580,7 @@ command, the number, and what it does *not* show.
 
 | Phase | Scope | Acceptance test (measured, written down) |
 |---|---|---|
-| **0. Foundations** | `BlobStore` / `VectorStore` / `LexicalStore` / `JobStore` interfaces with the current implementations; the typed event bus (B0) behind `on_event`; React + Vite scaffold served by FastAPI and matching today's UI; single-user auth | All 83 existing tests pass; offline CI eval unchanged; the new UI covers today's flows |
+| **0. Foundations** | `BlobStore` / `VectorStore` / `LexicalStore` / `JobStore` interfaces with the current implementations; the typed event bus (B0) behind `on_event`; React + Vite scaffold served by FastAPI and matching today's UI; single-user auth | All 83 existing tests pass; offline CI eval unchanged; the new UI covers today's flows. **Backend done:** 85 existing tests pass (one updated for the new stream contract) plus 28 new; offline eval output identical; collection retrieval identical on 18 query/mode pairs. React UI pending, built in Docker/CI, not committed. |
 | **1. Big files** | A1 resumable upload, A2 X-ray, A3 job windows + checkpoints, A4 progressive search, per-page unit storage, lock split, caps replaced by budgets | 1 GB synthetic PDF and a real public-domain scanned book: peak RSS stays under a fixed bound (target 1.5 GB) whatever the file size; `kill -9` mid-job resumes with no repeated window; a question asked at 30% ingestion is answered from committed pages; pages/min reported for each route |
 | **2. Hosted stores** | Qdrant (dense int8 + sparse), R2, SQLite replication; A6 page cache | `eval-retrieval` on payments and papers: no drop beyond one question; re-upload of a file with 1% of pages changed processes only those pages |
 | **3. Visualizer v1** | Metro strip, waterfall, replay, Page Grid, Rank Race, inspector tabs | Event-to-screen latency under 100 ms; every number on screen matches the saved event log; reduced-motion mode passes a manual check |

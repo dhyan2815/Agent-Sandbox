@@ -265,6 +265,9 @@ src/hyper_rag/
   retrieval/         embedders, dense search, BM25, fusion, rerank, the three-mode retriever
   agent/             the LangGraph agent and the single-shot baseline
   evaluation/        retrieval metrics, answer metrics, resumable ablation runs
+  stores/            blob, vector, keyword and job storage behind interfaces (local today)
+  events.py          typed engine events: each retrieval stage and agent decision, timed
+  auth.py            optional single-user login (password + signed cookie)
   chunking.py        heading-aware chunks with overlap
   web.py             polite fetcher (robots.txt, crawl delay, disk copy)
   cli.py, api.py     command line, FastAPI endpoint and web page
@@ -369,6 +372,9 @@ Settings live in [`config.yaml`](config.yaml); any of them can be overridden wit
 | `embedding_model` | `BAAI/bge-small-en-v1.5` | Dense retrieval, local |
 | `reranker_model` | `Xenova/ms-marco-MiniLM-L-6-v2` | Cross-encoder, local |
 | `top_k`, `rrf_k`, `max_rewrites` | 5, 60, 2 | Passages per answer, fusion constant, retry cap |
+| `password` (env `HYPER_RAG_PASSWORD`) | empty: no login | Turns on the single-user login. Set it in `.env` or the host's secrets, never in `config.yaml` |
+| `session_days` | 30 | How long a login lasts |
+| `runs_kept` | 50 | Saved event logs of recent answers per collection, for replay |
 
 Model names were checked against the providers' free-tier pages on 2026-11-10. Free
 line-ups change; update the names in `config.yaml` if a model is retired.
@@ -408,8 +414,14 @@ line-ups change; update the names in `config.yaml` if a model is retired.
   page, because Word files have no fixed pages.
 - **Uploads: out-of-scope questions are expensive.** With the router off, declining takes
   about six model calls (two query rewrites) instead of one.
-- **Uploads: the API has no login** and conversations live in the browser tab only. Run it
-  on your own machine, not on a shared network.
+- **Uploads: login is off by default** and conversations live in the browser tab only.
+  Without `HYPER_RAG_PASSWORD`, anyone who can reach the app can read and delete every
+  document; run it on your own machine. With it set, one password protects the whole app;
+  there are no separate accounts. Behind a host's HTTPS proxy, start uvicorn with
+  `--proxy-headers` and open the app at its own URL, not inside an iframe (the session
+  cookie is `SameSite=Lax`).
+- **Groq does not report daily tokens left.** The quota events carry what its headers
+  send: requests left today and tokens left this minute.
 - **Auto-evaluation is a health check, not a benchmark.** Its questions are written from the
   passages they are scored against and include no unanswerable ones.
 - **The dense index is an in-memory matrix.** That is fine for thousands of chunks and would

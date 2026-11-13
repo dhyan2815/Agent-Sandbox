@@ -3,7 +3,7 @@
 import re
 
 from hyper_rag.llm.base import LLMError
-from hyper_rag.llm.http import HttpLLM
+from hyper_rag.llm.http import HttpLLM, rate_limits
 from hyper_rag.prompts import Prompt
 
 URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -29,6 +29,9 @@ class GroqLLM(HttpLLM):
         self.reasoning_effort = reasoning_effort
 
     def complete(self, prompt: Prompt) -> str:
+        return self.complete_with_usage(prompt)[0]
+
+    def complete_with_usage(self, prompt: Prompt) -> tuple[str, dict]:
         headroom = 0 if self.reasoning_effort == "none" else REASONING_HEADROOM
         body = {
             "model": self.model,
@@ -43,10 +46,19 @@ class GroqLLM(HttpLLM):
                 {"role": "user", "content": prompt.user},
             ],
         }
-        data = self._post(URL, {"Authorization": f"Bearer {self.api_key}"}, body)
+        data, headers = self._post_with_headers(
+            URL, {"Authorization": f"Bearer {self.api_key}"}, body
+        )
         try:
             content = data["choices"][0]["message"]["content"] or ""
         except (KeyError, IndexError, TypeError) as error:
             raise LLMError(f"{self.name}: unexpected response shape: {str(data)[:300]}") from error
         # Some models inline their reasoning in <think> tags; never let that reach the user.
-        return re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+        text = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
+        usage = data.get("usage") or {}
+        return text, {
+            "model": self.name,
+            "tokens_in": usage.get("prompt_tokens"),
+            "tokens_out": usage.get("completion_tokens"),
+            **rate_limits(headers),
+        }

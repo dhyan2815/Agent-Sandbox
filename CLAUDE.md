@@ -24,6 +24,7 @@ The repository currently contains no source files. When code is added, consider 
 - **Lint**: `ruff check . && ruff format --check .`
 - **Tests**: `pytest` (single test: `pytest tests/test_agent.py::test_name`). Tests need no API key or network.
 - **Offline eval**: `hyper-rag ingest sample --offline && hyper-rag eval sample --offline`
+- **Login**: off unless `HYPER_RAG_PASSWORD` is set (in `.env` or host secrets). Storage goes through `src/hyper_rag/stores/` interfaces; engine events through `events.py` (plan v2 phase 0).
 - Design choices are logged in `hyper-rag/docs/DECISIONS.md`; never commit `hyper-rag/data/` or `.env`.
 
 ## Repository‑Specific Rules

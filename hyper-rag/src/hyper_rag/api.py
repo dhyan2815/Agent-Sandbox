@@ -5,15 +5,18 @@
     GET/POST   /collections                  list / create a collection of uploads
     POST       /collections/{c}/files        upload a document (parsed and indexed on arrival)
     POST       /collections/{c}/ask          answer with citations
-    POST       /collections/{c}/ask/stream   the same, streamed step by step (server-sent events)
+    POST       /collections/{c}/ask/stream   the same, streamed: typed events, steps, the answer
+    GET        /collections/{c}/runs         saved event logs of recent answers (for replay)
+    GET        /collections/{c}/runs/{id}    one saved run: every event and the answer
     GET        /collections/{c}/source       the page a citation points to, passage marked
     POST/GET   /collections/{c}/eval         start / read the auto-evaluation
+    GET/POST   /login, POST /logout          single-user login (only when a password is set)
 
 Run with:  uvicorn hyper_rag.api:app
 Set HYPER_RAG_OFFLINE=1 to serve with the fake LLM and hashing embedder (no key, no network).
 
-There is no login: this is meant to run on your own machine. Do not expose it to a network
-you do not trust; anyone who can reach it can read and delete the uploaded documents.
+Login is off unless HYPER_RAG_PASSWORD is set. Without it, anyone who can reach the app can
+read and delete the uploaded documents, which is fine on your own machine and nowhere else.
 """
 
 import json
@@ -23,16 +26,18 @@ from collections.abc import Iterator
 from functools import lru_cache
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, UploadFile
-from fastapi.responses import FileResponse, Response, StreamingResponse
+from fastapi import FastAPI, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, RedirectResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
-from hyper_rag.agent import Agent
+from hyper_rag import auth
+from hyper_rag.agent import Agent, Answer
 from hyper_rag.config import Settings, load_settings
 from hyper_rag.llm import LLM, LLMError, build_llm
 from hyper_rag.packs import list_packs
 from hyper_rag.parsing import SUPPORTED
 from hyper_rag.service import build_agent
+from hyper_rag.stores import JobStore, build_job_store
 from hyper_rag.uploads import CollectionError, CollectionNotFound, CollectionStore
 
 app = FastAPI(title="Hyper-RAG", version="0.2.0")
@@ -70,6 +75,7 @@ class AskResponse(BaseModel):
     citations: list[Citation]
     trace: list[str]
     llm_calls: int
+    run_id: str | None = None  # collections only: the saved events, at /runs/{run_id}
 
 
 class NewCollection(BaseModel):
@@ -98,6 +104,11 @@ def get_agent(pack: str) -> Agent:
 @lru_cache
 def get_store() -> CollectionStore:
     return CollectionStore(get_settings())
+
+
+@lru_cache
+def get_jobs() -> JobStore:
+    return build_job_store(get_settings())
 
 
 @lru_cache
@@ -130,6 +141,36 @@ def _http_error(error: Exception) -> HTTPException:
     raise error
 
 
+# --- login -------------------------------------------------------------------------------
+
+
+@app.middleware("http")
+async def login_required(request: Request, call_next):
+    refusal = auth.require_login(request, get_settings().password)
+    return refusal if refusal is not None else await call_next(request)
+
+
+@app.get("/login", include_in_schema=False)
+def login_form(request: Request) -> Response:
+    settings = get_settings()
+    if not settings.password or auth.valid_token(
+        settings.password, request.cookies.get(auth.COOKIE)
+    ):
+        return RedirectResponse("/", status_code=303)
+    return auth.login_page()
+
+
+@app.post("/login", include_in_schema=False)
+def login(request: Request, password: str = Form(default="", max_length=200)) -> Response:
+    settings = get_settings()
+    return auth.login(request, settings.password, password, settings.session_days)
+
+
+@app.post("/logout", include_in_schema=False)
+def logout() -> Response:
+    return auth.logout()
+
+
 # --- page, health, configuration ---------------------------------------------------------
 
 
@@ -154,6 +195,7 @@ def config() -> dict:
         "ocr": settings.ocr,
         "max_upload_mb": settings.max_upload_mb,
         "extensions": sorted(SUPPORTED),
+        "login": bool(settings.password),
     }
 
 
@@ -203,7 +245,7 @@ def delete_collection(slug: str) -> None:
         get_store().delete(slug)
     except CollectionError as error:
         raise _http_error(error) from error
-    _eval_jobs.pop(slug, None)
+    get_jobs().forget("eval", slug)
 
 
 # --- files -------------------------------------------------------------------------------
@@ -272,18 +314,46 @@ def _history(request: CollectionAskRequest) -> list[tuple[str, str]]:
     return [(turn.question, turn.answer) for turn in request.history]
 
 
+def _answer_events(
+    slug: str, agent: Agent, request: CollectionAskRequest
+) -> Iterator[tuple[str, str | dict]]:
+    """Run the agent and save its run. Yields ("event", dict), ("step", str), and last
+    ("answer", the answer's dict with its run_id)."""
+    events: list[dict] = []
+    for kind, payload in agent.ask_events(request.question, _history(request)):
+        if kind == "event":
+            events.append(payload)
+            yield kind, payload
+        elif kind == "step":
+            yield kind, payload
+        else:
+            assert isinstance(payload, Answer)
+            body = payload.to_dict()
+            body["run_id"] = get_store().save_run(slug, {"answer": body, "events": events})
+            yield "answer", body
+
+
 @app.post("/collections/{slug}/ask", response_model=AskResponse)
 def ask_collection(slug: str, request: CollectionAskRequest) -> dict:
     try:
-        return collection_agent(slug).ask(request.question, _history(request)).to_dict()
+        agent = collection_agent(slug)
+        for kind, payload in _answer_events(slug, agent, request):
+            if kind == "answer":
+                return payload
     except (CollectionError, LLMError) as error:
         raise _http_error(error) from error
+    raise RuntimeError("the agent finished without an answer")  # unreachable
 
 
 @app.post("/collections/{slug}/ask/stream")
 def ask_collection_stream(slug: str, request: CollectionAskRequest) -> StreamingResponse:
-    """Server-sent events: {"type": "step", "text": ...} per agent step, then one
-    {"type": "answer", ...} (or {"type": "error", "detail": ...})."""
+    """Server-sent events, one JSON object each:
+
+    {"type": "event", "t": "r.rerank", ...}   typed engine events (hyper_rag.events)
+    {"type": "step", "text": ...}             one trace line per agent step
+    {"type": "answer", ..., "run_id": ...}    last; the run is saved under run_id
+    {"type": "error", "detail": ...}          instead of the answer, if a call failed
+    """
     try:
         agent = collection_agent(slug)
     except (CollectionError, LLMError) as error:
@@ -291,14 +361,15 @@ def ask_collection_stream(slug: str, request: CollectionAskRequest) -> Streaming
 
     def events() -> Iterator[str]:
         try:
-            for kind, payload in agent.ask_events(request.question, _history(request)):
-                body = (
-                    {"type": "step", "text": payload}
-                    if kind == "step"
-                    else {"type": "answer", **payload.to_dict()}
-                )
+            for kind, payload in _answer_events(slug, agent, request):
+                if kind == "event":
+                    body = {"type": "event", **payload}
+                elif kind == "step":
+                    body = {"type": "step", "text": payload}
+                else:
+                    body = {"type": "answer", **payload}
                 yield f"data: {json.dumps(body, ensure_ascii=False)}\n\n"
-        except LLMError as error:
+        except (LLMError, CollectionError) as error:
             yield f"data: {json.dumps({'type': 'error', 'detail': str(error)})}\n\n"
 
     return StreamingResponse(
@@ -308,21 +379,36 @@ def ask_collection_stream(slug: str, request: CollectionAskRequest) -> Streaming
     )
 
 
+@app.get("/collections/{slug}/runs")
+def list_runs(slug: str) -> dict:
+    try:
+        return {"runs": get_store().runs(slug)}
+    except CollectionError as error:
+        raise _http_error(error) from error
+
+
+@app.get("/collections/{slug}/runs/{run_id}")
+def read_run(slug: str, run_id: str) -> dict:
+    try:
+        return get_store().run(slug, run_id)
+    except CollectionError as error:
+        raise _http_error(error) from error
+
+
 # --- auto-evaluation ---------------------------------------------------------------------
 
 # One evaluation per collection at a time, run on a background thread because it takes
-# minutes on a free tier. State is in memory: a restart forgets a running job, but the
-# rows it finished are on disk and the next run resumes from them.
-_eval_jobs: dict[str, dict] = {}
-_eval_lock = threading.Lock()
+# minutes on a free tier. The job and its log are in the job store, so a restart reports
+# the interrupted job instead of forgetting it; the rows it finished are on disk and the
+# next run resumes from them.
 
 
-def _run_eval(slug: str, request: EvalRequest) -> None:
+def _run_eval(slug: str, job_id: str, request: EvalRequest) -> None:
     from hyper_rag.evaluation.synthetic import evaluate_collection
 
-    job = _eval_jobs[slug]
+    jobs = get_jobs()
     try:
-        job["report"] = evaluate_collection(
+        report = evaluate_collection(
             get_store(),
             slug,
             get_settings(),
@@ -330,12 +416,11 @@ def _run_eval(slug: str, request: EvalRequest) -> None:
             configs=("hybrid_rerank", "agent") if request.agent else ("hybrid_rerank",),
             use_judge=request.judge,
             regenerate=request.regenerate,
-            on_progress=lambda line: job["log"].append(line.strip()),
+            on_progress=lambda line: jobs.log(job_id, line.strip()),
         )
-        job["state"] = "done"
+        jobs.finish(job_id, report)
     except Exception as error:  # report every failure to the UI instead of dying silently
-        job["state"] = "failed"
-        job["error"] = str(error)
+        jobs.fail(job_id, str(error))
 
 
 @app.post("/collections/{slug}/eval", status_code=202)
@@ -344,11 +429,10 @@ def start_eval(slug: str, request: EvalRequest) -> dict:
         get_store().retriever(slug)  # fails now, with a clear message, if there is nothing to test
     except CollectionError as error:
         raise _http_error(error) from error
-    with _eval_lock:
-        if _eval_jobs.get(slug, {}).get("state") == "running":
-            raise HTTPException(status_code=409, detail="An evaluation is already running.")
-        _eval_jobs[slug] = {"state": "running", "log": [], "report": None, "error": None}
-    threading.Thread(target=_run_eval, args=(slug, request), daemon=True).start()
+    job = get_jobs().start("eval", slug)
+    if job is None:
+        raise HTTPException(status_code=409, detail="An evaluation is already running.")
+    threading.Thread(target=_run_eval, args=(slug, job["id"], request), daemon=True).start()
     return {"state": "running"}
 
 
@@ -361,7 +445,12 @@ def read_eval(slug: str) -> dict:
         saved = latest_report(get_store(), slug)
     except CollectionError as error:
         raise _http_error(error) from error
-    job = _eval_jobs.get(slug)
+    job = get_jobs().latest("eval", slug)
     if job is None:
         return {"state": "idle", "log": [], "report": saved, "error": None}
-    return {**job, "report": job["report"] or saved}
+    return {
+        "state": job["state"],
+        "log": job["log"],
+        "report": job["result"] or saved,
+        "error": job["error"],
+    }

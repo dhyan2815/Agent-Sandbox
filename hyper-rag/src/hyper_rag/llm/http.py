@@ -47,6 +47,9 @@ class HttpLLM:
         self._last_call = time.monotonic()
 
     def _post(self, url: str, headers: dict, body: dict) -> dict:
+        return self._post_with_headers(url, headers, body)[0]
+
+    def _post_with_headers(self, url: str, headers: dict, body: dict) -> tuple[dict, httpx.Headers]:
         for attempt in range(self.max_retries + 1):
             self._pace()
             try:
@@ -55,7 +58,7 @@ class HttpLLM:
                 reason, wait = f"network error: {error}", None
             else:
                 if response.status_code < 400:
-                    return response.json()
+                    return response.json(), response.headers
                 if response.status_code != 429 and response.status_code < 500:
                     # 400/401/403/404: retrying the same request cannot succeed.
                     raise LLMError(
@@ -74,3 +77,27 @@ class HttpLLM:
             if attempt < self.max_retries:
                 time.sleep(wait + 0.5)
         raise LLMError(f"{self.name}: gave up after {self.max_retries + 1} attempts ({reason})")
+
+
+_RATE_LIMIT_HEADERS = {
+    "x-ratelimit-remaining-requests": "requests_left_today",
+    "x-ratelimit-limit-requests": "requests_per_day",
+    "x-ratelimit-remaining-tokens": "tokens_left_this_minute",
+    "x-ratelimit-limit-tokens": "tokens_per_minute",
+}
+QUOTA_FIELDS = tuple(_RATE_LIMIT_HEADERS.values())
+
+
+def rate_limits(headers: httpx.Headers) -> dict:
+    """The OpenAI-style x-ratelimit-* counters, under names that say what they count.
+
+    Checked against Groq on 2026-11-13: "requests" is the per-day request budget and
+    "tokens" the per-minute token budget. Groq sends no daily token counter, so the
+    UI cannot show tokens left today; it shows what the provider actually reports.
+    """
+    limits = {}
+    for header, name in _RATE_LIMIT_HEADERS.items():
+        value = headers.get(header)
+        if value is not None and value.isdigit():
+            limits[name] = int(value)
+    return limits

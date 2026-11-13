@@ -13,10 +13,11 @@ def client(settings, store):
     originals = api.get_settings, api.get_store
     api.get_settings, api.get_store = (lambda: settings), (lambda: store)
     api.get_llms.cache_clear()
-    api._eval_jobs.clear()
+    api.get_jobs.cache_clear()
     yield TestClient(api.app)
     api.get_settings, api.get_store = originals
     api.get_llms.cache_clear()
+    api.get_jobs.cache_clear()
 
 
 @pytest.fixture
@@ -71,9 +72,20 @@ def test_streamed_answer_sends_steps_then_the_answer(client, uploaded):
         events = [
             json.loads(line[6:]) for line in response.iter_lines() if line.startswith("data: ")
         ]
-    assert [e["type"] for e in events[:-1]] == ["step"] * (len(events) - 1)
-    assert events[0]["text"].startswith("retrieve: ")  # uploads skip the router
+    steps = [e for e in events if e["type"] == "step"]
+    typed = [e["t"] for e in events if e["type"] == "event"]
+    assert {e["type"] for e in events[:-1]} == {"step", "event"}
+    assert steps[0]["text"].startswith("retrieve: ")  # uploads skip the router
+    assert typed[:6] == ["a.retrieve", "q.embed", "r.dense", "r.bm25", "r.fuse", "r.rerank"]
+    assert typed[6:] == ["a.grade", "a.generate", "a.check"]
     assert events[-1]["type"] == "answer" and "two working days" in events[-1]["answer"]
+
+    # The run was saved with every event, so it can be replayed.
+    run = client.get(f"/collections/solar/runs/{events[-1]['run_id']}").json()
+    assert [e["t"] for e in run["events"]] == typed
+    assert run["answer"]["answer"] == events[-1]["answer"]
+    listed = client.get("/collections/solar/runs").json()["runs"]
+    assert listed[0]["id"] == run["id"] and listed[0]["events"] == len(typed)
 
 
 def test_originals_pdf_inline_html_only_as_download(client, uploaded, tmp_path):

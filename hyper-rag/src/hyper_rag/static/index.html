@@ -51,6 +51,8 @@
   #new-collection { display: flex; gap: 6px; padding: 6px 8px; }
   #new-collection input { flex: 1; padding: 6px 8px; }
   .nav-empty { color: var(--muted); font-size: .85rem; padding: 4px 8px; }
+  .logout { padding: 8px 16px 14px; border-top: 1px solid var(--line); }
+  .logout button { width: 100%; }
 
   /* --- main --- */
   main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -163,6 +165,9 @@
       <h2>Built-in demo packs</h2>
       <div id="pack-list"></div>
     </div>
+    <form method="post" action="/logout" id="logout" class="logout" hidden>
+      <button type="submit">Log out</button>
+    </form>
   </aside>
 
   <main>
@@ -256,8 +261,12 @@ function el(tag, props = {}, children = []) {
   return node;
 }
 
+// A login is required and the session has ended (or never started): go and log in.
+const toLogin = (response) => { if (response.status === 401) window.location.assign("/login"); };
+
 async function api(path, options = {}) {
   const response = await fetch(path, options);
+  toLogin(response);
   if (response.status === 204) return null;
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -454,6 +463,7 @@ const scrollChat = () => { $("messages").scrollTop = $("messages").scrollHeight;
 // POST + server-sent events: fetch gives a byte stream, events are "data: {...}" blocks.
 async function streamAnswer(path, payload, onEvent) {
   const response = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  toLogin(response);
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.detail || `Request failed (${response.status})`);
@@ -762,6 +772,7 @@ $("eval-run").addEventListener("click", async () => {
     state.config = await api("/config");
     state.packs = (await api("/packs")).packs;
     $("offline-banner").hidden = !state.config.offline;
+    $("logout").hidden = !state.config.login;
     $("model-line").textContent = state.config.offline ? "Offline demo mode" : `Answers by ${state.config.generator}`;
     $("accepted").textContent = `PDF, Word, PowerPoint, Excel, images, text, Markdown, HTML and CSV, up to ${state.config.max_upload_mb} MB each. Tables are kept as tables; images and scanned pages are read by OCR on this machine.`;
     $("picker").accept = state.config.extensions.join(",");

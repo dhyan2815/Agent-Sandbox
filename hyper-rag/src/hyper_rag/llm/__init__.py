@@ -1,13 +1,13 @@
 """LLM providers behind one interface. `build_llm` is the only place that picks one."""
 
 from hyper_rag.config import Settings
-from hyper_rag.llm.base import LLM, LLMError, parse_json
+from hyper_rag.llm.base import LLM, LLMError, complete_with_usage, parse_json
 from hyper_rag.llm.cache import CachedLLM
 from hyper_rag.llm.fake import FakeLLM
 from hyper_rag.llm.gemini import GeminiLLM
 from hyper_rag.llm.groq import GroqLLM
 
-__all__ = ["LLM", "LLMError", "build_llm", "parse_json"]
+__all__ = ["LLM", "LLMError", "build_llm", "complete_with_usage", "parse_json"]
 
 
 def build_llm(settings: Settings, role: str = "generator") -> LLM:

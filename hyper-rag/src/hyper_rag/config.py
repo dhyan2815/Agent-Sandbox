@@ -55,6 +55,19 @@ class Settings(BaseSettings):
     upload_chunk_size: int = 1200
     upload_chunk_overlap: int = 150
 
+    # Storage (see hyper_rag.stores). Only the local implementations exist so far;
+    # the hosted ones (R2, Qdrant) arrive in plan v2 phase 2.
+    blob_store: Literal["local"] = "local"
+    vector_store: Literal["numpy"] = "numpy"
+    lexical_store: Literal["bm25"] = "bm25"
+    job_store: Literal["sqlite"] = "sqlite"
+
+    # Login. Empty password = no login, for use on your own machine. Set HYPER_RAG_PASSWORD
+    # (in .env or the host's secrets, never in config.yaml) before exposing the app.
+    password: str = ""
+    session_days: int = 30
+    runs_kept: int = 50  # saved event logs of recent answers, per collection, for replay
+
     # Paths
     packs_dir: Path = Path("packs")
     data_dir: Path = Path("data")

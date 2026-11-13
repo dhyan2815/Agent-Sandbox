@@ -235,3 +235,67 @@ before touching the file system, stored files are named by content hash, not by 
 name, uploads have a size limit and an extension allow-list, and only PDFs and images are
 served inline. Every other upload is sent back as a download, so an uploaded HTML file is
 never rendered as a page of the app. The UI builds every node with `textContent`.
+
+## 25. Typed events alongside the trace, carried in the run's config
+
+Plan v2 (B0) needs every stage to report what it did with the real objects, so the
+visualizer animates actual work. The retriever and every agent node now emit typed events
+("r.dense", "a.grade", ...) with ranked chunk ids, scores and milliseconds. The trace lines
+stay: the current UI, the CLI and the eval reports read them.
+
+The listener is passed through LangGraph's per-run `config`, not stored on the agent,
+because a pack's agent is cached and shared by concurrent requests; a listener on `self`
+would mix two users' events. Nodes run inside `graph.stream`, so a plain list collects each
+node's events and `ask_events` yields them after the node, before its trace line. With no
+listener nothing is emitted, and the offline eval output is byte-identical to before.
+
+Each collection answer's events are saved with the answer (`runs/<id>.json`, the newest 50
+kept), which is what makes replay cheap later.
+
+## 26. Token and quota numbers travel with the reply
+
+Providers that know their usage implement `complete_with_usage`, returning the reply and
+a dict (tokens in and out, a cache hit flag, rate-limit counters). Usage is returned with the
+reply instead of kept as `llm.last_usage`, because one LLM object serves several requests at
+once. The plan proposed a `tokens_left_today` meter. A live call to Groq on 2026-11-13
+showed its headers carry requests per day (`x-ratelimit-*-requests`, 1000) and tokens per
+minute (`x-ratelimit-*-tokens`, 8000) only, so the `llm.quota` event reports those, named
+for what they count. A daily token meter would have to be counted locally.
+
+## 27. Storage behind four interfaces, local implementations first
+
+`BlobStore`, `VectorStore`, `LexicalStore` and `JobStore` (`hyper_rag/stores/`) have the
+current behaviour as their only implementations: a folder, an exact numpy scan, rank_bm25,
+SQLite. Collections now go through them, so R2 and Qdrant can be added in phase 2 without
+touching the upload code. The vector and keyword stores are namespaced per collection and
+embedding model and change a whole file at a time, which is how uploads change a collection
+and how Qdrant will want it; the retriever still works with positions in its chunk list, and
+a small adapter maps chunk ids to positions.
+
+Checked before and after: the offline pack eval output is identical, and on a collection of
+all nine supported formats the top-10 ids and scores of 18 query and mode pairs are
+identical. The packs keep their own on-disk index (`hyper_rag.index`): they are evaluation
+corpora built by a command, and their published numbers must not move. The auto-eval's
+working files still live in the collection's local folder; they move with phase 2.
+
+Evaluation jobs moved from a dict in memory to the job store. A restart used to forget a
+running evaluation; now it reports it as interrupted. Ingestion jobs and their page windows
+(plan v2, A3) are phase 1.
+
+## 28. One password and a signed cookie, off unless a password is set
+
+The plan's answer for phase 0 was single-user auth. A password from `HYPER_RAG_PASSWORD`
+was chosen over a magic link because a link needs an email service and its key on a free
+tier. With no password set nothing changes, so local use and the tests behave as before.
+
+The cookie is `<expiry>.<HMAC-SHA256>` keyed by a hash of the password: no second secret to
+manage, and changing the password logs every browser out. It is HttpOnly, `SameSite=Lax`
+(other sites' form posts arrive without it, which covers CSRF for this app) and Secure when
+the request came over HTTPS, read from `X-Forwarded-Proto` behind a host's proxy. API calls
+without a session get 401, pages redirect to `/login`, and `/health` stays open for the
+host's probe. Five wrong passwords from one address in 15 minutes block that address for
+the rest of the window. Behind a proxy that address is the proxy's unless uvicorn runs with
+`--proxy-headers`, in which case the limit becomes global; for one user that is acceptable.
+Lax cookies are not sent inside a cross-site iframe, so the app is opened at its own URL
+(on Hugging Face, the `*.hf.space` address), not embedded in the Space page.
+

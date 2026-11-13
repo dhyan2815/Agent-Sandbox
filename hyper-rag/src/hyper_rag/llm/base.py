@@ -15,6 +15,21 @@ class LLM(Protocol):
         ...
 
 
+def complete_with_usage(llm: LLM, prompt: Prompt) -> tuple[str, dict]:
+    """Call the model and also return what the call cost, where the provider says.
+
+    Providers that know their usage implement `complete_with_usage` themselves and return
+    any of: tokens_in, tokens_out, cached (True when the reply came from the disk cache)
+    and the provider's rate-limit counters. The rest return an empty dict. Usage travels
+    with the reply instead of sitting on the LLM object, because one LLM object serves
+    several requests at once.
+    """
+    method = getattr(llm, "complete_with_usage", None)
+    if method is None:
+        return llm.complete(prompt), {}
+    return method(prompt)
+
+
 class LLMError(RuntimeError):
     """A provider call failed and retrying did not help."""
 
