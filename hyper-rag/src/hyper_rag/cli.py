@@ -61,6 +61,24 @@ def doctor(
 
 
 @app.command()
+def mcp(
+    remote: str = typer.Option(
+        "",
+        "--remote",
+        help="URL of a deployed Hyper-RAG; the password is read from HYPER_RAG_REMOTE_PASSWORD.",
+    ),
+    offline: bool = typer.Option(False, "--offline", help=OFFLINE_HELP),
+) -> None:
+    """Serve your collections to Claude Code, Gemini CLI or n8n as an MCP server (stdio)."""
+    try:
+        from hyper_rag.mcp_server import run
+    except ImportError:
+        typer.echo('The MCP server needs its extra: pip install -e ".[mcp]"', err=True)
+        raise typer.Exit(1) from None
+    run(load_settings(offline=offline), remote=remote)
+
+
+@app.command()
 def packs() -> None:
     """List the available domain packs."""
     settings = load_settings()

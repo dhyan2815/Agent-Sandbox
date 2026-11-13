@@ -10,6 +10,7 @@
     GET        /collections/{c}/files/{id}/events      reading progress (server-sent events)
     GET        /collections/{c}/files/{id}/pages       per-page route and progress (page grid)
     POST       /collections/{c}/ask          answer with citations
+    GET        /collections/{c}/search       best passages for a query (no model call)
     POST       /collections/{c}/check        check each claim of a text against the documents
     POST       /collections/{c}/export       an answer as Markdown or a LinkedIn outline
     POST       /collections/{c}/ask/stream   the same, streamed: typed events, steps, the answer
@@ -674,6 +675,29 @@ def ask_collection_stream(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/collections/{slug}/search")
+def search_collection(
+    slug: str, q: str = Query(min_length=1, max_length=500), k: int = Query(default=5, ge=1, le=10)
+) -> dict:
+    """The best passages for a query, with scores. No model is called, so it uses none of
+    the hourly budget. It is what the MCP server's search tool reads."""
+    try:
+        hits = PassagesOnly(get_store().retriever(slug)).retrieve(q, top_k=k)
+    except CollectionError as error:
+        raise _http_error(error) from error
+    return {
+        "passages": [
+            {
+                "chunk_id": h.chunk.id,
+                "title": h.chunk.title,
+                "text": h.chunk.text[:1200],
+                "score": round(float(h.score), 4),
+            }
+            for h in hits
+        ]
+    }
 
 
 @app.post("/collections/{slug}/check")

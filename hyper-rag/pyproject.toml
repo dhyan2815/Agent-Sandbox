@@ -33,6 +33,8 @@ dependencies = [
 [project.optional-dependencies]
 # Hosted stores (plan v2 phase 2): Qdrant for vectors and keywords, S3/R2 for files.
 hosted = ["qdrant-client==1.20.0", "boto3==1.43.122"]
+# MCP server (deck card D1): ask your documents from Claude Code, Gemini CLI or n8n.
+mcp = ["mcp==1.30.0"]
 # reportlab only builds the PDF fixtures the tests parse; moto is an in-process S3 for the
 # blob store tests; the hosted clients are tested against Qdrant's local mode.
 dev = [
@@ -40,6 +42,7 @@ dev = [
     "pytest==9.2.0",
     "reportlab==5.1.0",
     "moto[server]==5.2.5",
+    "mcp==1.30.0",
     "qdrant-client==1.20.0",
     "boto3==1.43.122",
 ]
