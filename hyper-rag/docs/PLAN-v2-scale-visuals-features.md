@@ -610,6 +610,21 @@ Large files are generated or downloaded at test time, never committed.
 4. Which deck cards feel closest to your real week? D1 (MCP) and D4 (claim checker) look like
    the strongest fits for how you work, judging by this repository.
 
+**Answers (2026-11-13):**
+
+1. **Host: Hugging Face Space**, with a public URL and a password-protected app. Before
+   Phase 6, confirm the free CPU Basic Docker tier is available on the account. If it is not,
+   A10 (edge ingestion) becomes the main path, as section 5 says.
+2. **Auth: single user at first.** Phase 0 ships a single-user password or magic link with a
+   session cookie. Multi-user accounts wait for P9 (shareable collections).
+3. **Galaxy: a demo and recording mode on a side branch**, not part of the product. The
+   product's visualizer is the Metro strip, waterfall, Rank Race and Page Grid (Phase 3).
+   Phase 4 moves off the main path, and nothing in Phases 5 and 6 depends on it.
+4. **Deck cards closest to a real week: D1 (MCP server) and D6 (answer → artifact).** These
+   are the first candidates for promotion. The promotion rule in section 4 still applies:
+   the flow happens three times in real use, a success metric is written down, and a free-tier
+   cost estimate fits the budget.
+
 ---
 
 ## 8. Sources
