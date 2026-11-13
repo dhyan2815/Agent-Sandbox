@@ -478,3 +478,26 @@ windows to the front of the queue and the question waits up to 15 seconds for th
 (`jit_wait_seconds`); the run log records which pages were promoted. In the test a question
 about page 60 of 64 had its window read before the windows in between. Scanned pages have
 no text layer, so they cannot be found this way and are read in order.
+
+## 36. The Galaxy, on a side branch
+
+Plan v2 phase 4, kept on `feat/galaxy` as decided (a demo and recording mode, not part of
+the product). An Explore tab draws every passage of a collection as a point in 3D: PCA in
+numpy, fitted once per state of the collection (`projection.py`, `GET /collections/{c}/map`),
+with each question placed by the same projection (a `q.position` event). The latest
+question's dense hits are blue, BM25 hits amber, passages both found white, the rest
+dimmed, and lines join the question to the reranker's top 5, which are listed with their
+real rerank, cosine and BM25 scores, because a projection's distances are a sketch (on the
+20,000-passage test the three axes kept 6% of the variance). UMAP was left out (it needs
+numba). three.js and @react-three/fiber are loaded only when the tab opens, so the rest of
+the app stays at about 90 KB gzipped.
+
+The metrics board under it adds up the last 20 saved runs: mean time per stage, model calls
+and tokens per answer, the share of passages never retrieved, requests left with the
+provider, and a histogram of the top rerank score (the out-of-scope signal).
+
+Measured (`web/e2e/galaxy.mjs`): 20,000 passages drawn, the listed top 5 equal the saved
+run's rerank hits, the question placed from its logged position. The frame rate was 27 fps,
+below the plan's 50, but on SwiftShader, a software renderer on the CPU, because this
+machine has no GPU; the target is for an integrated GPU and is not verified here.
+

@@ -104,8 +104,10 @@ def golden() -> list[dict]:
         {"question": "Summarise chapter 10.", "terms": terms(10)},
         {"question": "Compare chapters 2 and 3.", "terms": terms(2, 3)},
         {"question": "Which chapter covers net metering, and what does it say?", "terms": terms(6)},
-        {"question": "What is this book about overall?",
-         "terms": [CHAPTERS[n][1][0] for n in range(10)]},
+        {
+            "question": "What is this book about overall?",
+            "terms": [CHAPTERS[n][1][0] for n in range(10)],
+        },
     ]
     return facts + [{"kind": "global", **item} for item in whole]
 
@@ -199,13 +201,17 @@ def main() -> None:
     ]
     for label, rows in results.items():
         calls = round(sum(r.get("calls", 0) for r in rows) / len(rows), 2)
-        lines.append(
-            f"| {label} | {summarise(rows, 'fact', 'score')} | {summarise(rows, 'global', 'context')}"
-            f" | {summarise(rows, 'global', 'score')} | {calls} |"
-        )
-    lines += ["", "## Whole-book questions", "",
-              "| Question | Before: context / answer / calls | After: context / answer / calls |",
-              "|---|---|---|"]
+        fact = summarise(rows, "fact", "score")
+        context = summarise(rows, "global", "context")
+        answer = summarise(rows, "global", "score")
+        lines.append(f"| {label} | {fact} | {context} | {answer} | {calls} |")
+    lines += [
+        "",
+        "## Whole-book questions",
+        "",
+        "| Question | Before: context / answer / calls | After: context / answer / calls |",
+        "|---|---|---|",
+    ]
     before = {r["question"]: r for r in results["before"]}
     for row in results["after"]:
         if row["kind"] != "global":
@@ -215,12 +221,17 @@ def main() -> None:
             f"| {row['question']} | {old.get('context')} / {old.get('score')} / {old.get('calls')}"
             f" | {row.get('context')} / {row.get('score')} / {row.get('calls')} |"
         )
-    lines += ["", "## What this does not show", "",
-              "- The book is synthetic: chapters on distinct topics make the gain easy to see. "
-              "A real book's chapters overlap more.",
-              "- The 'answer' score counts topic terms, a proxy for a good summary, not a judge.",
-              "- The first whole-book question pays for the chapter summaries it needs; later "
-              "ones reuse them, so the mean calls fall as the collection is used.", ""]
+    lines += [
+        "",
+        "## What this does not show",
+        "",
+        "- The book is synthetic: chapters on distinct topics make the gain easy to see. "
+        "A real book's chapters overlap more.",
+        "- The 'answer' score counts topic terms, a proxy for a good summary, not a judge.",
+        "- The first whole-book question pays for the chapter summaries it needs; later "
+        "ones reuse them, so the mean calls fall as the collection is used.",
+        "",
+    ]
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text("\n".join(lines))
     (args.out.with_suffix(".json")).write_text(json.dumps(results, indent=1))

@@ -538,6 +538,10 @@ def _answer_events(
     """Run the agent and save its run. Yields ("event", dict), ("step", str), and last
     ("answer", the answer's dict with its run_id)."""
     events: list[dict] = list(prelude or [])
+    # Where the question lands in the Galaxy view: the same projection as the passages.
+    position = get_store().place_question(slug, request.question)
+    if position is not None:
+        events.append({"t": "q.position", "xyz": position})
     for event in events:
         yield "event", event
     reading = get_store().coverage(slug)
@@ -606,6 +610,16 @@ def ask_collection_stream(slug: str, request: CollectionAskRequest) -> Streaming
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/collections/{slug}/map")
+def collection_map(slug: str) -> dict:
+    """Every passage placed in 3D (PCA), for the Galaxy view."""
+    try:
+        result = get_store().map(slug)
+    except CollectionError as error:
+        raise _http_error(error) from error
+    return {key: value for key, value in result.items() if key != "projection"}
 
 
 @app.get("/collections/{slug}/runs")

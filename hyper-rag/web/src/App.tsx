@@ -8,11 +8,16 @@ import { FilesView } from "./components/FilesView";
 import { Sidebar } from "./components/Sidebar";
 import { Inspector, type InspectorTab, type SourceView } from "./components/SourcePanel";
 import { type EngineEvent, quota } from "./events";
+import { lazy, Suspense } from "react";
 import { Metro } from "./viz/Metro";
+import { Metrics } from "./viz/Metrics";
+
+// three.js is large: the Galaxy is loaded only when the Explore tab is opened.
+const Galaxy = lazy(() => import("./viz/Galaxy").then((m) => ({ default: m.Galaxy })));
 import { RankRace } from "./viz/RankRace";
 
 export type Where = { kind: "collection" | "pack"; id: string };
-export type Tab = "chat" | "files" | "eval";
+export type Tab = "chat" | "files" | "eval" | "explore";
 
 const keyOf = (where: Where) => `${where.kind}:${where.id}`;
 
@@ -271,7 +276,7 @@ export function App() {
               )}
             </div>
             <nav className="tabs" id="tabs" role="tablist">
-              {(["chat", "files", "eval"] as Tab[])
+              {(["chat", "files", "eval", "explore"] as Tab[])
                 .filter((name) => isCollection || name === "chat")
                 .map((name) => (
                   <button
@@ -282,7 +287,7 @@ export function App() {
                     data-tab={name}
                     onClick={() => setTab(name)}
                   >
-                    {{ chat: "Chat", files: "Files", eval: "Evaluation" }[name]}
+                    {{ chat: "Chat", files: "Files", eval: "Evaluation", explore: "Explore" }[name]}
                   </button>
                 ))}
             </nav>
@@ -317,6 +322,16 @@ export function App() {
           <FilesView collection={collection} config={cfg} onChanged={refreshCollections} />
         )}
         {collection && tab === "eval" && cfg && <EvalView slug={collection.slug} config={cfg} />}
+        {collection && tab === "explore" && (
+          <div className="view" id="explore-view">
+            <div className="pad wide">
+              <Suspense fallback={<p className="note">Loading the 3D view…</p>}>
+                <Galaxy slug={collection.slug} events={latest?.events ?? []} />
+              </Suspense>
+              <Metrics slug={collection.slug} passages={chunks} />
+            </div>
+          </div>
+        )}
       </main>
 
       {inspector && (
