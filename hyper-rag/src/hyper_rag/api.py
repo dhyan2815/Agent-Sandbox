@@ -26,6 +26,7 @@ read and delete the uploaded documents, which is fine on your own machine and no
 
 import asyncio
 import json
+import logging
 import os
 import shutil
 import threading
@@ -37,10 +38,16 @@ from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Query, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import (
+    FileResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
 from pydantic import BaseModel, Field
 
-from hyper_rag import auth
+from hyper_rag import auth, deploy
 from hyper_rag.agent import Agent, Answer
 from hyper_rag.background import IngestWorker, OffsetMismatch, UploadSessions
 from hyper_rag.config import Settings, load_settings
@@ -56,13 +63,20 @@ from hyper_rag.uploads import CollectionError, CollectionNotFound, CollectionSto
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    for problem in deploy.check_settings(get_settings()):
+        log.log(logging.ERROR if problem.level == "error" else logging.WARNING, problem.message)
+    # The models load in the background, so the server answers /health at once and the page
+    # can show "warming up" instead of a first question that hangs.
+    warmup = get_warmup()
+    warmup.start(lambda: (get_store().embedder, get_store().reranker))
     # Files a previous run left half-read are picked up again, from their last window.
     await run_in_threadpool(lambda: get_worker().resume())
     yield
     get_worker().shutdown()
 
 
-app = FastAPI(title="Hyper-RAG", version="0.3.0", lifespan=lifespan)
+log = logging.getLogger("hyper_rag.api")
+app = FastAPI(title="Hyper-RAG", version="0.4.0", lifespan=lifespan)
 
 
 class Turn(BaseModel):
@@ -118,6 +132,28 @@ class EvalRequest(BaseModel):
 @lru_cache
 def get_settings() -> Settings:
     return load_settings(offline=os.environ.get("HYPER_RAG_OFFLINE") == "1")
+
+
+@lru_cache
+def get_warmup() -> deploy.Warmup:
+    return deploy.Warmup()
+
+
+@lru_cache
+def get_quota() -> deploy.QuotaGuard:
+    return deploy.QuotaGuard(get_settings().model_requests_per_hour)
+
+
+def spend_model_quota(request: Request) -> None:
+    """Count a request that will call the model; refuse it with 429 once the hour's budget is
+    used. The budget is per client address, and the page tells the user when to come back."""
+    wait = get_quota().take(auth.client_address(request))
+    if wait:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Hourly limit reached. Try again in {int(wait // 60) + 1} minutes.",
+            headers={"Retry-After": str(int(wait) + 1)},
+        )
 
 
 @lru_cache
@@ -248,7 +284,17 @@ def asset(name: str) -> FileResponse:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok"}
+    """Is the server up, and have its models loaded? Open to everyone (no login), so it
+    says nothing about the data. `warm` is idle | warming | ready | failed."""
+    return {"status": "ok", "warm": get_warmup().state}
+
+
+@app.get("/ready")
+def ready() -> Response:
+    """Probes the stores behind the app (files, vectors) and the warm-up. 503 if any fails."""
+    body = deploy.readiness(get_settings(), get_store())
+    body["warm"] = get_warmup().to_dict()
+    return JSONResponse(body, status_code=200 if body["ready"] else 503)
 
 
 @app.get("/config")
@@ -263,6 +309,7 @@ def config() -> dict:
         "max_upload_mb": settings.max_upload_mb,
         "extensions": sorted(SUPPORTED),
         "login": bool(settings.password),
+        "demo_mode": settings.demo_mode,
     }
 
 
@@ -275,7 +322,8 @@ def packs() -> dict:
 
 
 @app.post("/ask", response_model=AskResponse)
-def ask(request: AskRequest) -> dict:
+def ask(request: AskRequest, http: Request) -> dict:
+    spend_model_quota(http)
     try:
         return get_agent(request.pack).ask(request.question).to_dict()
     except (FileNotFoundError, LLMError) as error:  # unknown or un-ingested pack; provider
@@ -565,7 +613,8 @@ def _answer_events(
 
 
 @app.post("/collections/{slug}/ask", response_model=AskResponse)
-def ask_collection(slug: str, request: CollectionAskRequest) -> dict:
+def ask_collection(slug: str, request: CollectionAskRequest, http: Request) -> dict:
+    spend_model_quota(http)
     try:
         prelude, options = _prepare(slug, request.question)
         agent = collection_agent(slug, **options)
@@ -578,7 +627,9 @@ def ask_collection(slug: str, request: CollectionAskRequest) -> dict:
 
 
 @app.post("/collections/{slug}/ask/stream")
-def ask_collection_stream(slug: str, request: CollectionAskRequest) -> StreamingResponse:
+def ask_collection_stream(
+    slug: str, request: CollectionAskRequest, http: Request
+) -> StreamingResponse:
     """Server-sent events, one JSON object each:
 
     {"type": "event", "t": "r.rerank", ...}   typed engine events (hyper_rag.events)
@@ -586,6 +637,7 @@ def ask_collection_stream(slug: str, request: CollectionAskRequest) -> Streaming
     {"type": "answer", ..., "run_id": ...}    last; the run is saved under run_id
     {"type": "error", "detail": ...}          instead of the answer, if a call failed
     """
+    spend_model_quota(http)
     try:
         prelude, options = _prepare(slug, request.question)
         agent = collection_agent(slug, **options)

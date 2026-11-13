@@ -43,6 +43,24 @@ def _print_answer(answer, trace: bool) -> None:
 
 
 @app.command()
+def doctor(
+    offline: bool = typer.Option(False, "--offline", help=OFFLINE_HELP),
+    hosted: bool = typer.Option(
+        False, "--hosted", help="Check as if on a host with a wiped disk (a Space sets SPACE_ID)."
+    ),
+) -> None:
+    """Check the settings for problems before you deploy. Exits 1 if there is an error."""
+    from hyper_rag.deploy import check_settings
+
+    problems = check_settings(load_settings(offline=offline), hosted=hosted or None)
+    for problem in problems:
+        typer.echo(f"{problem.level.upper():8} {problem.message}")
+    errors = sum(p.level == "error" for p in problems)
+    typer.echo(f"\n{errors} error(s), {len(problems) - errors} warning(s).")
+    raise typer.Exit(1 if errors else 0)
+
+
+@app.command()
 def packs() -> None:
     """List the available domain packs."""
     settings = load_settings()

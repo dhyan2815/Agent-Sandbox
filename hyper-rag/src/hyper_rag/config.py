@@ -86,7 +86,13 @@ class Settings(BaseSettings):
     # (in .env or the host's secrets, never in config.yaml) before exposing the app.
     password: str = ""
     session_days: int = 30
+    # Requests that spend model quota (questions, claim checks, LLM exports) one client may
+    # make per hour. Protects the free daily allowance on a host. 0 = no limit.
+    model_requests_per_hour: int = 120
     runs_kept: int = 50  # saved event logs of recent answers, per collection, for replay
+    # Demo and recording mode: shows the Explore tab (the 3D Galaxy and the metrics board).
+    # Off by default; the product's visualizer is the strip, waterfall and rank race.
+    demo_mode: bool = False
 
     # Paths
     packs_dir: Path = Path("packs")

@@ -7,6 +7,7 @@ export interface Config {
   max_upload_mb: number;
   extensions: string[];
   login: boolean;
+  demo_mode: boolean;
 }
 
 export interface FileReport {

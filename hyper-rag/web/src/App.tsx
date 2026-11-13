@@ -9,6 +9,8 @@ import { Sidebar } from "./components/Sidebar";
 import { Inspector, type InspectorTab, type SourceView } from "./components/SourcePanel";
 import { type EngineEvent, quota } from "./events";
 import { lazy, Suspense } from "react";
+import { WakingScreen } from "./components/WakingScreen";
+import { useServerStatus } from "./status";
 import { Metro } from "./viz/Metro";
 import { Metrics } from "./viz/Metrics";
 
@@ -23,6 +25,7 @@ const keyOf = (where: Where) => `${where.kind}:${where.id}`;
 
 export function App() {
   const client = useQueryClient();
+  const server = useServerStatus();
   const config = useQuery({ queryKey: ["config"], queryFn: () => api<Config>("/config") });
   const packs = useQuery({
     queryKey: ["packs"],
@@ -200,6 +203,8 @@ export function App() {
   const isCollection = where?.kind === "collection";
   const chunks = collection?.files.reduce((sum, f) => sum + f.chunks, 0) ?? 0;
 
+  if (server.status === "down") return <WakingScreen since={server.since} />;
+
   return (
     <div className={"app" + (inspector ? " with-source" : "")} id="app">
       <Sidebar
@@ -217,6 +222,11 @@ export function App() {
       />
 
       <main>
+        {server.status === "warming" && (
+          <div className="banner" id="warming-banner" role="status">
+            Loading the search models. The first question may take a little longer.
+          </div>
+        )}
         {cfg?.offline && (
           <div className="banner" id="offline-banner">
             Offline demo mode: answers come from a rule-based stand-in, not a language model.
@@ -278,6 +288,7 @@ export function App() {
             <nav className="tabs" id="tabs" role="tablist">
               {(["chat", "files", "eval", "explore"] as Tab[])
                 .filter((name) => isCollection || name === "chat")
+                .filter((name) => name !== "explore" || cfg?.demo_mode)
                 .map((name) => (
                   <button
                     key={name}
@@ -322,7 +333,7 @@ export function App() {
           <FilesView collection={collection} config={cfg} onChanged={refreshCollections} />
         )}
         {collection && tab === "eval" && cfg && <EvalView slug={collection.slug} config={cfg} />}
-        {collection && tab === "explore" && (
+        {collection && tab === "explore" && cfg?.demo_mode && (
           <div className="view" id="explore-view">
             <div className="pad wide">
               <Suspense fallback={<p className="note">Loading the 3D view…</p>}>

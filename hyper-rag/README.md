@@ -370,6 +370,10 @@ The image builds the React app, runs as user 1000 on port 7860 and starts uvicor
 password in the Space's secrets. Its disk is wiped on restart, so for anything you want to
 keep, set `HYPER_RAG_BLOB_STORE=s3` (R2) and `HYPER_RAG_VECTOR_STORE=qdrant`,
 `HYPER_RAG_LEXICAL_STORE=qdrant` (Qdrant Cloud's free cluster), with their keys as secrets.
+The step-by-step runbook, with every secret and variable, is [`docs/DEPLOY.md`](docs/DEPLOY.md);
+`hyper-rag doctor --hosted` checks your settings first. The page shows a waking-up screen
+while a sleeping host starts, and questions are limited per hour
+(`HYPER_RAG_MODEL_REQUESTS_PER_HOUR`) to protect the free model quota.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/ask -H "Content-Type: application/json" \

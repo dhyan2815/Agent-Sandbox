@@ -205,3 +205,49 @@ def test_unchanged_passages_are_not_embedded_again(settings):
     store.create("Other")
     store.add_file("other", "a.md", b"# Depot\n\nThe depot opens at seven.\n")
     assert calls == []  # the same passages, in another collection: embedded once
+
+
+def test_the_running_app_answers_after_a_restart_on_an_empty_disk(settings, s3, qdrant, tmp_path):
+    """Phase 6 acceptance: restart the host (empty disk, same R2 and Qdrant), ask a question."""
+    from fastapi.testclient import TestClient
+
+    from conftest import StubOcr
+    from hyper_rag import api
+    from hyper_rag.stores.qdrant import QdrantLexicalStore, QdrantVectorStore
+
+    def machine(name):
+        local = settings.model_copy(update={"data_dir": tmp_path / name})
+        return local, CollectionStore(
+            local,
+            ocr=StubOcr(),
+            blobs=_blobs(s3, tmp_path, cache=f"{name}-cache"),
+            vectors=QdrantVectorStore(":memory:", client=qdrant),
+            lexical=QdrantLexicalStore(":memory:", client=qdrant),
+        )
+
+    _, before = machine("before")
+    before.create("Solar")
+    before.add_file("solar", "guide.pdf", make_pdf(tmp_path / "guide.pdf").read_bytes())
+
+    local, after = machine("after")  # a fresh container: nothing on its disk
+    originals = api.get_settings, api.get_store
+    api.get_settings, api.get_store = (lambda: local), (lambda: after)
+    for cached in (api.get_llms, api.get_jobs, api.get_quota, api.get_warmup, api.get_worker):
+        cached.cache_clear()
+    try:
+        with TestClient(api.app) as client:  # runs start-up: warm-up and resuming jobs
+            api.get_warmup().wait(5)
+            assert client.get("/health").json() == {"status": "ok", "warm": "ready"}
+            assert client.get("/ready").json()["ready"] is True
+            assert [c["slug"] for c in client.get("/collections").json()["collections"]] == [
+                "solar"
+            ]
+            answer = client.post(
+                "/collections/solar/ask",
+                json={"question": "How long does a standard rooftop installation take?"},
+            ).json()
+            assert not answer["refused"] and answer["citations"]
+    finally:
+        api.get_settings, api.get_store = originals
+        for cached in (api.get_llms, api.get_jobs, api.get_quota, api.get_warmup, api.get_worker):
+            cached.cache_clear()
