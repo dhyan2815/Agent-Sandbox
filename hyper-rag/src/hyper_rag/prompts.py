@@ -18,7 +18,7 @@ REFUSAL_MESSAGE = "I can't answer that from the available sources."
 @dataclass(frozen=True)
 class Prompt:
     task: str  # route | grade | rewrite | generate | check | judge | condense | synthesize
-    #           | summarize
+    #           | summarize | claims | verify
     system: str
     user: str
     max_tokens: int = 400
@@ -182,4 +182,42 @@ def chapter_summary_prompt(title: str, sections: list[str]) -> Prompt:
     user = f"Chapter: {title}\n\nNotes from its sections:\n{notes}"
     return Prompt(
         "summarize", system, user, max_tokens=300, inputs={"title": title, "sections": sections}
+    )
+
+
+def claims_prompt(text: str, max_claims: int) -> Prompt:
+    """Split a draft into separate checkable claims (claim checker, deck card D4)."""
+    system = (
+        "You split a text into its separate factual claims, so that each can be checked "
+        "against documents. A claim is one statement that is true or false: a number, a date, "
+        "a name, a property, a cause. Rewrite each so it stands on its own (replace pronouns "
+        "with what they refer to). Skip opinions, greetings and questions. "
+        f'Reply with JSON only: {{"claims": ["...", "..."]}} with at most {max_claims} claims.'
+    )
+    return Prompt(
+        "claims", system, f"Text:\n{text}", max_tokens=600, inputs={"text": text, "max": max_claims}
+    )
+
+
+def verify_claims_prompt(items: list[tuple[str, list[Chunk]]]) -> Prompt:
+    """Verdicts for a few claims at once, each against its own numbered passages."""
+    system = (
+        "You check claims against source passages. For each claim give one verdict: "
+        '"supported" (a passage states it), "contradicted" (a passage states something that '
+        'conflicts with it, such as a different number, date or name) or "not_found" (the '
+        "passages say nothing about it). Judge only from the passages, never from outside "
+        "knowledge, and do not guess: if the passages are silent, the verdict is not_found. "
+        "For supported and contradicted, give the number of the passage that decides it. Reply "
+        'with JSON only: {"verdicts": [{"claim": 1, "verdict": "supported", "passage": 2}, ...]}.'
+    )
+    blocks = []
+    for number, (claim, passages) in enumerate(items, start=1):
+        shown = "\n".join(f"  [{i}] {c.text[:600]}" for i, c in enumerate(passages, start=1))
+        blocks.append(f"Claim {number}: {claim}\nPassages for claim {number}:\n{shown}")
+    return Prompt(
+        "verify",
+        system,
+        "\n\n".join(blocks),
+        max_tokens=60 + 40 * len(items),
+        inputs={"items": items},
     )

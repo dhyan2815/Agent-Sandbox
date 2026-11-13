@@ -270,3 +270,27 @@ tr.grid-row td { background: var(--bg); }
 .waking-dots span:nth-child(3) { animation-delay: .4s; }
 @keyframes waking-pulse { 0%, 80%, 100% { opacity: .25; transform: scale(.8); } 40% { opacity: 1; transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .waking-dots span { animation: none; opacity: .7; } }
+
+/* Claim checker. Verdicts use colour and a word, never colour alone. */
+.check-text { width: 100%; resize: vertical; margin-top: 10px; }
+.check-summary { margin: 18px 0 8px; }
+.claims { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.claim { border: 1px solid var(--line); border-left-width: 4px; border-radius: 8px; background: var(--panel); padding: 10px 12px; }
+.claim.v-supported { border-left-color: var(--accent); }
+.claim.v-contradicted { border-left-color: #b3392f; }
+.claim.v-not_found { border-left-color: var(--warn); }
+.claim-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.verdict { font-size: .75rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.verdict.v-supported { background: var(--soft); color: var(--accent); }
+.verdict.v-contradicted { background: #f8e3e0; color: #8f2a22; }
+.verdict.v-not_found { background: var(--warn-soft); color: var(--warn); }
+span.v-supported { color: var(--accent); font-weight: 600; }
+span.v-contradicted { color: #b3392f; font-weight: 600; }
+span.v-not_found { color: var(--warn); font-weight: 600; }
+.claim-passage { display: block; width: 100%; text-align: left; margin-top: 8px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.claim-quote { display: block; margin-top: 3px; font-size: .88rem; }
+@media (prefers-color-scheme: dark) {
+  .verdict.v-contradicted { background: #3a1f1c; color: #f08a80; }
+  .claim.v-contradicted { border-left-color: #f08a80; }
+  span.v-contradicted { color: #f08a80; }
+}

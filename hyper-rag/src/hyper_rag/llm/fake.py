@@ -7,6 +7,7 @@ and makes the offline eval numbers reproducible to the digit.
 """
 
 import json
+import re
 
 from hyper_rag.prompts import INSUFFICIENT, Prompt
 from hyper_rag.text import STOPWORDS, coverage, split_sentences, strip_citations, tokenize
@@ -70,6 +71,35 @@ class FakeLLM:
         # Extractive: the first sentence of each section's notes, after the chapter title.
         firsts = [split_sentences(text)[0] for text in sections if text and split_sentences(text)]
         return f"{title}. " + " ".join(firsts[:5])
+
+    def _claims(self, text: str, max: int) -> str:
+        # Every sentence of some length is a claim.
+        sentences = [s for s in split_sentences(text) if len(s.split()) >= 4]
+        return json.dumps({"claims": sentences[:max]})
+
+    def _verify(self, items: list) -> str:
+        verdicts = []
+        for number, (claim, passages) in enumerate(items, start=1):
+            best_score, best_index = 0.0, 0
+            for index, passage in enumerate(passages, start=1):
+                score = coverage(claim, passage.text)
+                if score > best_score:
+                    best_score, best_index = score, index
+            verdict = "not_found"
+            if best_score >= 0.5:
+                # Mostly the same words but a figure that the passage does not contain.
+                figures = set(re.findall(r"\d+(?:[.,]\d+)?", claim))
+                passage_text = passages[best_index - 1].text
+                missing = figures - set(re.findall(r"\d+(?:[.,]\d+)?", passage_text))
+                if missing:
+                    verdict = "contradicted"
+                elif best_score >= SUPPORTED_THRESHOLD:
+                    verdict = "supported"
+            entry = {"claim": number, "verdict": verdict}
+            if verdict != "not_found":
+                entry["passage"] = best_index
+            verdicts.append(entry)
+        return json.dumps({"verdicts": verdicts})
 
     def _synthesize(self, passage) -> str:
         # The longest sentence of the passage body, turned into a question about itself.

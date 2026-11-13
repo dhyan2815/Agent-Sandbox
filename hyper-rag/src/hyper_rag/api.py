@@ -10,6 +10,7 @@
     GET        /collections/{c}/files/{id}/events      reading progress (server-sent events)
     GET        /collections/{c}/files/{id}/pages       per-page route and progress (page grid)
     POST       /collections/{c}/ask          answer with citations
+    POST       /collections/{c}/check        check each claim of a text against the documents
     POST       /collections/{c}/ask/stream   the same, streamed: typed events, steps, the answer
     GET        /collections/{c}/runs         saved event logs of recent answers (for replay)
     GET        /collections/{c}/runs/{id}    one saved run: every event and the answer
@@ -47,7 +48,7 @@ from fastapi.responses import (
 )
 from pydantic import BaseModel, Field
 
-from hyper_rag import auth, deploy
+from hyper_rag import auth, claims, deploy
 from hyper_rag.agent import Agent, Answer
 from hyper_rag.background import IngestWorker, OffsetMismatch, UploadSessions
 from hyper_rag.config import Settings, load_settings
@@ -115,6 +116,10 @@ class AskResponse(BaseModel):
     # Files still being read when the question was asked: the answer only searched what
     # had been read so far (pages_done of pages_total).
     reading: list[dict] = Field(default_factory=list)
+
+
+class ClaimCheckRequest(BaseModel):
+    text: str = Field(min_length=20, max_length=4000)
 
 
 class NewCollection(BaseModel):
@@ -662,6 +667,21 @@ def ask_collection_stream(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.post("/collections/{slug}/check")
+def check_claims_in_collection(slug: str, request: ClaimCheckRequest, http: Request) -> dict:
+    """Claim checker: each claim in the text, judged against the collection's passages.
+
+    Costs one model call to split the text and one per four claims to judge them, so it
+    counts toward the hourly budget like a question does.
+    """
+    spend_model_quota(http)
+    try:
+        retriever = PassagesOnly(get_store().retriever(slug))
+        return claims.check_claims(retriever, get_llms()[1], request.text).to_dict()
+    except (CollectionError, LLMError) as error:
+        raise _http_error(error) from error
 
 
 @app.get("/collections/{slug}/map")

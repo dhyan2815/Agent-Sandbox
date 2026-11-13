@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { plural } from "./answer";
 import { type AnswerBody, type Citation, type Collection, type Config, type Source, api, isReading } from "./api";
 import { ChatView, type Turn, askQuestion } from "./components/ChatView";
+import { CheckView } from "./components/CheckView";
 import { EvalView } from "./components/EvalView";
 import { FilesView } from "./components/FilesView";
 import { Sidebar } from "./components/Sidebar";
@@ -19,7 +20,7 @@ const Galaxy = lazy(() => import("./viz/Galaxy").then((m) => ({ default: m.Galax
 import { RankRace } from "./viz/RankRace";
 
 export type Where = { kind: "collection" | "pack"; id: string };
-export type Tab = "chat" | "files" | "eval" | "explore";
+export type Tab = "chat" | "files" | "check" | "eval" | "explore";
 
 const keyOf = (where: Where) => `${where.kind}:${where.id}`;
 
@@ -286,7 +287,7 @@ export function App() {
               )}
             </div>
             <nav className="tabs" id="tabs" role="tablist">
-              {(["chat", "files", "eval", "explore"] as Tab[])
+              {(["chat", "files", "check", "eval", "explore"] as Tab[])
                 .filter((name) => isCollection || name === "chat")
                 .filter((name) => name !== "explore" || cfg?.demo_mode)
                 .map((name) => (
@@ -298,7 +299,7 @@ export function App() {
                     data-tab={name}
                     onClick={() => setTab(name)}
                   >
-                    {{ chat: "Chat", files: "Files", eval: "Evaluation", explore: "Explore" }[name]}
+                    {{ chat: "Chat", files: "Files", check: "Check claims", eval: "Evaluation", explore: "Explore" }[name]}
                   </button>
                 ))}
             </nav>
@@ -332,6 +333,7 @@ export function App() {
         {collection && tab === "files" && cfg && (
           <FilesView collection={collection} config={cfg} onChanged={refreshCollections} />
         )}
+        {collection && tab === "check" && <CheckView slug={collection.slug} onCite={openCitation} />}
         {collection && tab === "eval" && cfg && <EvalView slug={collection.slug} config={cfg} />}
         {collection && tab === "explore" && cfg?.demo_mode && (
           <div className="view" id="explore-view">

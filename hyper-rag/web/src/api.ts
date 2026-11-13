@@ -88,6 +88,30 @@ export interface AnswerBody {
   reading?: Reading[];
 }
 
+export interface ClaimPassage {
+  title: string;
+  url: string;
+  chunk_id: string;
+  doc_id: string;
+  text: string;
+}
+
+export type Verdict = "supported" | "contradicted" | "not_found";
+
+export interface CheckedClaim {
+  claim: string;
+  verdict: Verdict;
+  evidence: ClaimPassage | null;
+  closest: ClaimPassage | null;
+}
+
+export interface ClaimReport {
+  claims: CheckedClaim[];
+  summary: Record<Verdict, number>;
+  llm_calls: number;
+  truncated: boolean;
+}
+
 export interface Span {
   text: string;
   hit: boolean;
