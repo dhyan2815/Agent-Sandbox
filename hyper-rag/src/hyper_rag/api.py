@@ -11,6 +11,7 @@
     GET        /collections/{c}/files/{id}/pages       per-page route and progress (page grid)
     POST       /collections/{c}/ask          answer with citations
     POST       /collections/{c}/check        check each claim of a text against the documents
+    POST       /collections/{c}/export       an answer as Markdown or a LinkedIn outline
     POST       /collections/{c}/ask/stream   the same, streamed: typed events, steps, the answer
     GET        /collections/{c}/runs         saved event logs of recent answers (for replay)
     GET        /collections/{c}/runs/{id}    one saved run: every event and the answer
@@ -49,6 +50,7 @@ from fastapi.responses import (
 from pydantic import BaseModel, Field
 
 from hyper_rag import auth, claims, deploy
+from hyper_rag import export as exporting
 from hyper_rag.agent import Agent, Answer
 from hyper_rag.background import IngestWorker, OffsetMismatch, UploadSessions
 from hyper_rag.config import Settings, load_settings
@@ -120,6 +122,11 @@ class AskResponse(BaseModel):
 
 class ClaimCheckRequest(BaseModel):
     text: str = Field(min_length=20, max_length=4000)
+
+
+class ExportRequest(BaseModel):
+    run_id: str = Field(min_length=10, max_length=60)
+    format: str = Field(default="markdown", max_length=20)
 
 
 class NewCollection(BaseModel):
@@ -682,6 +689,25 @@ def check_claims_in_collection(slug: str, request: ClaimCheckRequest, http: Requ
         return claims.check_claims(retriever, get_llms()[1], request.text).to_dict()
     except (CollectionError, LLMError) as error:
         raise _http_error(error) from error
+
+
+@app.post("/collections/{slug}/export")
+def export_answer(slug: str, request: ExportRequest, http: Request) -> dict:
+    """An answer taken out of the app, as Markdown (free) or a LinkedIn outline (one model
+    request). Built from the saved run, never from text sent by the page."""
+    if request.format not in exporting.FORMATS:
+        raise HTTPException(status_code=422, detail=f"Unknown format '{request.format}'.")
+    try:
+        answer = get_store().run(slug, request.run_id).get("answer")
+        if not answer:
+            raise CollectionNotFound(f"Run '{request.run_id}' has no answer")
+        if request.format == "linkedin":
+            spend_model_quota(http)
+        return exporting.export_answer(answer, request.format, get_llms()[0])
+    except (CollectionError, LLMError) as error:
+        raise _http_error(error) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
 
 @app.get("/collections/{slug}/map")

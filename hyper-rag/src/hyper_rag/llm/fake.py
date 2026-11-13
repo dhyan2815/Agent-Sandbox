@@ -101,6 +101,11 @@ class FakeLLM:
             verdicts.append(entry)
         return json.dumps({"verdicts": verdicts})
 
+    def _outline(self, question: str, answer: str) -> str:
+        # The question as a hook, each sentence of the answer as a point.
+        points = [f"- {s}" for s in split_sentences(strip_citations(answer))[:5]]
+        return "\n".join([question, "", *points, "", "What has your experience been?"])
+
     def _synthesize(self, passage) -> str:
         # The longest sentence of the passage body, turned into a question about itself.
         body = passage.text.split("\n", 1)[-1]

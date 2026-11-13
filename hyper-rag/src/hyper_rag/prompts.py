@@ -18,7 +18,7 @@ REFUSAL_MESSAGE = "I can't answer that from the available sources."
 @dataclass(frozen=True)
 class Prompt:
     task: str  # route | grade | rewrite | generate | check | judge | condense | synthesize
-    #           | summarize | claims | verify
+    #           | summarize | claims | verify | outline
     system: str
     user: str
     max_tokens: int = 400
@@ -220,4 +220,23 @@ def verify_claims_prompt(items: list[tuple[str, list[Chunk]]]) -> Prompt:
         "\n\n".join(blocks),
         max_tokens=60 + 40 * len(items),
         inputs={"items": items},
+    )
+
+
+def post_outline_prompt(question: str, answer: str) -> Prompt:
+    """A LinkedIn post outline from a cited answer (answer-to-artifact export, deck card D6)."""
+    system = (
+        "You turn a sourced answer into an outline for a LinkedIn post. Use only the facts in "
+        "the answer: keep every number, name and date exactly, add no statistic or claim of "
+        "your own. Write plain text in this shape: a first line that works as a hook, a blank "
+        "line, 3 to 5 short points each starting with '- ', a blank line, and a closing line "
+        "that invites a reply. No hashtags, no emojis, no citation numbers."
+    )
+    user = f"Question: {question}\n\nAnswer:\n{answer}"
+    return Prompt(
+        "outline",
+        system,
+        user,
+        max_tokens=500,
+        inputs={"question": question, "answer": answer},
     )

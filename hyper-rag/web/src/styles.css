@@ -294,3 +294,9 @@ span.v-not_found { color: var(--warn); font-weight: 600; }
   .claim.v-contradicted { border-left-color: #f08a80; }
   span.v-contradicted { color: #f08a80; }
 }
+
+/* Export under an answer. */
+.export { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 8px; }
+.export button.quiet { font-size: .8rem; padding: 2px 8px; }
+.export-draft { flex-basis: 100%; margin-top: 6px; }
+.export-draft textarea { width: 100%; resize: vertical; }
