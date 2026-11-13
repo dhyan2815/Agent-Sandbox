@@ -274,7 +274,11 @@ class CollectionStore:
                 "headings": _first_headings(units),
                 "report": report,
             }
-            record["chunks"] = len(self._build_index(slug, record)[0])
+            try:
+                record["chunks"] = len(self._build_index(slug, record)[0])
+            except Exception:
+                self._discard(slug, record)  # no orphaned files for a file that never got listed
+                raise
             record["seconds"] = round(time.monotonic() - started, 2)
 
             # Uploading a file with the name of an existing one replaces it: the usual

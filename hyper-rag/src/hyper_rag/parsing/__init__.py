@@ -4,6 +4,7 @@ One function, `parse_file`, picks the parser from the file extension. Every pars
 returns the same `ParsedFile`, so nothing after this point knows what format it was.
 """
 
+import zipfile
 from pathlib import Path
 
 from hyper_rag.parsing.model import ParsedFile, ParseError, Unit
@@ -37,6 +38,23 @@ SUPPORTED: dict[str, str] = {
     ".tsv": "csv",
 }
 
+# Office files are zip archives. A small upload can expand to gigabytes ("zip bomb"), so the
+# declared uncompressed size is checked before any parser opens the archive.
+MAX_UNZIPPED_MB = 300
+
+
+def _check_archive(path: Path) -> None:
+    try:
+        with zipfile.ZipFile(path) as archive:
+            total = sum(info.file_size for info in archive.infolist())
+    except zipfile.BadZipFile as error:
+        raise ParseError(f"'{path.name}' is not a valid {path.suffix.lower()} file.") from error
+    if total > MAX_UNZIPPED_MB * 1024 * 1024:
+        raise ParseError(
+            f"'{path.name}' expands to more than {MAX_UNZIPPED_MB} MB and was not opened."
+        )
+
+
 _LEGACY = {".doc": ".docx", ".ppt": ".pptx", ".xls": ".xlsx"}
 
 
@@ -61,6 +79,8 @@ def parse_file(path: Path, ocr: Ocr, max_units: int = 300) -> ParsedFile:
         return parse_pdf(path, ocr, max_units)
     if family in ("docx", "pptx", "xlsx"):
         from hyper_rag.parsing import office
+
+        _check_archive(path)
 
         return getattr(office, f"parse_{family}")(path, ocr, max_units)
     if family == "image":

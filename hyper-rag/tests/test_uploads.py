@@ -178,3 +178,34 @@ def test_collections_can_skip_the_router(solar):
     direct = Agent(retriever, FakeLLM(), description, route=False).ask(question)
     assert routed.trace[0] == "route: retrieve" and direct.trace[0].startswith("retrieve:")
     assert direct.text == routed.text and direct.llm_calls == routed.llm_calls - 1
+
+
+def test_zip_bomb_is_refused_before_parsing(store, monkeypatch):
+    import io
+    import zipfile
+
+    from hyper_rag import parsing
+
+    monkeypatch.setattr(parsing, "MAX_UNZIPPED_MB", 1)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("word/document.xml", b"0" * (3 * 1024 * 1024))  # compresses to ~3 KB
+    store.create("Bombs")
+    with pytest.raises(CollectionError, match="expands to more than"):
+        store.add_file("bombs", "bomb.docx", buffer.getvalue())
+    with pytest.raises(CollectionError, match="not a valid"):
+        store.add_file("bombs", "fake.xlsx", b"not a zip")
+    assert store.get("bombs")["files"] == []
+
+
+def test_failed_indexing_leaves_no_orphan_files(store, monkeypatch):
+    store.create("Orphans")
+
+    def boom(*args, **kwargs):
+        raise RuntimeError("embedder down")
+
+    monkeypatch.setattr(store, "_build_index", boom)
+    with pytest.raises(RuntimeError):
+        store.add_file("orphans", "notes.txt", b"Some searchable text about solar panels.")
+    assert list((store.path("orphans") / "files").iterdir()) == []
+    assert list((store.path("orphans") / "parsed").iterdir()) == []
