@@ -474,7 +474,7 @@ async function streamAnswer(path, payload, onEvent) {
   }
 }
 
-const NEXT_STEP = { condense: "deciding whether the documents cover this", route: "searching the documents", retrieve: "checking which passages are relevant", grade: "writing the answer", rewrite: "searching again with a new query", generate: "checking the answer against the sources" };
+const NEXT_STEP = { condense: "searching the documents", route: "searching the documents", retrieve: "checking which passages are relevant", grade: "writing the answer", rewrite: "searching again with a new query", generate: "checking the answer against the sources" };
 
 $("ask-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -487,7 +487,7 @@ $("ask-form").addEventListener("submit", async (event) => {
   const history = turns.filter((t) => t.answer && !t.answer.error && !t.answer.refused).slice(-3)
     .map((t) => ({ question: t.question, answer: t.answer.answer.slice(0, 4000) }));
 
-  const steps = el("ul", { class: "steps" }, [el("li", { class: "working", text: "starting" })]);
+  const steps = el("ul", { class: "steps" }, [el("li", { class: "working", text: "searching the documents" })]);
   const turn = { question, answer: null, node: el("div", { class: "msg bot" }, [steps]) };
   turns.push(turn);
   $("question").value = "";

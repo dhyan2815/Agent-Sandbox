@@ -73,5 +73,12 @@ class FakeLLM:
         if not sentences:
             return json.dumps({})
         sentence = max(sentences, key=len)
-        fact = sentence.rstrip(".!?")
-        return json.dumps({"question": f"{fact}?", "answer": sentence, "fact": fact})
+        words = sentence.rstrip(".!?").split()
+        # The "fact" is the last few words: short and literal, as the prompt demands.
+        return json.dumps(
+            {
+                "question": f"{' '.join(words)}?",
+                "answer": sentence,
+                "fact": " ".join(words[-3:]),
+            }
+        )

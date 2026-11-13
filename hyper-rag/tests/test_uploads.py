@@ -169,3 +169,12 @@ def test_index_is_rebuilt_for_a_different_embedder(solar, settings):
     other = CollectionStore(settings, ocr=StubOcr(), embedder=OtherEmbedder())
     assert len(other.retriever("solar-docs").chunks) == len(solar.retriever("solar-docs").chunks)
     assert (other.path("solar-docs") / "index-hashing-other").is_dir()
+
+
+def test_collections_can_skip_the_router(solar):
+    retriever, description = solar.retriever("solar-docs"), solar.description("solar-docs")
+    question = "How much does the annual service visit cost?"
+    routed = Agent(retriever, FakeLLM(), description).ask(question)
+    direct = Agent(retriever, FakeLLM(), description, route=False).ask(question)
+    assert routed.trace[0] == "route: retrieve" and direct.trace[0].startswith("retrieve:")
+    assert direct.text == routed.text and direct.llm_calls == routed.llm_calls - 1

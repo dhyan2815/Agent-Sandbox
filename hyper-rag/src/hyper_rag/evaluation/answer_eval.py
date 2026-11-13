@@ -125,6 +125,7 @@ def run_answer_eval(
     run_dir: Path,
     configs: tuple[str, ...] = CONFIGS,
     on_progress: Callable[[str], None] = print,
+    route: bool = True,
 ) -> list[dict]:
     """Answer and score every golden question under each configuration. Resumable.
 
@@ -138,6 +139,7 @@ def run_answer_eval(
         description,
         max_rewrites=settings.max_rewrites,
         control_llm=control,
+        route=route,
     )
     summaries = []
     for config in configs:

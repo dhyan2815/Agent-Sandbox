@@ -357,6 +357,7 @@ def collection_ask(
             pack_description=store.description(collection),
             max_rewrites=settings.max_rewrites,
             control_llm=build_llm(settings, "control"),
+            route=False,
         )
         answer = agent.ask(question)
     except (CollectionError, LLMError) as error:

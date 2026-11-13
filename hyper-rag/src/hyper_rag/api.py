@@ -116,6 +116,7 @@ def collection_agent(slug: str) -> Agent:
         pack_description=store.description(slug),
         max_rewrites=get_settings().max_rewrites,
         control_llm=control,
+        route=False,  # see Agent.__init__: the description of an upload is only a guess
     )
 
 

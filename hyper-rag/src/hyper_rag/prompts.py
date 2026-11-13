@@ -152,9 +152,10 @@ def synthesize_prompt(passage: Chunk) -> Prompt:
         "specific question that the passage answers, as a person who has not seen the "
         'passage would ask it: name the subject, never say "the passage" or "the document". '
         "Reply with JSON only: "
-        '{"question": "...", "answer": "<one or two sentences>", '
-        '"fact": "<a short phrase copied word for word from the passage that a correct '
-        'answer must contain, such as a number or a name>"}.'
+        '{"question": "...", "answer": "<one or two sentences>", "fact": "..."}. '
+        "The fact is the one number, name or term (at most four words, copied exactly from "
+        "the passage, never a whole sentence or a table row) that any correct answer must "
+        "contain."
     )
     return Prompt(
         "synthesize",

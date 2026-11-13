@@ -72,7 +72,7 @@ def test_streamed_answer_sends_steps_then_the_answer(client, uploaded):
             json.loads(line[6:]) for line in response.iter_lines() if line.startswith("data: ")
         ]
     assert [e["type"] for e in events[:-1]] == ["step"] * (len(events) - 1)
-    assert events[0]["text"] == "route: retrieve"
+    assert events[0]["text"].startswith("retrieve: ")  # uploads skip the router
     assert events[-1]["type"] == "answer" and "two working days" in events[-1]["answer"]
 
 

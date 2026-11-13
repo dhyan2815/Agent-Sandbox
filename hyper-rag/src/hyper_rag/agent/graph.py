@@ -58,6 +58,7 @@ class Agent:
         max_rewrites: int = 2,
         mode: Mode = "hybrid_rerank",
         control_llm: LLM | None = None,
+        route: bool = True,
     ):
         self.retriever = retriever
         self.llm = llm  # writes the answer
@@ -66,6 +67,13 @@ class Agent:
         self.pack_description = pack_description
         self.max_rewrites = max_rewrites
         self.mode = mode
+        # The router judges scope from a description of the corpus. A pack's description
+        # is written by hand. An uploaded collection's is guessed from file names and
+        # headings, and a router working from that guess declined a question whose
+        # answer sat on a scanned page it could not know about. Collections therefore
+        # skip routing: retrieval and grading decide, at the cost of more calls on
+        # questions that really are out of scope.
+        self.route = route
         self.graph = self._build_graph()
 
     # --- nodes ------------------------------------------------------------------
@@ -188,7 +196,7 @@ class Agent:
         graph.add_node("check", self._check)
 
         graph.add_edge(START, "condense")
-        graph.add_edge("condense", "route")
+        graph.add_edge("condense", "route" if self.route else "retrieve")
         graph.add_conditional_edges(
             "route", self._after_route, {"retrieve": "retrieve", "decline": END}
         )

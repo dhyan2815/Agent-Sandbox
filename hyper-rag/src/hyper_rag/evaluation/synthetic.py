@@ -31,6 +31,7 @@ from hyper_rag.uploads import CollectionStore
 
 # Passages shorter than this rarely hold a fact worth asking about (titles, captions).
 MIN_PASSAGE_CHARS = 200
+MAX_FACT_CHARS = 40
 
 
 def pick_passages(chunks: list[Chunk], count: int, seed: int = 0) -> list[Chunk]:
@@ -51,6 +52,23 @@ def pick_passages(chunks: list[Chunk], count: int, seed: int = 0) -> list[Chunk]
             if by_file[file_id] and len(picked) < count:
                 picked.append(by_file[file_id].pop())
     return picked
+
+
+def _usable_fact(fact: str, passage: str) -> bool:
+    """A key fact is checked by exact match, so it has to be short and literal.
+
+    The first live run showed why: the model copied whole sentences and pieces of table
+    rows ("Solar panel | 25") as the fact, and correct answers that reworded them were
+    counted as wrong. Anything longer than a few words is dropped; the question then
+    simply has no exact-match check.
+    """
+    return (
+        bool(fact)
+        and len(fact) <= MAX_FACT_CHARS
+        and len(fact.split()) <= 4
+        and "|" not in fact
+        and contains_fact(passage, fact)
+    )
 
 
 def generate_golden(
@@ -79,7 +97,7 @@ def generate_golden(
                 "relevant_sources": [[chunk.doc_id]],
                 # The model is asked to copy the fact from the passage. Keep it only if
                 # it really is there; a paraphrased "fact" would fail correct answers.
-                "key_facts": [fact] if fact and contains_fact(chunk.text, fact) else [],
+                "key_facts": [fact] if _usable_fact(fact, chunk.text) else [],
                 "source_chunk": chunk.id,
                 "source_title": chunk.title,
             }
@@ -145,6 +163,7 @@ def evaluate_collection(
         run_dir,
         configs=configs,
         on_progress=on_progress,
+        route=False,  # the same agent the collection is asked with
     )
     report = {
         "collection": slug,
