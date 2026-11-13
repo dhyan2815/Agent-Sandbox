@@ -1,6 +1,6 @@
 """HTTP API and the web page.
 
-    GET  /                                   the web UI
+    GET  /                                   the web UI (the React app if built, else /classic)
     POST /ask                                ask a built-in domain pack
     GET/POST   /collections                  list / create a collection of uploads
     POST       /collections/{c}/files        upload a document (parsed and indexed on arrival)
@@ -174,9 +174,34 @@ def logout() -> Response:
 # --- page, health, configuration ---------------------------------------------------------
 
 
+CLASSIC_PAGE = Path(__file__).parent / "static" / "index.html"
+
+
 @app.get("/", include_in_schema=False)
 def index() -> FileResponse:
-    return FileResponse(Path(__file__).parent / "static" / "index.html")
+    """The React app when it has been built (web/dist), otherwise the classic page.
+
+    The build is made by `npm run build` in web/, by the Dockerfile and by CI; it is not
+    committed. Without it, a plain `pip install` still serves a complete UI.
+    """
+    built = get_settings().ui_dir / "index.html"
+    return FileResponse(built if built.is_file() else CLASSIC_PAGE)
+
+
+@app.get("/classic", include_in_schema=False)
+def classic() -> FileResponse:
+    """Today's single-file page, kept until the React app has replaced it everywhere."""
+    return FileResponse(CLASSIC_PAGE)
+
+
+@app.get("/assets/{name}", include_in_schema=False)
+def asset(name: str) -> FileResponse:
+    """The React app's bundled scripts and styles. Their names carry a content hash."""
+    folder = (get_settings().ui_dir / "assets").resolve()
+    path = (folder / name).resolve()
+    if path.parent != folder or not path.is_file():
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(path, headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 @app.get("/health")

@@ -271,6 +271,8 @@ src/hyper_rag/
   chunking.py        heading-aware chunks with overlap
   web.py             polite fetcher (robots.txt, crawl delay, disk copy)
   cli.py, api.py     command line, FastAPI endpoint and web page
+web/                 the React app (Vite + TypeScript); built into web/dist, not committed
+Dockerfile           one image: builds web/, serves it and the API on port 7860
 results/             saved eval outputs that the tables above are copied from
 docs/DECISIONS.md    every design choice, the alternatives and the reason
 ```
@@ -310,7 +312,7 @@ It exercises the whole pipeline, and CI runs it on every push, but its numbers m
 plumbing, not answer quality.
 
 ```bash
-pytest                              # 83 tests, about 10 seconds
+pytest                              # 121 tests, about 10 seconds
 hyper-rag eval sample --offline     # retrieval + answer ablation on the sample pack
 ```
 
@@ -330,6 +332,32 @@ hyper-rag eval-retrieval payments   # retrieval metrics, no LLM calls
 hyper-rag eval payments --save      # full ablation; resumable if a rate limit stops it
 uvicorn hyper_rag.api:app           # web page at http://127.0.0.1:8000, API docs at /docs
 ```
+
+### 3. The web app (React)
+
+`uvicorn` serves the React app from `web/dist` once it is built, and the single-file classic
+page until then (it stays at `/classic` either way). Building needs Node 24:
+
+```bash
+cd web && npm ci && npm run build && cd ..   # typecheck + production build into web/dist
+uvicorn hyper_rag.api:app                    # now serves the React app
+
+cd web && npm run dev                        # or: live reload on :5173, API proxied to :8000
+npm test                                     # unit tests
+BASE_URL=http://127.0.0.1:8000 npm run e2e   # every UI flow in a real browser (offline server)
+```
+
+### 4. Docker (and a Hugging Face Space)
+
+```bash
+docker build -t hyper-rag .
+docker run -p 7860:7860 -e GROQ_API_KEY=... -e HYPER_RAG_PASSWORD=... hyper-rag
+```
+
+The image builds the React app, runs as user 1000 on port 7860 and starts uvicorn with
+`--proxy-headers`, which is what a Hugging Face Space (Docker SDK) expects. Put keys and the
+password in the Space's secrets. Its disk is wiped on restart, so uploads do not survive one
+yet; plan v2 phase 2 moves them to R2.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/ask -H "Content-Type: application/json" \

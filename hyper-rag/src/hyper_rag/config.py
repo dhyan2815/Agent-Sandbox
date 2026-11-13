@@ -71,6 +71,7 @@ class Settings(BaseSettings):
     # Paths
     packs_dir: Path = Path("packs")
     data_dir: Path = Path("data")
+    ui_dir: Path = Path("web/dist")  # the built React app; missing = serve the classic page
 
     @classmethod
     def settings_customise_sources(

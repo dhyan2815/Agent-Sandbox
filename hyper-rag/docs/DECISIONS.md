@@ -299,3 +299,29 @@ the rest of the window. Behind a proxy that address is the proxy's unless uvicor
 Lax cookies are not sent inside a cross-site iframe, so the app is opened at its own URL
 (on Hugging Face, the `*.hf.space` address), not embedded in the Space page.
 
+## 29. The React app is built, not committed, and the classic page stays as a fallback
+
+Phase 0's other half: `web/` is React 19 + Vite + TypeScript with TanStack Query for server
+state, the stack plan v2 names for the visualizer. It reproduces the classic page's flows and
+look (the stylesheet is copied verbatim), and adds nothing new yet: the event stream is
+there for phase 3, but nothing on screen uses it.
+
+The build output is not committed (the user's choice): the Dockerfile and CI build it. So
+that `pip install` alone still gives a working app, `/` serves `web/dist/index.html` when it
+exists and the classic page otherwise; the classic page also stays at `/classic` until the
+React app has replaced it everywhere. Assets are served by a route that refuses any name
+resolving outside `web/dist/assets`, with a year-long immutable cache (names carry a hash).
+
+Checked: a Playwright script (`web/e2e/flows.mjs`, also run in CI) logs in, creates a
+collection, uploads, asks, follows up, opens a citation, runs the evaluation, asks a pack,
+removes a file, deletes the collection and logs out. It passed against uvicorn and against
+the Docker image running as user 1000. Screenshots of the two pages answering the same
+question match, and the app has no horizontal scroll at 390 px.
+
+Unit tests cover only the pure parts (the SSE reader, the answer parser) with vitest in
+Node. jsdom and Testing Library were dropped: npm 10 crashed resolving vitest's optional
+peers with them, and the browser script covers the components better. The lockfile is
+written by the npm in `node:24` (11.19.1, recorded as `packageManager`); an older npm 11
+left out optional packages and `npm ci` in the image refused the lockfile, which the Docker
+build caught before CI would have.
+

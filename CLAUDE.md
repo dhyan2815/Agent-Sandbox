@@ -25,7 +25,8 @@ The repository currently contains no source files. When code is added, consider 
 - **Tests**: `pytest` (single test: `pytest tests/test_agent.py::test_name`). Tests need no API key or network.
 - **Offline eval**: `hyper-rag ingest sample --offline && hyper-rag eval sample --offline`
 - **Login**: off unless `HYPER_RAG_PASSWORD` is set (in `.env` or host secrets). Storage goes through `src/hyper_rag/stores/` interfaces; engine events through `events.py` (plan v2 phase 0).
-- Design choices are logged in `hyper-rag/docs/DECISIONS.md`; never commit `hyper-rag/data/` or `.env`.
+- **Web app** (`hyper-rag/web/`, Node 24): `npm ci && npm run build` (typecheck + build into `web/dist`, served by uvicorn; not committed), `npm test`, `BASE_URL=... npm run e2e`. Docker: `docker build -t hyper-rag .` from `hyper-rag/`.
+- Design choices are logged in `hyper-rag/docs/DECISIONS.md`; never commit `hyper-rag/data/` or `.env` or `hyper-rag/web/dist/`.
 
 ## Repository‑Specific Rules
 - No `.cursor` or Copilot rule files are present. When such files are added, summarize the most important directives here.
