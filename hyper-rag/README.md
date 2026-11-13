@@ -312,7 +312,7 @@ It exercises the whole pipeline, and CI runs it on every push, but its numbers m
 plumbing, not answer quality.
 
 ```bash
-pytest                              # 0 tests, about a minute
+pytest                              # 184 tests, about a minute
 hyper-rag eval sample --offline     # retrieval + answer ablation on the sample pack
 ```
 
