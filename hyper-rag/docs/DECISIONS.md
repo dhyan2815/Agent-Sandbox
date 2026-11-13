@@ -472,6 +472,14 @@ write a summary answer, so the live run (`results/phase5-book-live.md`) is the c
 that counts. Short documents get no summaries: on the 3-page test PDF a summary outranked
 the page itself.
 
+Live, with Groq's models answering (`results/phase5-book-live.md`, one run): fact questions
+1.0 before and after; topic terms in the answers to the eight whole-book questions 0.34
+before, 0.54 after; model calls per question 3.2 before, 3.5 after (the chapter summaries
+included). The gain is uneven: "compare chapters 2 and 3" went from 0 to 0.63 and the
+overall question from 0 to 0.2, while two single-chapter questions scored lower than
+before (chapter 7: 1.0 to 0.5). One run per configuration, so single questions are noise;
+the direction is the result.
+
 Reading on demand (A5): the X-ray keeps each page's text layer, searchable with BM25 the
 moment a file is uploaded. While files are being read, a question's best pages move their
 windows to the front of the queue and the question waits up to 15 seconds for them
