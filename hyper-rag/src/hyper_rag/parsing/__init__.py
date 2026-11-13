@@ -58,7 +58,7 @@ def _check_archive(path: Path) -> None:
 _LEGACY = {".doc": ".docx", ".ppt": ".pptx", ".xls": ".xlsx"}
 
 
-def parse_file(path: Path, ocr: Ocr, max_units: int = 300) -> ParsedFile:
+def parse_file(path: Path, ocr: Ocr, max_units: int | None = None) -> ParsedFile:
     """Parse one file. Raises ParseError if the format is unsupported or the file is unreadable."""
     suffix = path.suffix.lower()
     family = SUPPORTED.get(suffix)
@@ -82,7 +82,8 @@ def parse_file(path: Path, ocr: Ocr, max_units: int = 300) -> ParsedFile:
 
         _check_archive(path)
 
-        return getattr(office, f"parse_{family}")(path, ocr, max_units)
+        # Slides and sheets have no page budget of their own; 10,000 only stops a runaway file.
+        return getattr(office, f"parse_{family}")(path, ocr, max_units or 10_000)
     if family == "image":
         from hyper_rag.parsing.image import parse_image
 

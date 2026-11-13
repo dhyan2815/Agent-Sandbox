@@ -49,7 +49,9 @@ class BM25LexicalStore:
 
     def remove(self, namespace: str, file_id: str) -> None:
         with self._lock:
-            self._files.get(namespace, {}).pop(file_id, None)
+            files = self._files.get(namespace, {})
+            for group in [g for g in files if _belongs(g, file_id)]:
+                del files[group]
             self._built.pop(namespace, None)
 
     def drop(self, namespace: str) -> None:
@@ -73,3 +75,8 @@ class BM25LexicalStore:
         if index is None:
             return []
         return [(ids[row], score) for row, score in index.search(query, k)]
+
+
+def _belongs(group: str, file_id: str) -> bool:
+    """A file's vectors are stored in groups: the file id, or "<file id>#<window>"."""
+    return group == file_id or group.startswith(file_id + "#")

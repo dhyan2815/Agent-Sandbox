@@ -3,7 +3,12 @@
     GET  /                                   the web UI (the React app if built, else /classic)
     POST /ask                                ask a built-in domain pack
     GET/POST   /collections                  list / create a collection of uploads
-    POST       /collections/{c}/files        upload a document (parsed and indexed on arrival)
+    POST       /collections/{c}/files        upload a small document (read before the reply)
+    POST       /collections/{c}/uploads      start a resumable upload (big files; see background.py)
+    PUT/GET    /collections/{c}/uploads/{id} send a part at ?offset= / ask how much arrived
+    POST       /collections/{c}/uploads/{id}/complete   finish it; reading runs in the background
+    GET        /collections/{c}/files/{id}/events      reading progress (server-sent events)
+    GET        /collections/{c}/files/{id}/pages       per-page route and progress (page grid)
     POST       /collections/{c}/ask          answer with citations
     POST       /collections/{c}/ask/stream   the same, streamed: typed events, steps, the answer
     GET        /collections/{c}/runs         saved event logs of recent answers (for replay)
@@ -19,19 +24,24 @@ Login is off unless HYPER_RAG_PASSWORD is set. Without it, anyone who can reach 
 read and delete the uploaded documents, which is fine on your own machine and nowhere else.
 """
 
+import asyncio
 import json
 import os
+import shutil
 import threading
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
+from contextlib import asynccontextmanager
 from functools import lru_cache
 from pathlib import Path
 
-from fastapi import FastAPI, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, Form, HTTPException, Query, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, RedirectResponse, Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 from hyper_rag import auth
 from hyper_rag.agent import Agent, Answer
+from hyper_rag.background import IngestWorker, OffsetMismatch, UploadSessions
 from hyper_rag.config import Settings, load_settings
 from hyper_rag.llm import LLM, LLMError, build_llm
 from hyper_rag.packs import list_packs
@@ -40,7 +50,16 @@ from hyper_rag.service import build_agent
 from hyper_rag.stores import JobStore, build_job_store
 from hyper_rag.uploads import CollectionError, CollectionNotFound, CollectionStore
 
-app = FastAPI(title="Hyper-RAG", version="0.2.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+    # Files a previous run left half-read are picked up again, from their last window.
+    await run_in_threadpool(lambda: get_worker().resume())
+    yield
+    get_worker().shutdown()
+
+
+app = FastAPI(title="Hyper-RAG", version="0.3.0", lifespan=lifespan)
 
 
 class Turn(BaseModel):
@@ -76,6 +95,9 @@ class AskResponse(BaseModel):
     trace: list[str]
     llm_calls: int
     run_id: str | None = None  # collections only: the saved events, at /runs/{run_id}
+    # Files still being read when the question was asked: the answer only searched what
+    # had been read so far (pages_done of pages_total).
+    reading: list[dict] = Field(default_factory=list)
 
 
 class NewCollection(BaseModel):
@@ -109,6 +131,21 @@ def get_store() -> CollectionStore:
 @lru_cache
 def get_jobs() -> JobStore:
     return build_job_store(get_settings())
+
+
+@lru_cache
+def get_worker() -> IngestWorker:
+    return IngestWorker(get_store(), get_jobs(), get_settings().ingest_workers)
+
+
+@lru_cache
+def get_uploads() -> UploadSessions:
+    return UploadSessions(get_store(), get_settings().data_dir / "incoming" / "resumable")
+
+
+class NewUpload(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    size: int = Field(gt=0)
 
 
 @lru_cache
@@ -271,6 +308,8 @@ def delete_collection(slug: str) -> None:
     except CollectionError as error:
         raise _http_error(error) from error
     get_jobs().forget("eval", slug)
+    # The evaluation's working files live in a local folder whatever the blob store is.
+    shutil.rmtree(get_store().path(slug), ignore_errors=True)
 
 
 # --- files -------------------------------------------------------------------------------
@@ -278,13 +317,129 @@ def delete_collection(slug: str) -> None:
 
 @app.post("/collections/{slug}/files", status_code=201)
 def upload_file(slug: str, file: UploadFile) -> dict:
-    """Upload one document. The reply is its record, including the parse report."""
+    """Upload one small document. The reply is its record, including the parse report.
+
+    The upload is copied to disk in blocks, never held in memory whole; a file over the
+    direct-upload limit is refused before it is read. Big files use /uploads instead.
+    """
+    store = get_store()
     limit = get_settings().max_upload_mb * 1024 * 1024
-    data = file.file.read(limit + 1)  # one byte past the limit is enough to know it is too big
+    name = file.filename or "upload"
     try:
-        return get_store().add_file(slug, file.filename or "upload", data)
+        store.get(slug)
+        too_big = CollectionError(
+            f"'{Path(name).name}' is larger than the {get_settings().max_upload_mb} MB "
+            "direct upload limit. Larger files are sent in parts (resumable upload)."
+        )
+        if file.size is not None and file.size > limit:
+            raise too_big
+        path = store.incoming_path()
+        with path.open("wb") as handle:
+            copied = 0
+            while block := file.file.read(1024 * 1024):
+                copied += len(block)
+                if copied > limit:
+                    break
+                handle.write(block)
+        if copied > limit:
+            path.unlink(missing_ok=True)
+            raise too_big
+        return store.add_path(slug, name, path)
     except CollectionError as error:
         raise _http_error(error) from error
+
+
+@app.post("/collections/{slug}/uploads", status_code=201)
+def start_upload(slug: str, request: NewUpload) -> dict:
+    try:
+        return get_uploads().create(slug, request.name, request.size)
+    except CollectionError as error:
+        raise _http_error(error) from error
+
+
+@app.get("/collections/{slug}/uploads/{upload_id}")
+def upload_status(slug: str, upload_id: str) -> dict:
+    try:
+        return get_uploads().status(slug, upload_id)
+    except CollectionError as error:
+        raise _http_error(error) from error
+
+
+@app.put("/collections/{slug}/uploads/{upload_id}")
+async def upload_part(
+    slug: str, upload_id: str, request: Request, offset: int = Query(ge=0)
+) -> Response:
+    """Append the next part. 409 with the expected offset if it does not follow on."""
+    limit = get_uploads().part_size
+    declared = request.headers.get("content-length")
+    if declared is not None and int(declared) > limit:
+        raise HTTPException(status_code=413, detail="This part is larger than allowed.")
+    body = await request.body()  # one part, at most upload_part_mb
+    try:
+        status = await run_in_threadpool(get_uploads().append, slug, upload_id, offset, [body])
+    except OffsetMismatch as error:
+        return Response(
+            json.dumps({"detail": str(error), "received": error.received}),
+            status_code=409,
+            media_type="application/json",
+        )
+    except CollectionError as error:
+        raise _http_error(error) from error
+    return Response(json.dumps(status), media_type="application/json")
+
+
+@app.post("/collections/{slug}/uploads/{upload_id}/complete", status_code=202)
+def complete_upload(slug: str, upload_id: str) -> dict:
+    """The file is stored and listed as "queued"; reading it runs in the background."""
+    try:
+        record = get_uploads().complete(slug, upload_id)
+    except CollectionError as error:
+        raise _http_error(error) from error
+    if not record.get("duplicate"):
+        get_worker().submit(slug, record["id"])
+    return record
+
+
+@app.get("/collections/{slug}/files/{file_id}/pages")
+def file_pages(slug: str, file_id: str) -> dict:
+    try:
+        return get_store().pages(slug, file_id)
+    except CollectionError as error:
+        raise _http_error(error) from error
+
+
+@app.get("/collections/{slug}/files/{file_id}/events")
+async def file_events(slug: str, file_id: str) -> StreamingResponse:
+    """Server-sent events while a file is read: its record each time it changes, until
+    it is ready or failed. {"type": "progress", ...record} then {"type": "end", ...}."""
+    store = get_store()
+    try:
+        store.file_record(slug, file_id)
+    except CollectionError as error:
+        raise _http_error(error) from error
+
+    async def events() -> AsyncIterator[str]:
+        last = None
+        while True:
+            try:
+                record = await run_in_threadpool(store.file_record, slug, file_id)
+            except CollectionError:
+                yield f"data: {json.dumps({'type': 'end', 'status': 'removed'})}\n\n"
+                return
+            seen = (record.get("status"), record.get("pages_done"), record.get("windows_done"))
+            if seen != last:
+                last = seen
+                yield f"data: {json.dumps({'type': 'progress', **record})}\n\n"
+            if record.get("status") in ("ready", "failed"):
+                yield f"data: {json.dumps({'type': 'end', 'status': record['status']})}\n\n"
+                return
+            await asyncio.sleep(0.5)
+
+    return StreamingResponse(
+        events(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.delete("/collections/{slug}/files/{file_id}", status_code=204)
@@ -345,6 +500,12 @@ def _answer_events(
     """Run the agent and save its run. Yields ("event", dict), ("step", str), and last
     ("answer", the answer's dict with its run_id)."""
     events: list[dict] = []
+    reading = get_store().coverage(slug)
+    if reading:
+        # Honest about a half-read collection: only the pages read so far were searched.
+        coverage = {"t": "q.coverage", "reading": reading}
+        events.append(coverage)
+        yield "event", coverage
     for kind, payload in agent.ask_events(request.question, _history(request)):
         if kind == "event":
             events.append(payload)
@@ -354,6 +515,7 @@ def _answer_events(
         else:
             assert isinstance(payload, Answer)
             body = payload.to_dict()
+            body["reading"] = reading
             body["run_id"] = get_store().save_run(slug, {"answer": body, "events": events})
             yield "answer", body
 

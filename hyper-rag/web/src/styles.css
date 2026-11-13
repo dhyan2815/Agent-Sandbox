@@ -140,3 +140,9 @@ mark { background: var(--mark); color: var(--mark-ink); border-radius: 3px; padd
   header.top, #messages, #composer, .pad, .banner { padding-left: 16px; padding-right: 16px; }
   .top-row { flex-wrap: wrap; }
 }
+
+/* --- reading progress (plan v2 phase 1) --- */
+tr.reading td { white-space: normal; vertical-align: top; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); margin-top: 6px; overflow: hidden; max-width: 420px; }
+.bar span { display: block; height: 100%; background: var(--accent); transition: width .4s ease; }
+@media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }

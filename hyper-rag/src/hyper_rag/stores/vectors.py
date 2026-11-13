@@ -1,8 +1,8 @@
 """Vector storage: chunk embeddings per collection, searchable by cosine similarity.
 
 A namespace is one collection under one embedding model (vectors from different models
-are not comparable). Inside it, vectors are added and removed a whole file at a time,
-because that is how uploads change a collection.
+are not comparable). Inside it, vectors are added in groups (one window of a file's pages,
+named "<file id>#w00003") and removed a whole file at a time.
 
 Today's implementation keeps the matrices in memory and scans them exactly, the same
 search the packs use (`DenseIndex`). The hosted one (plan v2, A7) is a Qdrant collection
@@ -26,7 +26,9 @@ class VectorStore(Protocol):
         """Store one file's vectors (row i belongs to chunk_ids[i]), replacing earlier ones."""
         ...
 
-    def remove(self, namespace: str, file_id: str) -> None: ...
+    def remove(self, namespace: str, file_id: str) -> None:
+        """Remove the file's groups: `file_id` itself and every "file_id#..." group."""
+        ...
 
     def drop(self, namespace: str) -> None: ...
 
@@ -59,7 +61,9 @@ class NumpyVectorStore:
 
     def remove(self, namespace: str, file_id: str) -> None:
         with self._lock:
-            self._files.get(namespace, {}).pop(file_id, None)
+            files = self._files.get(namespace, {})
+            for group in [g for g in files if _belongs(g, file_id)]:
+                del files[group]
             self._stacked.pop(namespace, None)
 
     def drop(self, namespace: str) -> None:
@@ -82,3 +86,8 @@ class NumpyVectorStore:
         if index is None:
             return []
         return [(ids[row], score) for row, score in index.search(query_vector, k)]
+
+
+def _belongs(group: str, file_id: str) -> bool:
+    """A file's vectors are stored in groups: the file id, or "<file id>#<window>"."""
+    return group == file_id or group.startswith(file_id + "#")

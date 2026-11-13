@@ -21,6 +21,15 @@ export interface FileReport {
   warnings: string[];
 }
 
+export interface XRaySummary {
+  pages: number;
+  routes: Record<string, number>;
+  estimate_seconds: number;
+  boilerplate_lines: number;
+  outline_entries: number;
+  warning?: string;
+}
+
 export interface FileRecord {
   id: string;
   name: string;
@@ -28,10 +37,25 @@ export interface FileRecord {
   kind: string;
   size: number;
   chunks: number;
-  seconds: number;
-  report: FileReport;
+  seconds?: number;
+  report: FileReport | null;
+  status?: "queued" | "reading" | "ready" | "failed";
+  pages_total?: number | null;
+  pages_done?: number;
+  windows_total?: number | null;
+  windows_done?: number;
+  xray?: XRaySummary | null;
+  error?: string | null;
   duplicate?: boolean;
   replaced?: boolean;
+}
+
+export interface Reading {
+  file_id: string;
+  name: string;
+  status: string;
+  pages_done: number;
+  pages_total: number | null;
 }
 
 export interface Collection {
@@ -60,6 +84,7 @@ export interface AnswerBody {
   trace: string[];
   llm_calls: number;
   run_id?: string | null;
+  reading?: Reading[];
 }
 
 export interface Span {
@@ -177,4 +202,52 @@ export async function streamAnswer(
     if (done) break;
     for (const message of read(decoder.decode(value, { stream: true }))) onMessage(message);
   }
+}
+
+/** Files that are still being read: the collection list should keep refreshing. */
+export const isReading = (file: FileRecord) => file.status === "queued" || file.status === "reading";
+
+interface UploadSession {
+  id: string;
+  received: number;
+  size: number;
+  part_size: number;
+}
+
+/**
+ * Send a file in parts (resumable upload). A failed part is retried after asking the
+ * server how much it has, so a dropped connection resumes instead of starting over.
+ */
+export async function uploadResumable(
+  slug: string,
+  file: File,
+  onProgress: (fraction: number) => void,
+): Promise<FileRecord> {
+  const session = await postJson<UploadSession>(`/collections/${slug}/uploads`, {
+    name: file.name,
+    size: file.size,
+  });
+  const url = `/collections/${slug}/uploads/${session.id}`;
+  let offset = session.received;
+  let failures = 0;
+  while (offset < file.size) {
+    const part = file.slice(offset, offset + session.part_size);
+    try {
+      const response = await fetch(`${url}?offset=${offset}`, { method: "PUT", body: part });
+      toLogin(response);
+      if (response.status === 409) {
+        offset = (await response.json()).received; // the server already has more (or less)
+        continue;
+      }
+      if (!response.ok) throw new ApiError(await errorText(response));
+      offset = (await response.json()).received;
+      failures = 0;
+      onProgress(offset / file.size);
+    } catch (error) {
+      if (error instanceof ApiError || ++failures > 5) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1000 * failures));
+      offset = (await api<UploadSession>(url)).received; // resume where the server is
+    }
+  }
+  return api<FileRecord>(`${url}/complete`, { method: "POST" });
 }

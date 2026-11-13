@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { plural } from "./answer";
-import { type AnswerBody, type Citation, type Collection, type Config, type Source, api } from "./api";
+import { type AnswerBody, type Citation, type Collection, type Config, type Source, api, isReading } from "./api";
 import { ChatView, type Turn, askQuestion } from "./components/ChatView";
 import { EvalView } from "./components/EvalView";
 import { FilesView } from "./components/FilesView";
@@ -23,6 +23,9 @@ export function App() {
   const collections = useQuery({
     queryKey: ["collections"],
     queryFn: async () => (await api<{ collections: Collection[] }>("/collections")).collections,
+    // While any file is being read, keep the list (and its progress) fresh.
+    refetchInterval: (query) =>
+      query.state.data?.some((c) => c.files.some(isReading)) ? 1500 : false,
   });
   const refreshCollections = useCallback(
     () => client.invalidateQueries({ queryKey: ["collections"] }),

@@ -97,6 +97,19 @@ function BotMessage({ turn, onCite }: { turn: Turn; onCite: (c: Citation) => voi
     <div className="msg bot">
       <AnswerText body={body} onCite={onCite} />
       {body.refused && <p className="note">{reason.replace(/^decline: /, "Why: ")}</p>}
+      {body.reading && body.reading.length > 0 && (
+        <p className="note reading-note">
+          Still reading:{" "}
+          {body.reading
+            .map((r) =>
+              r.pages_total
+                ? `${r.name} (searched pages 1–${r.pages_done.toLocaleString()} of ${r.pages_total.toLocaleString()})`
+                : `${r.name} (not searched yet)`,
+            )
+            .join("; ")}
+          . Ask again when it is done for a complete answer.
+        </p>
+      )}
       {body.citations.length > 0 && (
         <div className="sources">
           {body.citations.map((c) => (

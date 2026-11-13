@@ -189,3 +189,58 @@ MAKERS = {
 def make_all(folder: Path) -> list[Path]:
     folder.mkdir(parents=True, exist_ok=True)
     return [maker(folder / name) for name, maker in MAKERS.items()]
+
+
+def make_book(
+    path: Path,
+    pages: int = 40,
+    blank_every: int = 0,
+    repeat_page: int = 0,
+    changed: dict[int, str] | None = None,
+) -> Path:
+    """A long PDF: a running header and "Page n of N" footer on every page, a chapter
+    heading every ten pages, and one fact per page that only that page states.
+
+    blank_every adds an empty page after every n pages; repeat_page appends an exact copy
+    of that page at the end. Both are what the X-ray pass should skip.
+    """
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    width, height = A4
+    pdf = canvas.Canvas(str(path), pagesize=A4)
+    total = pages + (pages // blank_every if blank_every else 0) + (1 if repeat_page else 0)
+    printed = 0
+
+    def page(number: int) -> None:
+        nonlocal printed
+        printed += 1
+        pdf.setFont("Helvetica", 8)
+        pdf.drawString(60, height - 40, "Northwind Solar field manual - internal edition")
+        pdf.drawString(width / 2 - 30, 30, f"Page {printed} of {total}")
+        y = height - 90
+        if number % 10 == 1:
+            pdf.setFont("Helvetica-Bold", 18)
+            pdf.drawString(60, y, f"Chapter {number // 10 + 1}: Site work part {number // 10 + 1}")
+            y -= 36
+        pdf.setFont("Helvetica", 10)
+        fact = f"Fact {number}: the inspection code for panel row {number} is NW-{number * 7:04d}."
+        lines = [
+            (changed or {}).get(number, fact),
+            "Crews log every inspection in the site book before leaving the roof.",
+            f"Row {number} uses mounting rails cut to {100 + number} centimetres.",
+        ]
+        for line in lines:
+            pdf.drawString(60, y, line)
+            y -= 16
+        pdf.showPage()
+
+    for number in range(1, pages + 1):
+        page(number)
+        if blank_every and number % blank_every == 0:
+            printed += 1
+            pdf.showPage()  # an empty page
+    if repeat_page:
+        page(repeat_page)
+    pdf.save()
+    return path

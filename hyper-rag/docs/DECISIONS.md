@@ -325,3 +325,99 @@ written by the npm in `node:24` (11.19.1, recorded as `packageManager`); an olde
 left out optional packages and `npm ci` in the image refused the lockfile, which the Docker
 build caught before CI would have.
 
+
+## 30. Big files: an X-ray pass, then windows of 32 pages, each a checkpoint
+
+Plan v2 phase 1. Every PDF is first X-rayed with pypdfium2 (`parsing/xray.py`): per page,
+the text layer's size, the share covered by large images, vector paths (a table hint), a
+two-column test and a content hash. Nothing is rendered and no image is decoded, so the
+pass costs milliseconds per page even on a scanned book. Each page gets a route: simple
+pages are read from pdfium's text objects (line positions and font sizes, so headings
+survive); pages with ruled lines, two columns, images over 1% of the page or no text layer
+go to the existing pdfplumber parser; blank pages and exact copies are skipped. The tests
+on the original fixtures pass unchanged with these routes.
+
+Running headers and footers are found by position (top or bottom tenth of the page) and
+removed only if they repeat word for word on most pages, or are short and numbered like
+the pages ("Page 12 of 900"). The first version blanked every number and matched any line
+in the margin; on a test file it deleted "Plate 7" and "Fact 7: ..." from every page,
+because those have the same shape everywhere. A test now keeps them.
+
+Reading then goes 32 pages at a time: parse, chunk, embed, write the window's units and
+index, register it with the search stores. The window's chunk file is written last and is
+the checkpoint: a resumed job skips every window that has one, and search sees a window the
+moment it is written. Units are stored per window, so a citation on page 900 reads one
+window, not the book. The store's lock now only covers metadata writes; parsing and
+embedding run outside it, so questions and other uploads never wait for a big file (a test
+holds a book mid-window and asks a question meanwhile).
+
+The 300-page cap is gone. Budgets replace it: 2 GB per file, 9 GB of originals and 20,000
+pages per collection, all settings. Uploading a file with an existing name keeps the old
+one searchable until the new one is ready.
+
+## 31. Resumable uploads through the API, and jobs that resume at start-up
+
+The plan's option 2 (parts through the API) was built rather than direct-to-R2, because R2
+comes with phase 2 and the API path works on any host. The protocol is three calls, not tus:
+start (name, size: checked against types and budgets before a byte is sent), PUT each 8 MB
+part at its offset (a wrong offset gets 409 with the right one, which is how a client
+resumes), complete. Parts are appended to a file on disk; the server never holds more than
+one part. The direct upload endpoint also stopped reading whole files into memory.
+
+Ingestion runs on a thread pool. At start-up, every file listed as queued or reading is
+picked up again and continues from its last committed window: the state that matters is
+the files and their checkpoints, not a job queue, so nothing extra has to survive a
+restart. Windows can be parsed in worker processes (`ingest_processes`), which also avoids
+pdfium's lack of thread safety; in-process, every pdfium call holds one lock, including
+the page preview endpoint.
+
+Answers given while a file is still being read carry `reading` (which files, how many
+pages searched) and a `q.coverage` event, and the UI says so under the answer.
+
+Measured (`scripts/bench_big_files.py`, `results/phase1-big-files.md`, 4 vCPU): a 1,282 MB
+PDF of 768 photo pages was read in 57 s with the reading process peaking at 175 MB, and a
+320 MB file of the same kind at 167 MB: memory follows the window, not the file. Two bugs
+were found on the way. The X-ray kept pdfium's whole document loaded (1,331 MB for this
+file) until it reopened the document every 32 pages (96 MB). pdfminer's reference cycles
+then grew the reading process to 730 MB until a garbage collection and `malloc_trim` ran
+after each window. A first measurement also reported 4,150 MB for every row because
+`ru_maxrss` survives `exec` on Linux; the script now reads `VmHWM`. Killed with SIGKILL
+after 8 of 24 windows, the file resumed at window 8 with no window committed twice, and a
+question asked from another process meanwhile searched the 256 pages read so far.
+
+## 32. Hosted stores: Qdrant for vectors and keywords, S3 for files, a copied job store
+
+`stores/qdrant.py` keeps each collection's vectors in a Qdrant collection with int8 scalar
+quantization in RAM and the full vectors on disk; searches rescore the int8 shortlist with
+the full vectors. On a real Qdrant 1.20 server with 3,000 random 384-dimension vectors, the
+top 10 matched the exact scan in all 50 queries. Keywords are a second Qdrant collection of
+sparse vectors with Qdrant's IDF modifier: BM25 with a fixed average length (Qdrant keeps
+IDF statistics, not document lengths), updated in place instead of rebuilt per upload.
+Dense and sparse live in separate collections so the two interfaces stay independent; the
+app still fuses ranks and runs the cross-encoder itself, as decision 3 requires.
+
+`stores/s3.py` speaks S3, which is what Cloudflare R2 is. Parsers need files on disk, so an
+object is downloaded once into a cache folder; originals are named by content hash, so the
+cache cannot go stale. An upload moved into the store also stays as the cached copy.
+
+The job store copies its SQLite file to the blob store (an online backup, at most every 30
+seconds and on close) and restores it on a fresh disk. Unfinished files do not depend on it:
+they resume from their own checkpoints in the blob store.
+
+Tests run the same code against Qdrant's in-process mode and moto's S3 server, including a
+"wiped disk" case: a second store with an empty local folder finds the collection, answers
+the same question with the same passages, and renders a cited page.
+
+The plan's direct-to-R2 browser upload (A1 option 1) was not built: parts go through the
+API (decision 31), which works on any host, and the API stages each finished file into R2.
+Its cost is that upload bytes cross the app server once.
+
+## 33. Page and embedding caches
+
+A PDF page's parsed text is cached in the blob store under its X-ray content hash (text
+without running lines, plus its images' raw bytes), route, OCR engine, a fingerprint of the
+running lines removed, and a parser version. Passages are embedded once per text and model
+(a local SQLite file; losing it costs time only). In the test, version 2 of a 40-page
+manual with one rewritten page parsed exactly that page; a resumed job never parses a page
+twice either. The hash ignores page numbers in headers and footers, so pages that moved
+because an earlier page was inserted are still recognised as unchanged.

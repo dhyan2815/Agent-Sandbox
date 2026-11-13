@@ -53,9 +53,11 @@ try {
 
   await page.setInputFiles("#picker", doc);
   await page.waitForSelector("#queue .ok", { timeout: 60_000 });
+  // Uploaded in parts; then read in the background while the table shows progress.
+  await page.waitForSelector("#files-table tbody tr:not(.reading) td.name", { timeout: 60_000 });
   expect((await page.textContent("#files-table")).includes("install-guide.md"), "file listed");
   expect((await page.textContent("#subtitle")).startsWith("1 file"), "header counts the file");
-  step("upload is indexed and its parse report listed");
+  step("resumable upload, background read, parse report listed");
 
   await page.click(".tab[data-tab=chat]");
   await page.fill("#question", QUESTION);

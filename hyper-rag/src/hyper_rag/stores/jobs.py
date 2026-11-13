@@ -150,3 +150,65 @@ class SqliteJobStore:
     def close(self) -> None:
         with self._lock:
             self._db.close()
+
+
+class ReplicatedJobStore(SqliteJobStore):
+    """The SQLite job store, copied to the blob store so it outlives a wiped disk.
+
+    On a free host the disk is gone after a restart. At start-up a missing database is
+    restored from the blob store; after a write, a consistent copy (SQLite's online
+    backup) is uploaded, at most every `every` seconds and once more on close. Jobs are
+    history, not state the app depends on (unfinished files resume from their own
+    checkpoints), so losing the last few seconds of it is acceptable.
+    """
+
+    KEY = "jobs/jobs.sqlite3"
+
+    def __init__(self, path: Path, blobs, every: float = 30.0):
+        self.blobs = blobs
+        self.every = every
+        self._last_copy = 0.0
+        self._dirty = False
+        if not path.exists() and blobs.exists(self.KEY):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(blobs.read_bytes(self.KEY))
+        self.path = path
+        super().__init__(path)
+
+    def _replicate(self, force: bool = False) -> None:
+        import time
+
+        self._dirty = True
+        if not force and time.monotonic() - self._last_copy < self.every:
+            return
+        copy = self.path.with_name(self.path.name + ".copy")
+        with self._lock:
+            target = sqlite3.connect(copy)
+            self._db.backup(target)
+            target.close()
+        self.blobs.write_file(self.KEY, copy, move=True)
+        copy.unlink(missing_ok=True)
+        self._last_copy = time.monotonic()
+        self._dirty = False
+
+    def start(self, kind: str, scope: str) -> dict | None:
+        job = super().start(kind, scope)
+        self._replicate()
+        return job
+
+    def finish(self, job_id: str, result: dict) -> None:
+        super().finish(job_id, result)
+        self._replicate()
+
+    def fail(self, job_id: str, error: str) -> None:
+        super().fail(job_id, error)
+        self._replicate()
+
+    def forget(self, kind: str, scope: str) -> None:
+        super().forget(kind, scope)
+        self._replicate()
+
+    def close(self) -> None:
+        if self._dirty:
+            self._replicate(force=True)
+        super().close()

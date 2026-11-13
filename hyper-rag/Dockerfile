@@ -20,7 +20,7 @@ RUN useradd --create-home --uid 1000 user
 WORKDIR /app
 COPY pyproject.toml README.md config.yaml ./
 COPY src ./src
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir ".[hosted]"
 COPY packs ./packs
 COPY --from=web /web/dist ./web/dist
 # The data folder is the only thing written at run time. A Space's disk is wiped on

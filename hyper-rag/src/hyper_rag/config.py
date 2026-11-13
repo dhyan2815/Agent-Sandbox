@@ -50,17 +50,32 @@ class Settings(BaseSettings):
 
     # Uploaded documents
     ocr: Literal["rapidocr", "none"] = "rapidocr"  # local OCR for images and scanned pages
-    max_upload_mb: int = 25
-    max_units_per_file: int = 300  # pages / slides / sheets read from one file
+    max_upload_mb: int = 25  # direct, one-request uploads; bigger files use resumable uploads
+    max_file_mb: int = 2048  # one file through a resumable upload
+    max_collection_mb: int = 9000  # all originals in a collection (R2's free tier is 10 GB)
+    max_collection_pages: int = 20000  # replaces the old 300-pages-per-file cap
+    window_pages: int = 32  # pages read, embedded and committed together
+    ingest_processes: int = 0  # >0: parse windows in this many worker processes
+    ingest_workers: int = 1  # files read at the same time in the background
+    upload_part_mb: float = 8  # resumable upload part size (MB)
     upload_chunk_size: int = 1200
     upload_chunk_overlap: int = 150
 
     # Storage (see hyper_rag.stores). Only the local implementations exist so far;
     # the hosted ones (R2, Qdrant) arrive in plan v2 phase 2.
-    blob_store: Literal["local"] = "local"
-    vector_store: Literal["numpy"] = "numpy"
-    lexical_store: Literal["bm25"] = "bm25"
-    job_store: Literal["sqlite"] = "sqlite"
+    blob_store: Literal["local", "s3"] = "local"
+    vector_store: Literal["numpy", "qdrant"] = "numpy"
+    lexical_store: Literal["bm25", "qdrant"] = "bm25"
+    job_store: Literal["sqlite"] = "sqlite"  # copied to the blob store when that is remote
+    # S3 / Cloudflare R2. Keys come from AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
+    s3_bucket: str = ""
+    s3_endpoint: str = ""  # R2: https://<account id>.r2.cloudflarestorage.com
+    s3_region: str = "auto"
+    s3_prefix: str = ""
+    # Qdrant: a URL (Qdrant Cloud, a server) or ":memory:". Key from QDRANT_API_KEY.
+    qdrant_url: str = ""
+    qdrant_api_key: str = Field(default="", validation_alias="QDRANT_API_KEY")
+    qdrant_prefix: str = "hyper-rag-"
 
     # Login. Empty password = no login, for use on your own machine. Set HYPER_RAG_PASSWORD
     # (in .env or the host's secrets, never in config.yaml) before exposing the app.
