@@ -23,9 +23,9 @@ every vector in RAM, which is the limit to watch on very large collections (see 
 Space. Two ways to run the app:
 
 - **Free: a Gradio Space on ZeroGPU** (a free account may host two). Template in
-  `deploy/gradio-space/`. The entry file runs on a laptop, but it has **not been run on a
-  real Space yet**, and it uses a GPU slot for an app that runs on the CPU, which is not what
-  ZeroGPU is for. If Hugging Face refuses it, use the next one.
+  `deploy/gradio-space/`. Run on a real Space on 2026-11-14: login, upload and search
+  worked. It holds a GPU slot for an app that runs on the CPU, which is not what ZeroGPU
+  is for, so Hugging Face may stop allowing it. If so, use the next one.
 - **PRO: a Docker Space on CPU Basic.** `Dockerfile` and `deploy/docker-space-README.md`.
   This is the tested image.
 

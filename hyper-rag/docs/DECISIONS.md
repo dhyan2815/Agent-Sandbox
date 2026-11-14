@@ -630,5 +630,10 @@ store when the blob store was slow to answer, and two openers of one SQLite file
 "database is locked". The store is now built once before either starts.
 
 Docker Spaces now need a paid plan. `deploy/gradio-space/` runs the same FastAPI app from a
-Gradio-SDK Space, which a free account may host on ZeroGPU. It runs on a laptop and has not
-been run on a Space; it holds a GPU slot it does not use, so Hugging Face may refuse it.
+Gradio-SDK Space, which a free account may host on ZeroGPU. It holds a GPU slot it does not
+use, so Hugging Face may refuse it later. Getting it to start on a real Space took three
+fixes: the platform installs its own `spaces` and `gradio[mcp]` (which caps pydantic at
+2.12.5, so the Space's requirements loosen that pin); ZeroGPU stops a Space that never
+reports its `@spaces.GPU` functions, which it only does inside `gr.Blocks.launch()`, so
+`app.py` reports itself; and a Space's `GRADIO_SSR_MODE=True` starts a Node server on the
+app's port, so SSR is turned off.
