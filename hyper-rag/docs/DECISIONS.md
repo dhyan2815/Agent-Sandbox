@@ -581,3 +581,25 @@ as messages. The SDK is pinned to `mcp==1.30.0`: its 2.x line exists, and its AP
 checked here. Return types are `dict[str, Any]` because a bare `dict` makes the SDK send
 text only. Verified through a real stdio client (list tools, ask, an error flagged as an
 error), and in tests against both backends.
+
+## 42. The metrics board gets its own tab
+
+Decision 37 hid the metrics board with the Galaxy under demo mode, and called that a cost. It
+now has a Metrics tab of its own, shown for every collection: time per stage, model calls and
+tokens per answer, requests left with the provider, the never-retrieved share and the top
+rerank score histogram, from the last 20 saved runs. Explore keeps only the Galaxy and stays
+behind `demo_mode`. The board is plain DOM, so it adds nothing to what a default page loads.
+
+## 43. A real-model quality check, and what it found
+
+`scripts/quality_check.py` (results in `results/quality-check.md`) runs on Groq against the
+eight fixture files. **Claims:** 30 hand-labelled claims (10 per verdict) go straight to
+`judge_claims`, which was split out of `check_claims` so the split step cannot change what is
+measured. All 30 were judged right, with none of the 20 unsupported claims called supported.
+The set is easy by construction (one sentence each, one changed figure or name), so this is
+a ceiling, and the labels are the author's. **Outlines:** 8 answers exported; none added a
+figure that was not in its answer, but 4 of 8 added unsupported filler ("reduces downtime",
+"becomes cash-flow positive"). The checker also missed true points that had lost their
+subject ("Warranty length: 10 years"). Both findings argue for the outline self-check
+(run the checker on an outline before showing it, after rewriting each point to stand
+alone); it was not built in this round.

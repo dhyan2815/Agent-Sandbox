@@ -170,6 +170,11 @@ try {
   expect((await page.locator(".msg").count()) === 0, "new chat clears the thread");
   step("new chat clears the thread");
 
+  // The metrics board has its own tab and adds up the answers asked so far.
+  await page.click(".tab[data-tab=metrics]");
+  await page.waitForSelector("[data-testid=metrics] .metric-bar");
+  step("metrics tab adds up the saved runs");
+
   // Claim checker: three claims, judged against the collection, each with its passage.
   expect((await page.locator(".tab[data-tab=explore]").count()) === 0, "Explore is demo mode only");
   await page.click(".tab[data-tab=check]");

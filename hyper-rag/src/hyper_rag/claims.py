@@ -102,11 +102,13 @@ def _verdict_of(entry: object, passages: list[Chunk]) -> tuple[str, Chunk | None
     return verdict, passages[number - 1]
 
 
-def check_claims(retriever, llm: LLM, text: str, max_claims: int = MAX_CLAIMS) -> ClaimReport:
-    """Check every claim in `text` against the collection behind `retriever`."""
-    report = ClaimReport()
-    claims, calls, report.truncated = split_claims(llm, text, max_claims)
-    report.llm_calls += calls
+def judge_claims(retriever, llm: LLM, claims: list[str]) -> tuple[list[CheckedClaim], int]:
+    """Verdicts for claims that are already split. Returns (checked claims, model calls).
+
+    Separate from the split so that verdict quality can be measured on fixed claims.
+    """
+    checked: list[CheckedClaim] = []
+    calls = 0
     found = [
         (claim, [hit.chunk for hit in retriever.retrieve(claim, top_k=PASSAGES_PER_CLAIM)])
         for claim in claims
@@ -117,17 +119,17 @@ def check_claims(retriever, llm: LLM, text: str, max_claims: int = MAX_CLAIMS) -
         verdicts = []
         if askable:
             reply = parse_json(complete_with_usage(llm, verify_claims_prompt(askable))[0])
-            report.llm_calls += 1
+            calls += 1
             verdicts = reply.get("verdicts") if isinstance(reply.get("verdicts"), list) else []
         by_number = {v.get("claim"): v for v in verdicts if isinstance(v, dict) and "claim" in v}
         position = 0
         for claim, passages in batch:
             if not passages:  # an empty collection or no hits: nothing to check against
-                report.claims.append(CheckedClaim(claim, "not_found"))
+                checked.append(CheckedClaim(claim, "not_found"))
                 continue
             position += 1
             verdict, evidence = _verdict_of(by_number.get(position), passages)
-            report.claims.append(
+            checked.append(
                 CheckedClaim(
                     claim,
                     verdict,
@@ -135,4 +137,13 @@ def check_claims(retriever, llm: LLM, text: str, max_claims: int = MAX_CLAIMS) -
                     closest=passages[0] if verdict == "not_found" else None,
                 )
             )
+    return checked, calls
+
+
+def check_claims(retriever, llm: LLM, text: str, max_claims: int = MAX_CLAIMS) -> ClaimReport:
+    """Check every claim in `text` against the collection behind `retriever`."""
+    report = ClaimReport()
+    claims, calls, report.truncated = split_claims(llm, text, max_claims)
+    report.claims, judged = judge_claims(retriever, llm, claims)
+    report.llm_calls = calls + judged
     return report

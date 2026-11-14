@@ -20,7 +20,7 @@ const Galaxy = lazy(() => import("./viz/Galaxy").then((m) => ({ default: m.Galax
 import { RankRace } from "./viz/RankRace";
 
 export type Where = { kind: "collection" | "pack"; id: string };
-export type Tab = "chat" | "files" | "check" | "eval" | "explore";
+export type Tab = "chat" | "files" | "check" | "eval" | "metrics" | "explore";
 
 const keyOf = (where: Where) => `${where.kind}:${where.id}`;
 
@@ -287,7 +287,7 @@ export function App() {
               )}
             </div>
             <nav className="tabs" id="tabs" role="tablist">
-              {(["chat", "files", "check", "eval", "explore"] as Tab[])
+              {(["chat", "files", "check", "eval", "metrics", "explore"] as Tab[])
                 .filter((name) => isCollection || name === "chat")
                 .filter((name) => name !== "explore" || cfg?.demo_mode)
                 .map((name) => (
@@ -299,7 +299,7 @@ export function App() {
                     data-tab={name}
                     onClick={() => setTab(name)}
                   >
-                    {{ chat: "Chat", files: "Files", check: "Check claims", eval: "Evaluation", explore: "Explore" }[name]}
+                    {{ chat: "Chat", files: "Files", check: "Check claims", eval: "Evaluation", metrics: "Metrics", explore: "Explore" }[name]}
                   </button>
                 ))}
             </nav>
@@ -335,13 +335,27 @@ export function App() {
         )}
         {collection && tab === "check" && <CheckView slug={collection.slug} onCite={openCitation} />}
         {collection && tab === "eval" && cfg && <EvalView slug={collection.slug} config={cfg} />}
+        {collection && tab === "metrics" && (
+          <div className="view" id="metrics-view">
+            <div className="pad wide">
+              <h3 className="section" style={{ marginTop: 0 }}>
+                How the last answers ran
+              </h3>
+              <p className="note">
+                Added up from the saved runs of the last questions in this collection: time per
+                stage, model calls and tokens, requests left with the provider, and how much of
+                the collection search ever reaches.
+              </p>
+              <Metrics slug={collection.slug} passages={chunks} />
+            </div>
+          </div>
+        )}
         {collection && tab === "explore" && cfg?.demo_mode && (
           <div className="view" id="explore-view">
             <div className="pad wide">
               <Suspense fallback={<p className="note">Loading the 3D view…</p>}>
                 <Galaxy slug={collection.slug} events={latest?.events ?? []} />
               </Suspense>
-              <Metrics slug={collection.slug} passages={chunks} />
             </div>
           </div>
         )}

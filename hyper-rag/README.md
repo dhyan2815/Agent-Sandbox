@@ -385,17 +385,22 @@ curl -X POST http://127.0.0.1:8000/ask -H "Content-Type: application/json" \
 - **Check a text against your documents.** The *Check claims* tab splits a pasted text into
   claims and marks each one supported, contradicted or not found, with the passage that
   decides it. "Not found" means your documents do not settle the claim, not that it is false.
-  Read the passage before you trust the verdict.
+  Read the passage before you trust the verdict. On Groq it judged 30 of 30 hand-labelled
+  claims right, but they are easy ones: see [results/quality-check.md](results/quality-check.md).
 - **Export an answer.** Under each answer: copy or download it as Markdown (sources and
   quotes included; paste it into Notion or any editor), or draft a LinkedIn post outline from
-  it. The outline uses one model request and is a draft: read it against the sources.
+  it. The outline uses one model request and is a draft: read it against the sources. In the
+  quality check, none of 8 outlines invented a figure, but 4 added claims the sources do not
+  make.
+- **Metrics.** The Metrics tab adds up the last answers' saved runs: time per stage, model
+  calls and tokens, requests left with the provider.
 - **Use it from Claude Code, Gemini CLI or n8n (MCP).** `pip install -e ".[mcp]"`, then
   `hyper-rag mcp` serves five tools over stdio: `list_collections`, `search` (no model
   call), `ask`, `get_source` and `check_claims`. For a deployed app: `hyper-rag mcp --remote
   https://your-space.hf.space` with the password in `HYPER_RAG_REMOTE_PASSWORD`. For
   example, `claude mcp add hyper-rag -- hyper-rag mcp`.
-- **Demo mode.** `HYPER_RAG_DEMO_MODE=1` shows the Explore tab: the 3D Galaxy and a metrics
-  board. Off by default.
+- **Demo mode.** `HYPER_RAG_DEMO_MODE=1` shows the Explore tab with the 3D Galaxy. Off by
+  default.
 
 ## Domain packs
 
