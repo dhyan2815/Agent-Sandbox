@@ -31,8 +31,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Hosted stores (plan v2 phase 2): Qdrant for vectors and keywords, S3/R2 for files.
-hosted = ["qdrant-client==1.20.0", "boto3==1.43.122"]
+# Hosted stores: a Hugging Face bucket for everything (decision 44), or Qdrant for vectors
+# and keywords with S3/R2 for files (plan v2 phase 2).
+hosted = ["qdrant-client==1.20.0", "boto3==1.43.122", "huggingface_hub==1.33.0"]
 # MCP server (deck card D1): ask your documents from Claude Code, Gemini CLI or n8n.
 mcp = ["mcp==1.30.0"]
 # reportlab only builds the PDF fixtures the tests parse; moto is an in-process S3 for the
@@ -45,6 +46,7 @@ dev = [
     "mcp==1.30.0",
     "qdrant-client==1.20.0",
     "boto3==1.43.122",
+    "huggingface_hub==1.33.0",
 ]
 
 [project.scripts]

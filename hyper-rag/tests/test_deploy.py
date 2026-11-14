@@ -99,6 +99,11 @@ def test_settings_check_finds_what_a_host_needs(settings, monkeypatch):
     ready = off.model_copy(update={"password": "pw", "blob_store": "s3", "s3_bucket": "b"})
     problems = deploy.check_settings(ready, hosted=True)
     assert any("AWS_ACCESS_KEY_ID" in p.message and p.level == "error" for p in problems)
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    bucket = off.model_copy(update={"password": "pw", "blob_store": "hf", "hf_bucket": "me/b"})
+    assert any("HF_TOKEN" in p.message for p in deploy.check_settings(bucket, hosted=True))
+    monkeypatch.setenv("HF_TOKEN", "hf_x")
+    assert not [p for p in deploy.check_settings(bucket, hosted=True) if p.level == "error"]
 
 
 def test_settings_check_needs_the_key_of_the_chosen_provider(settings):

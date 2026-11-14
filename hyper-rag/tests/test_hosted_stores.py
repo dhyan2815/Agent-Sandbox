@@ -251,3 +251,133 @@ def test_the_running_app_answers_after_a_restart_on_an_empty_disk(settings, s3, 
         api.get_settings, api.get_store = originals
         for cached in (api.get_llms, api.get_jobs, api.get_quota, api.get_warmup, api.get_worker):
             cached.cache_clear()
+
+
+class FakeBucketApi:
+    """The five Hub calls HfBucketBlobStore makes, over a dict. Listing matches by string
+    prefix, as the real Hub does (checked against a real bucket, docs/DECISIONS.md 44)."""
+
+    def __init__(self):
+        self.files: dict[str, bytes] = {}
+
+    def batch_bucket_files(self, bucket, add=None, delete=None):
+        from pathlib import Path
+
+        for source, path in add or []:
+            self.files[path] = source if isinstance(source, bytes) else Path(source).read_bytes()
+        for path in delete or []:
+            self.files.pop(path, None)
+
+    def download_bucket_files(self, bucket, files, raise_on_missing_files=False):
+        from huggingface_hub.errors import EntryNotFoundError
+
+        for path, target in files:
+            if path not in self.files:
+                raise EntryNotFoundError(path)
+            target.write_bytes(self.files[path])
+
+    def get_bucket_paths_info(self, bucket, paths):
+        return [path for path in paths if path in self.files]
+
+    def list_bucket_tree(self, bucket, prefix=None, recursive=None):
+        from types import SimpleNamespace
+
+        return [
+            SimpleNamespace(type="file", path=path)
+            for path in sorted(self.files)
+            if path.startswith(prefix.rstrip("/"))
+        ]
+
+
+def _hf_blobs(api, tmp_path, cache="cache"):
+    from hyper_rag.stores.hf import HfBucketBlobStore
+
+    return HfBucketBlobStore("me/bucket", cache_dir=tmp_path / cache, prefix="team", api=api)
+
+
+def test_hf_bucket_blob_store_round_trip(tmp_path):
+    api = FakeBucketApi()
+    blobs = _hf_blobs(api, tmp_path)
+    blobs.write_bytes("c/a/one.txt", b"1")
+    blobs.write_bytes("c/ab/near.txt", b"n")  # shares a string prefix with c/a
+    source = tmp_path / "big.bin"
+    source.write_bytes(b"x" * 3000)
+    blobs.write_file("c/a/sub/two.bin", source, move=True)
+    assert not source.exists()  # moved into the local cache, not copied
+    assert blobs.read_bytes("c/a/one.txt") == b"1" and blobs.exists("c/a/sub/two.bin")
+    assert blobs.list("c/a") == ["c/a/one.txt", "c/a/sub/two.bin"]
+    blobs.flush()
+    assert set(api.files) == {"team/c/a/one.txt", "team/c/ab/near.txt", "team/c/a/sub/two.bin"}
+    fresh = _hf_blobs(api, tmp_path, cache="other-cache")  # a new machine: nothing cached
+    assert fresh.local_path("c/a/sub/two.bin").read_bytes() == b"x" * 3000
+    blobs.delete_prefix("c/a")
+    assert blobs.list("c") == ["c/ab/near.txt"] and not blobs.exists("c/a/one.txt")
+    assert set(api.files) == {"team/c/ab/near.txt"}
+    with pytest.raises(KeyError):
+        blobs.read_bytes("c/missing")
+    with pytest.raises(KeyError):
+        blobs.local_path("c/missing")
+    with pytest.raises(ValueError):
+        blobs.write_bytes("../escape", b"")
+
+
+def test_a_collection_in_one_hf_bucket_survives_a_wiped_disk(settings, tmp_path):
+    """No Qdrant and no S3: the default in-memory indexes are rebuilt from the bucket."""
+    from conftest import StubOcr
+
+    api = FakeBucketApi()
+
+    def store(data_dir):
+        local = settings.model_copy(update={"data_dir": data_dir})
+        blobs = _hf_blobs(api, tmp_path, cache=f"{data_dir.name}-cache")
+        return CollectionStore(local, ocr=StubOcr(), blobs=blobs)
+
+    first = store(tmp_path / "machine-1")
+    first.create("Solar")
+    record = first.add_file("solar", "guide.pdf", make_pdf(tmp_path / "guide.pdf").read_bytes())
+    question = "How long does a standard rooftop installation take?"
+    before = [h.chunk.id for h in first.retriever("solar").retrieve(question)]
+
+    first.blobs.flush()  # what a clean shutdown does
+    second = store(tmp_path / "machine-2")  # the host restarted with an empty disk
+    assert [c["slug"] for c in second.all()] == ["solar"]
+    assert [h.chunk.id for h in second.retriever("solar").retrieve(question)] == before
+    image, kind = second.preview("solar", record["id"], 1)
+    assert kind == "image/png" and image.startswith(b"\x89PNG")
+    second.delete("solar")
+    assert second.all() == [] and not [k for k in api.files if "/collections/" in k]
+
+
+def test_hf_bucket_writes_are_batched_in_order_and_kept_when_the_hub_fails(tmp_path, monkeypatch):
+    from hyper_rag.stores import hf
+
+    monkeypatch.setattr(hf, "WRITE_DELAY", 3600.0)  # only the size limit and flush() send
+    monkeypatch.setattr(hf, "WRITE_BATCH", 3)
+    api = FakeBucketApi()
+    batches, send = [], api.batch_bucket_files
+
+    def record(bucket, add=None, delete=None):
+        batches.append([path for _, path in add or []])
+        return send(bucket, add=add, delete=delete)
+
+    api.batch_bucket_files = record
+    blobs = _hf_blobs(api, tmp_path)
+    blobs.write_bytes("p/1", b"a")
+    blobs.write_bytes("p/2", b"b")
+    assert batches == [] and blobs.read_bytes("p/1") == b"a" and blobs.exists("p/2")
+    with pytest.raises(KeyError):
+        blobs.read_bytes("p/never")  # answered from the key list: no round trip
+    blobs.write_bytes("p/checkpoint", b"c")  # the third write fills the batch
+    assert batches == [["team/p/1", "team/p/2", "team/p/checkpoint"]]
+
+    def down(bucket, add=None, delete=None):
+        raise ConnectionError("hub is down")
+
+    api.batch_bucket_files = down
+    blobs.write_bytes("p/3", b"d")
+    with pytest.raises(ConnectionError):
+        blobs.flush()
+    api.batch_bucket_files = record
+    blobs.write_bytes("p/4", b"e")
+    blobs.flush()
+    assert batches[-1] == ["team/p/3", "team/p/4"] and api.files["team/p/3"] == b"d"

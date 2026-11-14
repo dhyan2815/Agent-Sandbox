@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     ocr: Literal["rapidocr", "none"] = "rapidocr"  # local OCR for images and scanned pages
     max_upload_mb: int = 25  # direct, one-request uploads; bigger files use resumable uploads
     max_file_mb: int = 2048  # one file through a resumable upload
-    max_collection_mb: int = 9000  # all originals in a collection (R2's free tier is 10 GB)
+    max_collection_mb: int = 9000  # all originals in a collection (sized for R2's free 10 GB)
     max_collection_pages: int = 20000  # replaces the old 300-pages-per-file cap
     window_pages: int = 32  # pages read, embedded and committed together
     ingest_processes: int = 0  # >0: parse windows in this many worker processes
@@ -66,9 +66,9 @@ class Settings(BaseSettings):
     upload_chunk_size: int = 1200
     upload_chunk_overlap: int = 150
 
-    # Storage (see hyper_rag.stores). Only the local implementations exist so far;
-    # the hosted ones (R2, Qdrant) arrive in plan v2 phase 2.
-    blob_store: Literal["local", "s3"] = "local"
+    # Storage (see hyper_rag.stores). The local ones are the defaults; on a host, "hf"
+    # (a Hugging Face bucket) keeps everything in one place, or use "s3" with Qdrant.
+    blob_store: Literal["local", "s3", "hf"] = "local"
     vector_store: Literal["numpy", "qdrant"] = "numpy"
     lexical_store: Literal["bm25", "qdrant"] = "bm25"
     job_store: Literal["sqlite"] = "sqlite"  # copied to the blob store when that is remote
@@ -77,6 +77,9 @@ class Settings(BaseSettings):
     s3_endpoint: str = ""  # R2: https://<account id>.r2.cloudflarestorage.com
     s3_region: str = "auto"
     s3_prefix: str = ""
+    # Hugging Face Storage Bucket, "<user>/<bucket>". The token comes from HF_TOKEN.
+    hf_bucket: str = ""
+    hf_prefix: str = ""
     # Qdrant: a URL (Qdrant Cloud, a server) or ":memory:". Key from QDRANT_API_KEY.
     qdrant_url: str = ""
     qdrant_api_key: str = Field(default="", validation_alias="QDRANT_API_KEY")

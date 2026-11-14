@@ -24,7 +24,7 @@ RUN pip install --no-cache-dir ".[hosted]"
 COPY packs ./packs
 COPY --from=web /web/dist ./web/dist
 # The data folder is the only thing written at run time. A Space's disk is wiped on
-# restart; plan v2 phase 2 moves what matters to R2.
+# restart; a bucket keeps what matters (docs/DEPLOY.md).
 RUN mkdir -p data && chown -R user:user /app
 USER user
 ENV PORT=7860 HOME=/home/user

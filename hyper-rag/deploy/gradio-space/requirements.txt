@@ -1,0 +1,25 @@
+# Generated from pyproject.toml (dependencies + the Hugging Face bucket client).
+# Gradio itself comes from sdk_version in README.md.
+langgraph==1.2.20
+pydantic==2.14.3
+pydantic-settings==2.16.2
+pyyaml==6.0.3
+numpy==2.5.4
+rank-bm25==0.2.2
+fastembed==0.9.1
+httpx==0.28.1
+typer==0.29.0
+fastapi==0.162.2
+uvicorn==0.54.0
+beautifulsoup4==4.15.0
+pypdf==7.0.0
+pdfplumber==0.11.10
+pypdfium2==5.15.2
+python-docx==1.2.0
+python-pptx==1.0.2
+openpyxl==3.1.5
+pillow==13.0.0
+rapidocr==3.10.0
+python-multipart==0.0.33
+huggingface_hub==1.33.0
+spaces==0.52.0

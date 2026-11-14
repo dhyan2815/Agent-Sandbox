@@ -71,6 +71,9 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         log.log(logging.ERROR if problem.level == "error" else logging.WARNING, problem.message)
     # The models load in the background, so the server answers /health at once and the page
     # can show "warming up" instead of a first question that hangs.
+    # The store is built here first: built by the warm-up thread and the resume below at
+    # once, a remote blob store made two of them, and two openers of one SQLite file.
+    await run_in_threadpool(get_store)
     warmup = get_warmup()
     warmup.start(lambda: (get_store().embedder, get_store().reranker))
     # Files a previous run left half-read are picked up again, from their last window.

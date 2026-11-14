@@ -603,3 +603,32 @@ figure that was not in its answer, but 4 of 8 added unsupported filler ("reduces
 subject ("Warranty length: 10 years"). Both findings argue for the outline self-check
 (run the checker on an outline before showing it, after rewriting each point to stand
 alone); it was not built in this round.
+
+## 44. One Hugging Face bucket instead of R2 and Qdrant
+
+The deploy waited on three accounts (Hugging Face, Cloudflare, Qdrant). Hugging Face now has
+Storage Buckets (mutable object storage, 100 GB private on a free account), so `blob_store:
+hf` (`stores/hf.py`) keeps originals, page units, per-file indexes and the job log copy in one
+private bucket, with `HF_TOKEN` as the only storage secret. The numpy and BM25 stores were
+already rebuilt from the per-file index objects, so no vector database is needed. **Cost:**
+all vectors sit in RAM (about 1.5 KB a chunk), and search is an exact scan; Qdrant with R2
+stays supported for collections that outgrow that. Embedded Qdrant was considered and
+dropped: its local mode also loads everything into memory. Supabase (1 GB files, pauses
+after 7 idle days) and Vercel Blob (no home for long jobs) were ruled out.
+
+The store talks to the Hub through `huggingface_hub` (pinned to 1.33.0, the newest fastembed
+allows), not the bucket's S3 gateway, which would need a second set of keys. Each Hub call
+took about a second, and a 40-page PDF made 185 of them (86 s against 0.7 s on local disk).
+The store now lists the bucket once, reads from its cache folder and sends small writes in
+ordered batches (64 blobs, 32 MB or 2 s): the same file takes 3.0 s. **Costs:** a killed
+process can lose the last 2 s of small writes (the job resumes from the checkpoint that
+arrived), and the store assumes it is the only writer under its prefix. Checked on
+2026-11-14 against a real bucket: upload, shutdown, start on an empty disk, a cited answer.
+
+That run also showed a start-up race: the warm-up thread and the job resume each built the
+store when the blob store was slow to answer, and two openers of one SQLite file failed with
+"database is locked". The store is now built once before either starts.
+
+Docker Spaces now need a paid plan. `deploy/gradio-space/` runs the same FastAPI app from a
+Gradio-SDK Space, which a free account may host on ZeroGPU. It runs on a laptop and has not
+been run on a Space; it holds a GPU slot it does not use, so Hugging Face may refuse it.

@@ -130,6 +130,11 @@ def check_settings(settings: Settings, hosted: bool | None = None) -> list[Probl
             error("blob_store is s3 but HYPER_RAG_S3_BUCKET is not set.")
         if not (os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get("AWS_SECRET_ACCESS_KEY")):
             error("blob_store is s3 but AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY are not set.")
+    if settings.blob_store == "hf":
+        if not settings.hf_bucket:
+            error("blob_store is hf but HYPER_RAG_HF_BUCKET is not set.")
+        if not os.environ.get("HF_TOKEN"):
+            error("blob_store is hf but HF_TOKEN is not set.")
     if "qdrant" in (settings.vector_store, settings.lexical_store):
         if not settings.qdrant_url:
             error("A Qdrant store is selected but HYPER_RAG_QDRANT_URL is not set.")
@@ -147,7 +152,7 @@ def check_settings(settings: Settings, hosted: bool | None = None) -> list[Probl
         if settings.blob_store == "local":
             warn(
                 "The host's disk is wiped on restart and blob_store is local: uploaded files "
-                "and indexes will be lost. Use blob_store: s3 (R2) and qdrant."
+                "and indexes will be lost. Use blob_store: hf (a Hugging Face bucket)."
             )
         if not settings.password:
             error("HYPER_RAG_PASSWORD is not set: anyone with the URL can read your documents.")
