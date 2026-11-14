@@ -96,6 +96,9 @@ def _client(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+client_address = _client  # public name: the quota guard keys on the same address
+
+
 def _wants_page(request: Request) -> bool:
     return request.method == "GET" and "text/html" in request.headers.get("accept", "")
 

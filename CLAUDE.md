@@ -26,6 +26,7 @@ The repository currently contains no source files. When code is added, consider 
 - **Offline eval**: `hyper-rag ingest sample --offline && hyper-rag eval sample --offline`
 - **Login**: off unless `HYPER_RAG_PASSWORD` is set (in `.env` or host secrets). Storage goes through `src/hyper_rag/stores/` interfaces; engine events through `events.py` (plan v2 phase 0).
 - **Web app** (`hyper-rag/web/`, Node 24): `npm ci && npm run build` (typecheck + build into `web/dist`, served by uvicorn; not committed), `npm test`, `BASE_URL=... npm run e2e`. Docker: `docker build -t hyper-rag .` from `hyper-rag/`.
+- **Host and tools:** `hyper-rag doctor [--hosted]` checks settings before a deploy (runbook: `hyper-rag/docs/DEPLOY.md`); `hyper-rag mcp` serves the MCP tools (`pip install -e ".[mcp]"`); `HYPER_RAG_DEMO_MODE=1` shows the Explore tab. New endpoints: `/collections/{c}/check`, `/export`, `/search`; `/health`, `/ready`.
 - Design choices are logged in `hyper-rag/docs/DECISIONS.md`; never commit `hyper-rag/data/` or `.env` or `hyper-rag/web/dist/`.
 
 ## Repository‑Specific Rules

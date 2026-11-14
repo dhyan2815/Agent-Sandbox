@@ -312,7 +312,7 @@ It exercises the whole pipeline, and CI runs it on every push, but its numbers m
 plumbing, not answer quality.
 
 ```bash
-pytest                              # 121 tests, about 10 seconds
+pytest                              # 187 tests, about a minute
 hyper-rag eval sample --offline     # retrieval + answer ablation on the sample pack
 ```
 
@@ -366,15 +366,43 @@ docker run -p 7860:7860 -e GROQ_API_KEY=... -e HYPER_RAG_PASSWORD=... hyper-rag
 ```
 
 The image builds the React app, runs as user 1000 on port 7860 and starts uvicorn with
-`--proxy-headers`, which is what a Hugging Face Space (Docker SDK) expects. Put keys and the
-password in the Space's secrets. Its disk is wiped on restart, so for anything you want to
-keep, set `HYPER_RAG_BLOB_STORE=s3` (R2) and `HYPER_RAG_VECTOR_STORE=qdrant`,
-`HYPER_RAG_LEXICAL_STORE=qdrant` (Qdrant Cloud's free cluster), with their keys as secrets.
+`--proxy-headers`, which is what a Hugging Face Space (Docker SDK) expects. Docker Spaces now
+need a paid plan, so `deploy/gradio-space/` holds a free Gradio-SDK variant (not yet run on a
+real Space). Put keys and the password in the Space's secrets. Its disk is wiped on restart,
+so for anything you want to keep, set `HYPER_RAG_BLOB_STORE=hf` and `HYPER_RAG_HF_BUCKET`: files
+and indexes then live in one private Hugging Face bucket, with `HF_TOKEN` as the only secret.
+R2 with Qdrant Cloud is the alternative when vectors outgrow RAM.
+The step-by-step runbook, with every secret and variable, is [`docs/DEPLOY.md`](docs/DEPLOY.md);
+`hyper-rag doctor --hosted` checks your settings first. The page shows a waking-up screen
+while a sleeping host starts, and questions are limited per hour
+(`HYPER_RAG_MODEL_REQUESTS_PER_HOUR`) to protect the free model quota.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/ask -H "Content-Type: application/json" \
   -d '{"pack": "payments", "question": "Is UPI Intent supported on desktop web?"}'
 ```
+
+### 6. What else it does with a collection
+
+- **Check a text against your documents.** The *Check claims* tab splits a pasted text into
+  claims and marks each one supported, contradicted or not found, with the passage that
+  decides it. "Not found" means your documents do not settle the claim, not that it is false.
+  Read the passage before you trust the verdict. On Groq it judged 30 of 30 hand-labelled
+  claims right, but they are easy ones: see [results/quality-check.md](results/quality-check.md).
+- **Export an answer.** Under each answer: copy or download it as Markdown (sources and
+  quotes included; paste it into Notion or any editor), or draft a LinkedIn post outline from
+  it. The outline uses one model request and is a draft: read it against the sources. In the
+  quality check, none of 8 outlines invented a figure, but 4 added claims the sources do not
+  make.
+- **Metrics.** The Metrics tab adds up the last answers' saved runs: time per stage, model
+  calls and tokens, requests left with the provider.
+- **Use it from Claude Code, Gemini CLI or n8n (MCP).** `pip install -e ".[mcp]"`, then
+  `hyper-rag mcp` serves five tools over stdio: `list_collections`, `search` (no model
+  call), `ask`, `get_source` and `check_claims`. For a deployed app: `hyper-rag mcp --remote
+  https://your-space.hf.space` with the password in `HYPER_RAG_REMOTE_PASSWORD`. For
+  example, `claude mcp add hyper-rag -- hyper-rag mcp`.
+- **Demo mode.** `HYPER_RAG_DEMO_MODE=1` shows the Explore tab with the 3D Galaxy. Off by
+  default.
 
 ## Domain packs
 
@@ -417,7 +445,7 @@ Settings live in [`config.yaml`](config.yaml); any of them can be overridden wit
 | `runs_kept` | 50 | Saved event logs of recent answers per collection, for replay |
 | `max_file_mb`, `max_collection_mb`, `max_collection_pages` | 2048, 9000, 20000 | Budgets for big files (resumable uploads); they replace the old 300-page cap |
 | `window_pages`, `ingest_processes` | 32, 0 | Pages read and committed together; worker processes for parsing (0 = in the reading thread) |
-| `blob_store` | `local` | `s3` for Cloudflare R2 or any S3: `s3_bucket`, `s3_endpoint`, keys in `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` |
+| `blob_store` | `local` | `hf` for a Hugging Face bucket: `hf_bucket`, token in `HF_TOKEN`. `s3` for Cloudflare R2 or any S3: `s3_bucket`, `s3_endpoint`, keys in `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` |
 | `vector_store`, `lexical_store` | `numpy`, `bm25` | `qdrant` for both: `qdrant_url`, key in `QDRANT_API_KEY` (needs `pip install -e ".[hosted]"`) |
 
 Model names were checked against the providers' free-tier pages on 2026-11-10. Free
