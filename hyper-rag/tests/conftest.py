@@ -10,6 +10,20 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).parent))  # so tests can import make_files
 
 
+@pytest.fixture(autouse=True)
+def no_live_settings(monkeypatch):
+    """Tests never see a real deploy's settings: no HYPER_RAG_* variables, no keys, no .env.
+
+    A shell set up for a live check once ran the suite against a real bucket.
+    """
+    import os
+
+    for name in list(os.environ):
+        if name.startswith("HYPER_RAG_") or name in ("HF_TOKEN", "GROQ_API_KEY", "GEMINI_API_KEY"):
+            monkeypatch.delenv(name)
+    monkeypatch.setitem(Settings.model_config, "env_file", None)
+
+
 @pytest.fixture
 def settings(tmp_path) -> Settings:
     """Offline settings: fake LLM, hashing embedder, lexical reranker, data in a temp dir."""

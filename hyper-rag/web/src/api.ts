@@ -7,6 +7,7 @@ export interface Config {
   max_upload_mb: number;
   extensions: string[];
   login: boolean;
+  demo_mode: boolean;
 }
 
 export interface FileReport {
@@ -85,6 +86,30 @@ export interface AnswerBody {
   llm_calls: number;
   run_id?: string | null;
   reading?: Reading[];
+}
+
+export interface ClaimPassage {
+  title: string;
+  url: string;
+  chunk_id: string;
+  doc_id: string;
+  text: string;
+}
+
+export type Verdict = "supported" | "contradicted" | "not_found";
+
+export interface CheckedClaim {
+  claim: string;
+  verdict: Verdict;
+  evidence: ClaimPassage | null;
+  closest: ClaimPassage | null;
+}
+
+export interface ClaimReport {
+  claims: CheckedClaim[];
+  summary: Record<Verdict, number>;
+  llm_calls: number;
+  truncated: boolean;
 }
 
 export interface Span {

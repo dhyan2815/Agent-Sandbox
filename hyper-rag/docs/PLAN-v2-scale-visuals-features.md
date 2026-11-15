@@ -1,7 +1,13 @@
 # Plan v2: any-size documents, a live RAG visualizer, and a feature deck
 
-Status: **Phases 0 to 5 built** (DECISIONS.md 25 to 36; measurements in `results/`). Phase 4,
-the Galaxy, is on the side branch `feat/galaxy` as decided. Phase 6 (deploy) is not built. Written 2026-11-13 after reading the code on branch `ccr-0fbd0e60-zbgwzn`
+Status: **Phases 0 to 6 built** (DECISIONS.md 25 to 41; measurements in `results/`). The
+Galaxy (phase 4) is merged and sits behind `demo_mode`. Phase 6 is built as far as it can be
+without accounts: warm-up, readiness, a quota guard, a settings check, a waking-up screen, a
+restart-survival test against local stand-ins and the runbook (`docs/DEPLOY.md`). **Not
+done: the deploy itself.** It needs your Hugging Face, R2 and Qdrant accounts, and the
+Space's free CPU tier has not been confirmed. Deck cards D1 (MCP server), D4 (claim checker)
+and D6 (answer to artifact) were promoted by request and built; the rest of the deck is
+unbuilt. Written 2026-11-13 after reading the code on branch `ccr-0fbd0e60-zbgwzn`
 (`hyper-rag/`, commit `78286df`).
 
 Constraints decided with the user:
@@ -510,6 +516,10 @@ Impact and effort: H/M/L. Free-tier risk is how likely the feature is to exhaust
 - **Authentication:** today anyone who can reach the URL can read and delete everything (#11).
   The minimum before deployment is a single-user password or a magic link and a session
   cookie. Accounts come with P9.
+  *Update, 2026-11-15:* the deployed Space runs with the login turned off (the
+  `HYPER_RAG_PASSWORD` secret was deleted). The session cookie was dropped inside the
+  Hugging Face page's iframe, so the login could not complete there. Access is limited by
+  the Space being private; it must stay private, or the password must be set again first.
 - **Per-user quotas**, so one runaway job cannot spend the whole Groq or Qdrant free tier.
 - **Encryption at rest:** R2 already encrypts, so the remaining work is keeping keys out of
   logs and events.
@@ -585,7 +595,7 @@ command, the number, and what it does *not* show.
 | **3. Visualizer v1** | Metro strip, waterfall, replay, Page Grid, Rank Race, inspector tabs | Event-to-screen latency under 100 ms; every number on screen matches the saved event log; reduced-motion mode passes a manual check |
 | **4. Galaxy** | PCA live layout, optional UMAP, Explore tab, metrics board | 50+ fps with 20,000 points on an integrated GPU; the question point and top 5 are correct against the event log |
 | **5. Book structure** | A5 just-in-time parsing, A8 outline chunks + summary tree | New long-book golden set (about 20 questions, including global ones): report the score before and after, and LLM calls per question |
-| **6. Deploy** | HF Space (or the confirmed alternative), env secrets, cold-start UX, quotas | Fresh deploy from README instructions; the app survives a restart with no data loss |
+| **6. Deploy** | HF Space (or the confirmed alternative), env secrets, cold-start UX, quotas | Fresh deploy from README instructions; the app survives a restart with no data loss. **Built:** the app restarts on an empty disk and answers (`tests/test_hosted_stores.py`, local stand-ins for R2 and Qdrant), waking-up screen checked in a browser (`web/e2e/flows.mjs`). **Not done:** a deploy on the real services; follow `docs/DEPLOY.md`. |
 
 Test corpus for Phase 1:
 

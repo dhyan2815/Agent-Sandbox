@@ -3,12 +3,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { plural } from "./answer";
 import { type AnswerBody, type Citation, type Collection, type Config, type Source, api, isReading } from "./api";
 import { ChatView, type Turn, askQuestion } from "./components/ChatView";
+import { CheckView } from "./components/CheckView";
 import { EvalView } from "./components/EvalView";
 import { FilesView } from "./components/FilesView";
 import { Sidebar } from "./components/Sidebar";
 import { Inspector, type InspectorTab, type SourceView } from "./components/SourcePanel";
 import { type EngineEvent, quota } from "./events";
 import { lazy, Suspense } from "react";
+import { WakingScreen } from "./components/WakingScreen";
+import { useServerStatus } from "./status";
 import { Metro } from "./viz/Metro";
 import { Metrics } from "./viz/Metrics";
 
@@ -17,12 +20,13 @@ const Galaxy = lazy(() => import("./viz/Galaxy").then((m) => ({ default: m.Galax
 import { RankRace } from "./viz/RankRace";
 
 export type Where = { kind: "collection" | "pack"; id: string };
-export type Tab = "chat" | "files" | "eval" | "explore";
+export type Tab = "chat" | "files" | "check" | "eval" | "metrics" | "explore";
 
 const keyOf = (where: Where) => `${where.kind}:${where.id}`;
 
 export function App() {
   const client = useQueryClient();
+  const server = useServerStatus();
   const config = useQuery({ queryKey: ["config"], queryFn: () => api<Config>("/config") });
   const packs = useQuery({
     queryKey: ["packs"],
@@ -200,6 +204,8 @@ export function App() {
   const isCollection = where?.kind === "collection";
   const chunks = collection?.files.reduce((sum, f) => sum + f.chunks, 0) ?? 0;
 
+  if (server.status === "down") return <WakingScreen since={server.since} />;
+
   return (
     <div className={"app" + (inspector ? " with-source" : "")} id="app">
       <Sidebar
@@ -217,6 +223,11 @@ export function App() {
       />
 
       <main>
+        {server.status === "warming" && (
+          <div className="banner" id="warming-banner" role="status">
+            Loading the search models. The first question may take a little longer.
+          </div>
+        )}
         {cfg?.offline && (
           <div className="banner" id="offline-banner">
             Offline demo mode: answers come from a rule-based stand-in, not a language model.
@@ -276,8 +287,9 @@ export function App() {
               )}
             </div>
             <nav className="tabs" id="tabs" role="tablist">
-              {(["chat", "files", "eval", "explore"] as Tab[])
+              {(["chat", "files", "check", "eval", "metrics", "explore"] as Tab[])
                 .filter((name) => isCollection || name === "chat")
+                .filter((name) => name !== "explore" || cfg?.demo_mode)
                 .map((name) => (
                   <button
                     key={name}
@@ -287,7 +299,7 @@ export function App() {
                     data-tab={name}
                     onClick={() => setTab(name)}
                   >
-                    {{ chat: "Chat", files: "Files", eval: "Evaluation", explore: "Explore" }[name]}
+                    {{ chat: "Chat", files: "Files", check: "Check claims", eval: "Evaluation", metrics: "Metrics", explore: "Explore" }[name]}
                   </button>
                 ))}
             </nav>
@@ -321,14 +333,29 @@ export function App() {
         {collection && tab === "files" && cfg && (
           <FilesView collection={collection} config={cfg} onChanged={refreshCollections} />
         )}
+        {collection && tab === "check" && <CheckView slug={collection.slug} onCite={openCitation} />}
         {collection && tab === "eval" && cfg && <EvalView slug={collection.slug} config={cfg} />}
-        {collection && tab === "explore" && (
+        {collection && tab === "metrics" && (
+          <div className="view" id="metrics-view">
+            <div className="pad wide">
+              <h3 className="section" style={{ marginTop: 0 }}>
+                How the last answers ran
+              </h3>
+              <p className="note">
+                Added up from the saved runs of the last questions in this collection: time per
+                stage, model calls and tokens, requests left with the provider, and how much of
+                the collection search ever reaches.
+              </p>
+              <Metrics slug={collection.slug} passages={chunks} />
+            </div>
+          </div>
+        )}
+        {collection && tab === "explore" && cfg?.demo_mode && (
           <div className="view" id="explore-view">
             <div className="pad wide">
               <Suspense fallback={<p className="note">Loading the 3D view…</p>}>
                 <Galaxy slug={collection.slug} events={latest?.events ?? []} />
               </Suspense>
-              <Metrics slug={collection.slug} passages={chunks} />
             </div>
           </div>
         )}

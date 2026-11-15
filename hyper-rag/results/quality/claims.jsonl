@@ -1,0 +1,30 @@
+{"claim": "A standard rooftop installation takes two working days.", "label": "supported"}
+{"claim": "The inverter has a 10 year warranty, covered by the manufacturer.", "label": "supported"}
+{"claim": "The annual service visit costs 2400 rupees.", "label": "supported"}
+{"claim": "Panels should be cleaned every six weeks with soft water and a sponge.", "label": "supported"}
+{"claim": "A 3 kW system costs 185000 rupees before subsidy.", "label": "supported"}
+{"claim": "The subsidy for a 5 kW system is 94000 rupees.", "label": "supported"}
+{"claim": "Unused accessories can be returned within 14 days.", "label": "supported"}
+{"claim": "Refunds are paid to the original payment method in 5 working days.", "label": "supported"}
+{"claim": "The site survey fee is 1500 rupees.", "label": "supported"}
+{"claim": "An alert is sent when output drops below 60 percent of the forecast for two days in a row.", "label": "supported"}
+{"claim": "A standard rooftop installation takes five working days.", "label": "contradicted"}
+{"claim": "The battery has a 12 year warranty.", "label": "contradicted"}
+{"claim": "The annual service visit costs 4000 rupees.", "label": "contradicted"}
+{"claim": "Panels should be cleaned every two weeks.", "label": "contradicted"}
+{"claim": "A 3 kW system costs 250000 rupees before subsidy.", "label": "contradicted"}
+{"claim": "The subsidy for a 3 kW system is 50000 rupees.", "label": "contradicted"}
+{"claim": "Unused accessories can be returned within 30 days.", "label": "contradicted"}
+{"claim": "The mounting frame warranty is covered by the manufacturer.", "label": "contradicted"}
+{"claim": "Net metering approval usually takes three days after the installation is inspected.", "label": "contradicted"}
+{"claim": "The payback period is 7 years.", "label": "contradicted"}
+{"claim": "Northwind Solar was founded in 2009.", "label": "not_found"}
+{"claim": "The CEO of Northwind Solar is Ravi Mehta.", "label": "not_found"}
+{"claim": "The inverter is made in Germany.", "label": "not_found"}
+{"claim": "Solar panels lose 0.5 percent of their efficiency every year.", "label": "not_found"}
+{"claim": "Northwind Solar has an office in Mumbai.", "label": "not_found"}
+{"claim": "Installation crews are certified by the national electrical board.", "label": "not_found"}
+{"claim": "The monitoring app is available on iOS and Android.", "label": "not_found"}
+{"claim": "A 10 kW system qualifies for a subsidy of 120000 rupees.", "label": "not_found"}
+{"claim": "Customers can pay for a system in 12 monthly instalments.", "label": "not_found"}
+{"claim": "The warranty is void if the panels are cleaned with detergent.", "label": "not_found"}

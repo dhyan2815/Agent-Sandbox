@@ -3,6 +3,7 @@ import { nextStep, plural, segments } from "../answer";
 import { type AnswerBody, type Citation, type Collection, postJson, streamAnswer } from "../api";
 import type { Where } from "../App";
 import type { EngineEvent } from "../events";
+import { ExportMenu } from "./ExportMenu";
 import { markArrived } from "../viz/latency";
 import { Waterfall } from "../viz/Waterfall";
 
@@ -81,12 +82,13 @@ function AnswerText({ body, onCite }: { body: AnswerBody; onCite: (c: Citation) 
 
 interface MessageProps {
   turn: Turn;
+  exportSlug?: string; // set for collections: packs keep no saved run to export
   onCite: (c: Citation) => void;
   onReplay: (turn: Turn) => void;
   onRetrieval: (turn: Turn) => void;
 }
 
-function BotMessage({ turn, onCite, onReplay, onRetrieval }: MessageProps) {
+function BotMessage({ turn, exportSlug, onCite, onReplay, onRetrieval }: MessageProps) {
   const body = turn.answer;
   if (turn.error) {
     return (
@@ -134,6 +136,9 @@ function BotMessage({ turn, onCite, onReplay, onRetrieval }: MessageProps) {
             </button>
           ))}
         </div>
+      )}
+      {exportSlug && body.run_id && !body.refused && (
+        <ExportMenu slug={exportSlug} runId={body.run_id} />
       )}
       {turn.events.length > 0 ? (
         <Waterfall
@@ -225,7 +230,13 @@ export function ChatView(props: Props) {
               {turns.map((turn) => (
                 <div key={turn.id} style={{ display: "contents" }}>
                   <div className="msg user">{turn.question}</div>
-                  <BotMessage turn={turn} onCite={onCite} onReplay={onReplay} onRetrieval={onRetrieval} />
+                  <BotMessage
+                    turn={turn}
+                    exportSlug={where.kind === "collection" ? where.id : undefined}
+                    onCite={onCite}
+                    onReplay={onReplay}
+                    onRetrieval={onRetrieval}
+                  />
                 </div>
               ))}
             </>

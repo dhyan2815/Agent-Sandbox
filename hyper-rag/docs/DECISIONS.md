@@ -509,3 +509,131 @@ run's rerank hits, the question placed from its logged position. The frame rate 
 below the plan's 50, but on SwiftShader, a software renderer on the CPU, because this
 machine has no GPU; the target is for an integrated GPU and is not verified here.
 
+
+## 37. The Galaxy shipped in main, behind a demo-mode setting
+
+Decision 36 kept the Galaxy on a side branch. It was merged into `main` along with the rest
+of the work, so the plan's intent ("a demo and recording mode, not part of the product") is
+kept by a setting instead: `demo_mode` (`HYPER_RAG_DEMO_MODE=1`) is off by default, and the
+Explore tab, with the Galaxy and the metrics board, is hidden unless it is on. The three.js
+code was already loaded only when that tab opens, so a default install never downloads it.
+Alternatives were a normal tab for everyone (more screen for a view that is a sketch of the
+data) and removing it from `main` (the work is in git history, but a demo you cannot switch
+on is a demo nobody records). The cost: the metrics board is hidden with it, though it is
+product-useful; if it is wanted day to day, it should move to its own tab.
+
+## 38. Host readiness: warm-up, a quota guard, a settings check
+
+Phase 6 adds three things for a free host, none of which touch retrieval or answers.
+**Warm-up:** the embedding and reranking models load on a background thread at start-up, so
+`GET /health` answers at once with `warm: warming | ready | failed` (it is open without a
+login and says nothing about data). The page shows a waking-up screen while `/health`
+cannot be reached (a sleeping host) and a banner while the models load. A failed warm-up
+does not stop the app: the models load on the first question instead. **Quota guard:**
+questions, claim checks and LLM exports count toward `model_requests_per_hour` (default
+120) per client address; over it the API answers 429 with Retry-After. It is a sliding
+window kept in memory, so a restart forgets it, and behind a proxy the address is the
+forwarded one only because uvicorn runs with `--proxy-headers`. The point is to stop one
+runaway tab from spending Groq's 200K tokens a day, not to bill anyone. **Settings check:**
+`hyper-rag doctor` and the start-up log report a missing key for the chosen provider, a
+half-configured S3 or Qdrant, a local blob store on a host that wipes its disk, and a
+missing password. On a host (a Space sets `SPACE_ID`) the missing password is an error.
+`GET /ready` probes the stores behind the login and returns 503 with the failing probe.
+
+## 39. The claim checker fails closed, and says what "not found" means
+
+Deck card D4. A text is split into claims by one model call (at most 10; the model is asked
+for 11 so that a longer text is reported as cut, because a model told "at most 10" never
+shows that an 11th existed). Each claim is searched with the same hybrid retrieval the chat
+uses, which is local and free, and the model judges four claims per call against three
+passages each: `supported`, `contradicted` or `not_found`. A verdict only counts if it names
+a passage that exists. A missing verdict, an unknown word or a made-up passage number all
+become `not_found`, which the page words as "the documents do not settle this", never as
+"false". Four claims per call keeps one call near 3,000 tokens, under Groq's 8,000 a minute.
+Every verdict shows its passage and opens it in the source panel, because the model's
+reading is the weakest link and the reader must be able to overrule it.
+Not measured yet: how often a real model's verdicts agree with a person's. The tests cover
+the plumbing against the rule-based stand-in, which judges by word overlap and a missing
+figure, so they say nothing about verdict quality on a real model.
+
+## 40. Export is built from the saved run, and Notion means Markdown
+
+Deck card D6. `POST /collections/{c}/export` takes a run id, not text: the answer is read
+from what the server saved when it answered, so an export can only contain what the system
+said. Markdown (question, answer, sources with a flat quote each) needs no model and is the
+Notion route: Notion, Obsidian and most editors convert pasted Markdown, and a Notion API
+integration would need a token and a database id for a gain of one paste. The LinkedIn
+outline costs one request and is the only format that calls a model; it is told to use only
+the answer's facts, and the page says it is a draft that is not checked again. Refusals
+export as refusals, and cannot be turned into a post. Not built: a LinkedIn variant that
+runs the claim checker over its own draft before showing it.
+
+## 41. The MCP server: five tools, local or remote, a pinned SDK
+
+Deck card D1. `hyper-rag mcp` serves `list_collections`, `search`, `ask`, `get_source` and
+`check_claims` over stdio, on local collections by default, or on a deployed app with
+`--remote URL`, logging in with the password from `HYPER_RAG_REMOTE_PASSWORD` (an
+environment variable, so it is not in shell history or a process list). `search` calls no
+model, so it is the cheap way for another tool to look. All tools are read-only; `ask` and
+`check_claims` spend model requests, and on a host count toward its hourly limit. Errors the
+engine expects (no such collection, a rate limit, a wrong password) reach the calling model
+as messages. The SDK is pinned to `mcp==1.30.0`: its 2.x line exists, and its API was not
+checked here. Return types are `dict[str, Any]` because a bare `dict` makes the SDK send
+text only. Verified through a real stdio client (list tools, ask, an error flagged as an
+error), and in tests against both backends.
+
+## 42. The metrics board gets its own tab
+
+Decision 37 hid the metrics board with the Galaxy under demo mode, and called that a cost. It
+now has a Metrics tab of its own, shown for every collection: time per stage, model calls and
+tokens per answer, requests left with the provider, the never-retrieved share and the top
+rerank score histogram, from the last 20 saved runs. Explore keeps only the Galaxy and stays
+behind `demo_mode`. The board is plain DOM, so it adds nothing to what a default page loads.
+
+## 43. A real-model quality check, and what it found
+
+`scripts/quality_check.py` (results in `results/quality-check.md`) runs on Groq against the
+eight fixture files. **Claims:** 30 hand-labelled claims (10 per verdict) go straight to
+`judge_claims`, which was split out of `check_claims` so the split step cannot change what is
+measured. All 30 were judged right, with none of the 20 unsupported claims called supported.
+The set is easy by construction (one sentence each, one changed figure or name), so this is
+a ceiling, and the labels are the author's. **Outlines:** 8 answers exported; none added a
+figure that was not in its answer, but 4 of 8 added unsupported filler ("reduces downtime",
+"becomes cash-flow positive"). The checker also missed true points that had lost their
+subject ("Warranty length: 10 years"). Both findings argue for the outline self-check
+(run the checker on an outline before showing it, after rewriting each point to stand
+alone); it was not built in this round.
+
+## 44. One Hugging Face bucket instead of R2 and Qdrant
+
+The deploy waited on three accounts (Hugging Face, Cloudflare, Qdrant). Hugging Face now has
+Storage Buckets (mutable object storage, 100 GB private on a free account), so `blob_store:
+hf` (`stores/hf.py`) keeps originals, page units, per-file indexes and the job log copy in one
+private bucket, with `HF_TOKEN` as the only storage secret. The numpy and BM25 stores were
+already rebuilt from the per-file index objects, so no vector database is needed. **Cost:**
+all vectors sit in RAM (about 1.5 KB a chunk), and search is an exact scan; Qdrant with R2
+stays supported for collections that outgrow that. Embedded Qdrant was considered and
+dropped: its local mode also loads everything into memory. Supabase (1 GB files, pauses
+after 7 idle days) and Vercel Blob (no home for long jobs) were ruled out.
+
+The store talks to the Hub through `huggingface_hub` (pinned to 1.33.0, the newest fastembed
+allows), not the bucket's S3 gateway, which would need a second set of keys. Each Hub call
+took about a second, and a 40-page PDF made 185 of them (86 s against 0.7 s on local disk).
+The store now lists the bucket once, reads from its cache folder and sends small writes in
+ordered batches (64 blobs, 32 MB or 2 s): the same file takes 3.0 s. **Costs:** a killed
+process can lose the last 2 s of small writes (the job resumes from the checkpoint that
+arrived), and the store assumes it is the only writer under its prefix. Checked on
+2026-11-14 against a real bucket: upload, shutdown, start on an empty disk, a cited answer.
+
+That run also showed a start-up race: the warm-up thread and the job resume each built the
+store when the blob store was slow to answer, and two openers of one SQLite file failed with
+"database is locked". The store is now built once before either starts.
+
+Docker Spaces now need a paid plan. `deploy/gradio-space/` runs the same FastAPI app from a
+Gradio-SDK Space, which a free account may host on ZeroGPU. It holds a GPU slot it does not
+use, so Hugging Face may refuse it later. Getting it to start on a real Space took three
+fixes: the platform installs its own `spaces` and `gradio[mcp]` (which caps pydantic at
+2.12.5, so the Space's requirements loosen that pin); ZeroGPU stops a Space that never
+reports its `@spaces.GPU` functions, which it only does inside `gr.Blocks.launch()`, so
+`app.py` reports itself; and a Space's `GRADIO_SSR_MODE=True` starts a Node server on the
+app's port, so SSR is turned off.

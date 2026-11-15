@@ -1,6 +1,7 @@
 """Storage behind interfaces, so the hosted stores of plan v2 can replace the local ones.
 
-    BlobStore     originals, parsed units, indexes   local folder   s3 (Cloudflare R2)
+    BlobStore     originals, parsed units, indexes   local folder   hf (a Hugging Face bucket)
+                                                                    or s3 (Cloudflare R2)
     VectorStore   chunk embeddings per collection    numpy, exact   qdrant (int8, on disk)
     LexicalStore  keyword search per collection      rank_bm25      qdrant (sparse, IDF)
     JobStore      long-running jobs and their logs   SQLite         SQLite copied to the blobs
@@ -44,6 +45,16 @@ def build_blob_store(settings: Settings) -> BlobStore:
             endpoint_url=settings.s3_endpoint,
             region=settings.s3_region,
             prefix=settings.s3_prefix,
+        )
+    if settings.blob_store == "hf":
+        from hyper_rag.stores.hf import HfBucketBlobStore
+
+        if not settings.hf_bucket:
+            raise ValueError("blob_store is hf but HYPER_RAG_HF_BUCKET is not set")
+        return HfBucketBlobStore(
+            settings.hf_bucket,
+            cache_dir=settings.data_dir / "blob-cache",
+            prefix=settings.hf_prefix,
         )
     raise ValueError(f"Unknown blob store '{settings.blob_store}'")
 

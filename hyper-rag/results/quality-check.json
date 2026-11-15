@@ -1,0 +1,330 @@
+{
+  "date": "2026-11-14",
+  "offline": false,
+  "generator": "groq:openai/gpt-oss-120b",
+  "control": "groq:openai/gpt-oss-20b",
+  "claims": {
+    "rows": [
+      {
+        "claim": "A standard rooftop installation takes two working days.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "The inverter has a 10 year warranty, covered by the manufacturer.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "The annual service visit costs 2400 rupees.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "Panels should be cleaned every six weeks with soft water and a sponge.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "A 3 kW system costs 185000 rupees before subsidy.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "The subsidy for a 5 kW system is 94000 rupees.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "Unused accessories can be returned within 14 days.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "Refunds are paid to the original payment method in 5 working days.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "The site survey fee is 1500 rupees.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "An alert is sent when output drops below 60 percent of the forecast for two days in a row.",
+        "label": "supported",
+        "verdict": "supported"
+      },
+      {
+        "claim": "A standard rooftop installation takes five working days.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "The battery has a 12 year warranty.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "The annual service visit costs 4000 rupees.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "Panels should be cleaned every two weeks.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "A 3 kW system costs 250000 rupees before subsidy.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "The subsidy for a 3 kW system is 50000 rupees.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "Unused accessories can be returned within 30 days.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "The mounting frame warranty is covered by the manufacturer.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "Net metering approval usually takes three days after the installation is inspected.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "The payback period is 7 years.",
+        "label": "contradicted",
+        "verdict": "contradicted"
+      },
+      {
+        "claim": "Northwind Solar was founded in 2009.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "The CEO of Northwind Solar is Ravi Mehta.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "The inverter is made in Germany.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "Solar panels lose 0.5 percent of their efficiency every year.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "Northwind Solar has an office in Mumbai.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "Installation crews are certified by the national electrical board.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "The monitoring app is available on iOS and Android.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "A 10 kW system qualifies for a subsidy of 120000 rupees.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "Customers can pay for a system in 12 monthly instalments.",
+        "label": "not_found",
+        "verdict": "not_found"
+      },
+      {
+        "claim": "The warranty is void if the panels are cleaned with detergent.",
+        "label": "not_found",
+        "verdict": "not_found"
+      }
+    ],
+    "accuracy": 1.0,
+    "correct": 30,
+    "total": 30,
+    "false_supported": 0,
+    "not_supported_total": 20,
+    "llm_calls": 8,
+    "seconds": 22.7,
+    "confusion": {
+      "contradicted->contradicted": 10,
+      "not_found->not_found": 10,
+      "supported->supported": 10
+    }
+  },
+  "outlines": [
+    {
+      "question": "What is the warranty on the inverter, and who covers it?",
+      "refused": false,
+      "answer": "The inverter has a 10-year warranty, and it is covered by the manufacturer. [1]",
+      "outline": "The inverter comes with a solid 10‑year warranty.\n\n- Warranty length: 10 years  \n- Covered by: the manufacturer  \n\nWhat’s your experience with inverter warranties? Feel free to share!",
+      "invented_figures": [],
+      "points": [
+        {
+          "point": "Warranty length: 10 years",
+          "verdict": "not_found"
+        },
+        {
+          "point": "Covered by: the manufacturer",
+          "verdict": "supported"
+        }
+      ]
+    },
+    {
+      "question": "How much is the annual service visit?",
+      "refused": false,
+      "answer": "The annual service visit costs 2400 rupees. [1]",
+      "outline": "Annual service visits can be a game‑changer for keeping equipment running smoothly.\n\n- The cost is 2400 rupees per year.\n- This fee covers a comprehensive check‑up and maintenance.\n- Ensures optimal performance and reduces downtime.\n\nWhat’s your experience with annual service plans?",
+      "invented_figures": [],
+      "points": [
+        {
+          "point": "The cost is 2400 rupees per year.",
+          "verdict": "supported"
+        },
+        {
+          "point": "This fee covers a comprehensive check‑up and maintenance.",
+          "verdict": "supported"
+        },
+        {
+          "point": "Ensures optimal performance and reduces downtime.",
+          "verdict": "not_found"
+        }
+      ]
+    },
+    {
+      "question": "How often should the panels be cleaned, and how?",
+      "refused": false,
+      "answer": "The panels should be cleaned every six weeks, using soft water and a sponge. [1]",
+      "outline": "Clean your panels every six weeks for optimal performance.\n\n- Schedule cleaning at six‑week intervals  \n- Use soft water to avoid mineral deposits  \n- Apply a gentle sponge to remove dirt without scratching  \n\nWhat’s your panel maintenance routine?",
+      "invented_figures": [],
+      "points": [
+        {
+          "point": "Schedule cleaning at six‑week intervals",
+          "verdict": "supported"
+        },
+        {
+          "point": "Use soft water to avoid mineral deposits",
+          "verdict": "supported"
+        },
+        {
+          "point": "Apply a gentle sponge to remove dirt without scratching",
+          "verdict": "not_found"
+        }
+      ]
+    },
+    {
+      "question": "What does a 3 kW system cost, and what subsidy does it get?",
+      "refused": false,
+      "answer": "A 3 kW system costs 185 000 rupees before any subsidy, and it receives a subsidy of 78 000 rupees[1][2].",
+      "outline": "A 3 kW solar system costs 185 000 rupees before any subsidy.\n\n- The system’s price is 185 000 rupees.\n- It qualifies for a subsidy of 78 000 rupees.\n- After the subsidy, the net cost is reduced accordingly.\n\nWhat do you think about the impact of this subsidy on adoption rates?",
+      "invented_figures": [],
+      "points": [
+        {
+          "point": "The system’s price is 185 000 rupees.",
+          "verdict": "supported"
+        },
+        {
+          "point": "It qualifies for a subsidy of 78 000 rupees.",
+          "verdict": "not_found"
+        },
+        {
+          "point": "After the subsidy, the net cost is reduced accordingly.",
+          "verdict": "supported"
+        }
+      ]
+    },
+    {
+      "question": "How long does a standard rooftop installation take?",
+      "refused": false,
+      "answer": "A standard rooftop installation takes two working days. [1]",
+      "outline": "A standard rooftop installation can be completed in just two working days.\n\n- The timeline is fixed at two working days.\n- No additional time factors are mentioned.\n- This applies to a typical rooftop setup.\n\nWhat’s your experience with rooftop installation timelines?",
+      "invented_figures": [],
+      "points": [
+        {
+          "point": "The timeline is fixed at two working days.",
+          "verdict": "supported"
+        },
+        {
+          "point": "No additional time factors are mentioned.",
+          "verdict": "contradicted"
+        },
+        {
+          "point": "This applies to a typical rooftop setup.",
+          "verdict": "supported"
+        }
+      ]
+    },
+    {
+      "question": "When is an alert sent by the monitoring app?",
+      "refused": false,
+      "answer": "An alert is sent when the output falls below 60 % of the forecast for two consecutive days. [1]",
+      "outline": "When the forecast goes off track, the app sounds the alarm.\n\n- An alert is triggered if the output drops below 60 % of the forecast.  \n- The condition must persist for two consecutive days.  \n\nLet me know if you’ve seen this happen in your own monitoring.",
+      "invented_figures": [],
+      "points": [
+        {
+          "point": "An alert is triggered if the output drops below 60 % of the forecast.",
+          "verdict": "supported"
+        },
+        {
+          "point": "The condition must persist for two consecutive days.",
+          "verdict": "supported"
+        }
+      ]
+    },
+    {
+      "question": "How long do refunds take, and where are they paid?",
+      "refused": false,
+      "answer": "Refunds are paid to the original payment method and take 5 working days to be processed. [1]",
+      "outline": "Refunds are processed quickly—here’s what you need to know:\n\n- They’re paid back to the original payment method.  \n- Processing takes 5 working days.  \n\nLet me know if you have any other questions!",
+      "invented_figures": [],
+      "points": [
+        {
+          "point": "They’re paid back to the original payment method.",
+          "verdict": "supported"
+        },
+        {
+          "point": "Processing takes 5 working days.",
+          "verdict": "supported"
+        }
+      ]
+    },
+    {
+      "question": "What is the payback period of a system?",
+      "refused": false,
+      "answer": "The payback period is 4.5 years[1].",
+      "outline": "The payback period of the system is 4.5 years.\n\n- This metric indicates how long it takes to recover the initial investment.  \n- A 4.5‑year payback suggests the project becomes cash‑flow positive after that time.  \n- Stakeholders can use this figure to compare against other investment opportunities.  \n\nWhat does a 4.5‑year payback mean for your decision‑making?",
+      "invented_figures": [],
+      "points": [
+        {
+          "point": "This metric indicates how long it takes to recover the initial investment.",
+          "verdict": "supported"
+        },
+        {
+          "point": "A 4.5‑year payback suggests the project becomes cash‑flow positive after that time.",
+          "verdict": "not_found"
+        },
+        {
+          "point": "Stakeholders can use this figure to compare against other investment opportunities.",
+          "verdict": "not_found"
+        }
+      ]
+    }
+  ]
+}
