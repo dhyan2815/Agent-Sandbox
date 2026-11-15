@@ -24,7 +24,7 @@ Space. Two ways to run the app:
 
 - **Free: a Gradio Space on ZeroGPU** (a free account may host two). Template in
   `deploy/gradio-space/`. Run on a real Space on 2026-11-14: login, upload and search
-  worked. It holds a GPU slot for an app that runs on the CPU, which is not what ZeroGPU
+  worked, then on the bucket: a cited Groq answer, and the same answer after a restart. It holds a GPU slot for an app that runs on the CPU, which is not what ZeroGPU
   is for, so Hugging Face may stop allowing it. If so, use the next one.
 - **PRO: a Docker Space on CPU Basic.** `Dockerfile` and `deploy/docker-space-README.md`.
   This is the tested image.
@@ -99,6 +99,10 @@ The app runs the same check at start-up and writes every problem to its log.
   start on an empty disk, a cited answer from Groq) and in `tests/test_hosted_stores.py`.
 - **A killed Space** can lose the last two seconds of small writes (they are sent in
   batches). The file being read resumes from the checkpoint that did arrive.
+- **Changing a variable.** Once, a changed value (`local` back to `hf`) did not reach the
+  restarted Space, not even after a factory reboot, while `get_space_variables` showed the
+  new one. Deleting the variable and adding it again fixed it. Check the start-up log
+  after a change: on `local` the app warns that the disk is wiped on restart.
 - **One app per bucket.** The app lists the bucket once at start and trusts that list. Do
   not point two running apps, or the CLI and a running app, at the same bucket and prefix.
 - **Hourly limit.** Questions, claim checks and LLM exports count toward
