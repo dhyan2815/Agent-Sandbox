@@ -516,6 +516,10 @@ Impact and effort: H/M/L. Free-tier risk is how likely the feature is to exhaust
 - **Authentication:** today anyone who can reach the URL can read and delete everything (#11).
   The minimum before deployment is a single-user password or a magic link and a session
   cookie. Accounts come with P9.
+  *Update, 2026-11-15:* the deployed Space runs with the login turned off (the
+  `HYPER_RAG_PASSWORD` secret was deleted). The session cookie was dropped inside the
+  Hugging Face page's iframe, so the login could not complete there. Access is limited by
+  the Space being private; it must stay private, or the password must be set again first.
 - **Per-user quotas**, so one runaway job cannot spend the whole Groq or Qdrant free tier.
 - **Encryption at rest:** R2 already encrypts, so the remaining work is keeping keys out of
   logs and events.
